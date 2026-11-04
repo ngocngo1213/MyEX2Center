@@ -41,6 +41,10 @@ class OverlayViewManager(private val context: Context) {
     companion object {
         const val TAG = "OverlayViewManager"
         private const val BLACKOUT_GEAR_CHECK_MS = 500L
+        private const val BUBBLE_SIZE_DP = 64
+        private const val BUBBLE_PREFS = "ex2_overlay"
+        private const val KEY_BUBBLE_X = "bubble_x"
+        private const val KEY_BUBBLE_Y = "bubble_y"
     }
 
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -116,16 +120,22 @@ class OverlayViewManager(private val context: Context) {
     fun showBubble() {
         if (bubbleView != null) return
 
-        val dp48 = dpToPx(52)
+        val size = dpToPx(BUBBLE_SIZE_DP)
+        val metrics = context.resources.displayMetrics
+        // Default: right edge, lower third — clear of the gear selector / HUD and of the
+        // top status bar of navigation apps. A dragged position is remembered.
+        val defaultX = metrics.widthPixels - size - dpToPx(12)
+        val defaultY = metrics.heightPixels - size - dpToPx(150)
+        val bubblePrefs = context.getSharedPreferences(BUBBLE_PREFS, Context.MODE_PRIVATE)
         val params = WindowManager.LayoutParams(
-            dp48, dp48,
+            size, size,
             getOverlayWindowType(),
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = 20
-            y = 120
+            x = bubblePrefs.getInt(KEY_BUBBLE_X, defaultX).coerceIn(0, metrics.widthPixels - size)
+            y = bubblePrefs.getInt(KEY_BUBBLE_Y, defaultY).coerceIn(0, metrics.heightPixels - size)
         }
         bubbleLayoutParams = params
 
@@ -141,7 +151,7 @@ class OverlayViewManager(private val context: Context) {
 
         val icon = ImageView(context).apply {
             setImageResource(R.drawable.ic_launcher)
-            val pad = dpToPx(10)
+            val pad = dpToPx(12)
             setPadding(pad, pad, pad, pad)
         }
         bubble.addView(icon, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
@@ -179,6 +189,8 @@ class OverlayViewManager(private val context: Context) {
                     MotionEvent.ACTION_UP -> {
                         if (isClick) {
                             togglePanel()
+                        } else {
+                            bubblePrefs.edit().putInt(KEY_BUBBLE_X, p.x).putInt(KEY_BUBBLE_Y, p.y).apply()
                         }
                         return true
                     }
@@ -228,7 +240,7 @@ class OverlayViewManager(private val context: Context) {
     }
 
     private fun attachPanel() {
-        val width = dpToPx(380)
+        val width = dpToPx(440)
         val params = WindowManager.LayoutParams(
             width,
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -339,7 +351,7 @@ class OverlayViewManager(private val context: Context) {
                 "Ngoài trời: --°C"
             }
             setTextColor(Color.parseColor("#90A4AE"))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             setPadding(0, dpToPx(4), 0, dpToPx(12))
         }
         root.addView(outsideText)
@@ -356,7 +368,7 @@ class OverlayViewManager(private val context: Context) {
 
         // AC Toggle button
         val btnAcToggle = Button(context).apply {
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dpToPx(44))
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dpToPx(56))
             updateAcButtonAppearance(this, isAcOn == true)
             alpha = if (isAcOn == null) 0.6f else 1f
             setOnClickListener {
@@ -387,14 +399,14 @@ class OverlayViewManager(private val context: Context) {
         val lblTemp = TextView(context).apply {
             text = context.getString(R.string.overlay_temp_label)
             setTextColor(Color.WHITE)
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
         val btnTempMinus = createRoundButton("-")
         val txtTemp = TextView(context).apply {
             text = tempText()
             setTextColor(Color.parseColor("#0091FF"))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
             setTypeface(null, android.graphics.Typeface.BOLD)
             setPadding(dpToPx(12), 0, dpToPx(12), 0)
         }
@@ -437,14 +449,14 @@ class OverlayViewManager(private val context: Context) {
         val lblFan = TextView(context).apply {
             text = context.getString(R.string.overlay_fan_label)
             setTextColor(Color.WHITE)
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
         val btnFanMinus = createRoundButton("-")
         val txtFan = TextView(context).apply {
             text = fanText()
             setTextColor(Color.parseColor("#00C853"))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
             setTypeface(null, android.graphics.Typeface.BOLD)
             setPadding(dpToPx(12), 0, dpToPx(12), 0)
         }
@@ -495,7 +507,7 @@ class OverlayViewManager(private val context: Context) {
                 setColor(Color.parseColor("#2A3440"))
                 cornerRadius = dpToPx(8).toFloat()
             }
-            layoutParams = LinearLayout.LayoutParams(0, dpToPx(44), 1f).apply {
+            layoutParams = LinearLayout.LayoutParams(0, dpToPx(56), 1f).apply {
                 marginEnd = dpToPx(8)
             }
             setOnClickListener {
@@ -512,7 +524,7 @@ class OverlayViewManager(private val context: Context) {
                 setColor(Color.parseColor("#D32F2F"))
                 cornerRadius = dpToPx(8).toFloat()
             }
-            layoutParams = LinearLayout.LayoutParams(0, dpToPx(44), 1f)
+            layoutParams = LinearLayout.LayoutParams(0, dpToPx(56), 1f)
             setOnClickListener {
                 confirmAndReboot()
             }
@@ -552,7 +564,7 @@ class OverlayViewManager(private val context: Context) {
                 setColor(Color.parseColor("#2A3440"))
                 cornerRadius = dpToPx(18).toFloat()
             }
-            layoutParams = LinearLayout.LayoutParams(dpToPx(36), dpToPx(36))
+            layoutParams = LinearLayout.LayoutParams(dpToPx(52), dpToPx(52))
             setPadding(0, 0, 0, 0)
         }
     }
@@ -578,13 +590,25 @@ class OverlayViewManager(private val context: Context) {
 
         val blackout = FrameLayout(context).apply {
             setBackgroundColor(Color.BLACK)
-            // Add a faint hint that disappears or simply dismiss on click
             isClickable = true
             isFocusable = true
             setOnClickListener {
                 deactivateBlackoutMode()
             }
         }
+        // Faint hint for the first 3 s so the driver knows how to get the screen back.
+        val hint = TextView(context).apply {
+            text = "Màn hình đêm • Chạm bất kỳ đâu để thoát"
+            setTextColor(Color.parseColor("#64748B"))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+        }
+        blackout.addView(
+            hint,
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER
+            )
+        )
+        hint.animate().alpha(0f).setStartDelay(3000L).setDuration(800L).start()
 
         try {
             windowManager.addView(blackout, params)

@@ -14,7 +14,7 @@
     <!-- ======================================================== -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="60dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:layout_marginBottom="10dp">
@@ -29,8 +29,8 @@
             <!-- Car Avatar on Left Header -->
             <ImageView
                 android:id="@+id/ivHeaderCarAvatar"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:src="@drawable/img_my_ex2"
                 android:scaleType="fitCenter"
                 android:layout_marginEnd="12dp"
@@ -50,7 +50,7 @@
             <!-- Outside Temp Pill -->
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="52dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@drawable/bg_btn_inactive"
@@ -62,7 +62,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="⛅"
-                    android:textSize="15sp"
+                    android:textSize="16sp"
                     android:layout_marginEnd="6dp" />
 
                 <TextView
@@ -71,14 +71,14 @@
                     android:layout_height="wrap_content"
                     android:text="--°C"
                     android:textColor="@color/text_primary"
-                    android:textSize="14sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
             <!-- 12V Battery Pill -->
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="52dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@drawable/bg_btn_inactive"
@@ -97,7 +97,7 @@
                     android:layout_height="wrap_content"
                     android:text="-- V • Ắc quy"
                     android:textColor="@color/accent_emerald"
-                    android:textSize="13sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
@@ -106,7 +106,7 @@
         <LinearLayout
             android:id="@+id/layoutAutomationPill"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="52dp"
             android:layout_weight="1"
             android:orientation="horizontal"
             android:gravity="center"
@@ -129,7 +129,7 @@
                 android:layout_height="wrap_content"
                 android:text="Tự động hóa: Đang bật"
                 android:textColor="@color/text_emerald"
-                android:textSize="13sp"
+                android:textSize="16sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -143,7 +143,7 @@
             <!-- Wi-Fi Info -->
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="52dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@drawable/bg_btn_inactive"
@@ -168,7 +168,7 @@
                         android:layout_height="wrap_content"
                         android:text="Wi-Fi"
                         android:textColor="@color/text_primary"
-                        android:textSize="11sp"
+                        android:textSize="14sp"
                         android:textStyle="bold"
                         android:maxLines="1"
                         android:ellipsize="end" />
@@ -179,15 +179,15 @@
                         android:layout_height="wrap_content"
                         android:text="--"
                         android:textColor="@color/text_secondary"
-                        android:textSize="9sp" />
+                        android:textSize="14sp" />
                 </LinearLayout>
             </LinearLayout>
 
             <!-- App Catalog Button -->
             <ImageView
                 android:id="@+id/btnOpenCatalogHeader"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
                 android:src="@drawable/ic_store"
                 android:background="@drawable/bg_btn_inactive"
                 android:padding="9dp"
@@ -197,8 +197,8 @@
             <!-- Blackout Night Mode Button -->
             <ImageView
                 android:id="@+id/btnNightBlackout"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
                 android:src="@drawable/ic_screen_off"
                 android:background="@drawable/bg_btn_inactive"
                 android:padding="9dp"
@@ -208,8 +208,8 @@
             <!-- Settings Button -->
             <ImageView
                 android:id="@+id/btnSettings"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
                 android:src="@drawable/ic_settings"
                 android:background="@drawable/bg_btn_inactive"
                 android:padding="9dp"
@@ -321,7 +321,7 @@
                         android:layout_height="wrap_content"
                         android:text=" km/h"
                         android:textColor="@color/text_secondary"
-                        android:textSize="15sp"
+                        android:textSize="16sp"
                         android:layout_marginStart="4dp" />
                 </LinearLayout>
 
@@ -352,7 +352,7 @@
                         android:layout_height="wrap_content"
                         android:text=" ước tính"
                         android:textColor="@color/text_muted"
-                        android:textSize="12sp"
+                        android:textSize="14sp"
                         android:layout_marginStart="4dp" />
 
                     <View
@@ -397,13 +397,13 @@
                     android:layout_height="wrap_content"
                     android:text="Chế độ lái"
                     android:textColor="@color/text_secondary"
-                    android:textSize="13sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="6dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="60dp"
                     android:orientation="horizontal">
 
                     <TextView
@@ -413,7 +413,7 @@
                         android:layout_weight="1"
                         android:text="Tiết kiệm"
                         android:textColor="@color/text_secondary"
-                        android:textSize="14sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:gravity="center"
                         android:background="@drawable/bg_btn_inactive"
@@ -426,7 +426,7 @@
                         android:layout_weight="1"
                         android:text="Thoải mái"
                         android:textColor="@color/text_primary"
-                        android:textSize="14sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:gravity="center"
                         android:background="@drawable/bg_btn_active"
@@ -439,7 +439,7 @@
                         android:layout_weight="1"
                         android:text="Thể thao"
                         android:textColor="@color/text_secondary"
-                        android:textSize="14sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:gravity="center"
                         android:background="@drawable/bg_btn_inactive" />
@@ -451,14 +451,14 @@
                     android:layout_height="wrap_content"
                     android:text="Phanh tái sinh (Regen)"
                     android:textColor="@color/text_secondary"
-                    android:textSize="13sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginTop="8dp"
                     android:layout_marginBottom="6dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="60dp"
                     android:orientation="horizontal">
 
                     <TextView
@@ -468,7 +468,7 @@
                         android:layout_weight="1"
                         android:text="Thấp"
                         android:textColor="@color/text_secondary"
-                        android:textSize="14sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:gravity="center"
                         android:background="@drawable/bg_btn_inactive"
@@ -481,7 +481,7 @@
                         android:layout_weight="1"
                         android:text="Vừa"
                         android:textColor="@color/text_primary"
-                        android:textSize="14sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:gravity="center"
                         android:background="@drawable/bg_btn_active"
@@ -494,7 +494,7 @@
                         android:layout_weight="1"
                         android:text="Cao"
                         android:textColor="@color/text_secondary"
-                        android:textSize="14sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:gravity="center"
                         android:background="@drawable/bg_btn_inactive" />
@@ -516,7 +516,7 @@
                     android:layout_height="wrap_content"
                     android:text="Phím tắt cốt lõi"
                     android:textColor="@color/text_secondary"
-                    android:textSize="13sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
 
@@ -551,7 +551,7 @@
                             android:layout_height="wrap_content"
                             android:text="Tắt âm AVAS"
                             android:textColor="@color/text_primary"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -579,7 +579,7 @@
                             android:layout_height="wrap_content"
                             android:text="Auto Hold"
                             android:textColor="@color/text_secondary"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
@@ -618,7 +618,7 @@
                             android:layout_height="wrap_content"
                             android:text="Đổ đèo HDC"
                             android:textColor="@color/text_secondary"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -645,7 +645,7 @@
                             android:layout_height="wrap_content"
                             android:text="ESC OFF"
                             android:textColor="@color/text_secondary"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
@@ -680,7 +680,7 @@
                             android:layout_height="wrap_content"
                             android:text="Camera 360"
                             android:textColor="@color/text_primary"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -707,7 +707,7 @@
                             android:layout_height="wrap_content"
                             android:text="Bảo dưỡng"
                             android:textColor="@color/text_secondary"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
@@ -764,7 +764,7 @@
                             android:layout_height="wrap_content"
                             android:text="Chạy Đôi: Vietmap + YouTube"
                             android:textColor="@color/text_primary"
-                            android:textSize="15sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -772,7 +772,7 @@
                             android:layout_height="wrap_content"
                             android:text="Chia đôi 50:50 kèm thanh điều khiển nổi"
                             android:textColor="#D1FAE5"
-                            android:textSize="11sp" />
+                            android:textSize="14sp" />
                     </LinearLayout>
 
                     <TextView
@@ -780,7 +780,7 @@
                         android:layout_height="wrap_content"
                         android:text="MỞ ▶"
                         android:textColor="@color/text_primary"
-                        android:textSize="13sp"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -804,15 +804,15 @@
                         android:layout_weight="1"
                         android:text="🎵 Chưa có nội dung đang phát"
                         android:textColor="@color/text_primary"
-                        android:textSize="13sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:maxLines="1"
                         android:ellipsize="end" />
 
                     <ImageView
                         android:id="@+id/btnMediaPrev"
-                        android:layout_width="38dp"
-                        android:layout_height="38dp"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
                         android:src="@drawable/ic_prev"
                         android:background="@drawable/bg_btn_inactive"
                         android:padding="9dp"
@@ -821,8 +821,8 @@
 
                     <ImageView
                         android:id="@+id/btnMediaPlayPause"
-                        android:layout_width="38dp"
-                        android:layout_height="38dp"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
                         android:src="@drawable/ic_play"
                         android:background="@drawable/bg_btn_active"
                         android:padding="9dp"
@@ -831,8 +831,8 @@
 
                     <ImageView
                         android:id="@+id/btnMediaNext"
-                        android:layout_width="38dp"
-                        android:layout_height="38dp"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
                         android:src="@drawable/ic_next"
                         android:background="@drawable/bg_btn_inactive"
                         android:padding="9dp"
@@ -873,7 +873,7 @@
                         android:layout_height="wrap_content"
                         android:text="15"
                         android:textColor="@color/text_primary"
-                        android:textSize="13sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:gravity="end" />
                 </LinearLayout>
@@ -894,14 +894,14 @@
                     android:layout_height="wrap_content"
                     android:text="Trạm Điều Hòa Thông Minh"
                     android:textColor="@color/text_secondary"
-                    android:textSize="13sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
 
                 <!-- Row 1: AC, AUTO, Recirc, Quick Cool (48dp height) -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="56dp"
                     android:orientation="horizontal"
                     android:layout_marginBottom="10dp">
 
@@ -912,7 +912,7 @@
                         android:layout_weight="1"
                         android:text="A/C"
                         android:textColor="@color/text_primary"
-                        android:textSize="14sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:gravity="center"
                         android:background="@drawable/bg_btn_active"
@@ -926,7 +926,7 @@
                         android:layout_weight="1"
                         android:text="AUTO"
                         android:textColor="@color/text_secondary"
-                        android:textSize="14sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:gravity="center"
                         android:background="@drawable/bg_btn_inactive"
@@ -939,7 +939,7 @@
                         android:layout_weight="1.1"
                         android:text="Gió trong"
                         android:textColor="@color/text_primary"
-                        android:textSize="13sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:gravity="center"
                         android:background="@drawable/bg_btn_active"
@@ -962,7 +962,7 @@
                             android:layout_height="wrap_content"
                             android:text="⚡ Làm mát nhanh"
                             android:textColor="#FFFFFF"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
@@ -995,7 +995,7 @@
                                 android:layout_weight="1"
                                 android:text="Nhiệt độ"
                                 android:textColor="@color/text_secondary"
-                                android:textSize="13sp" />
+                                android:textSize="16sp" />
 
                             <TextView
                                 android:id="@+id/tvClimateTargetTemp"
@@ -1009,14 +1009,14 @@
 
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="48dp"
+                            android:layout_height="56dp"
                             android:orientation="horizontal"
                             android:gravity="center_vertical">
 
                             <Button
                                 android:id="@+id/btnTempMinus"
-                                android:layout_width="48dp"
-                                android:layout_height="48dp"
+                                android:layout_width="56dp"
+                                android:layout_height="56dp"
                                 android:text="-"
                                 android:textColor="@color/text_primary"
                                 android:textSize="22sp"
@@ -1038,8 +1038,8 @@
 
                             <Button
                                 android:id="@+id/btnTempPlus"
-                                android:layout_width="48dp"
-                                android:layout_height="48dp"
+                                android:layout_width="56dp"
+                                android:layout_height="56dp"
                                 android:text="+"
                                 android:textColor="@color/text_primary"
                                 android:textSize="22sp"
@@ -1072,7 +1072,7 @@
                                 android:layout_weight="1"
                                 android:text="Quạt gió"
                                 android:textColor="@color/text_secondary"
-                                android:textSize="13sp" />
+                                android:textSize="16sp" />
 
                             <TextView
                                 android:id="@+id/tvClimateFanSpeed"
@@ -1086,14 +1086,14 @@
 
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="48dp"
+                            android:layout_height="56dp"
                             android:orientation="horizontal"
                             android:gravity="center_vertical">
 
                             <Button
                                 android:id="@+id/btnFanMinus"
-                                android:layout_width="48dp"
-                                android:layout_height="48dp"
+                                android:layout_width="56dp"
+                                android:layout_height="56dp"
                                 android:text="-"
                                 android:textColor="@color/text_primary"
                                 android:textSize="22sp"
@@ -1115,8 +1115,8 @@
 
                             <Button
                                 android:id="@+id/btnFanPlus"
-                                android:layout_width="48dp"
-                                android:layout_height="48dp"
+                                android:layout_width="56dp"
+                                android:layout_height="56dp"
                                 android:text="+"
                                 android:textColor="@color/text_primary"
                                 android:textSize="22sp"
@@ -1132,7 +1132,7 @@
                 <!-- Row 3: 4 Vents & Defrost Buttons (Height 48dp) -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="56dp"
                     android:orientation="horizontal">
 
                     <LinearLayout
@@ -1158,7 +1158,7 @@
                             android:layout_height="wrap_content"
                             android:text="Gió mặt"
                             android:textColor="@color/text_primary"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -1185,7 +1185,7 @@
                             android:layout_height="wrap_content"
                             android:text="Gió chân"
                             android:textColor="@color/text_secondary"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -1212,7 +1212,7 @@
                             android:layout_height="wrap_content"
                             android:text="Sấy trước"
                             android:textColor="@color/text_secondary"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -1238,7 +1238,7 @@
                             android:layout_height="wrap_content"
                             android:text="Sấy sau"
                             android:textColor="@color/text_secondary"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
@@ -1276,7 +1276,7 @@
                         android:layout_weight="1"
                         android:text="Áp suất lốp &amp; Cửa kính"
                         android:textColor="@color/text_secondary"
-                        android:textSize="13sp"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -1285,7 +1285,7 @@
                         android:layout_height="wrap_content"
                         android:text="Cập nhật 21:41"
                         android:textColor="@color/text_muted"
-                        android:textSize="10sp" />
+                        android:textSize="14sp" />
                 </LinearLayout>
 
                 <!-- Center RelativeLayout with Enlarged Car & Flanking TPMS/Windows -->
@@ -1320,7 +1320,7 @@
                             android:layout_height="wrap_content"
                             android:text="-- kPa"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -1329,7 +1329,7 @@
                             android:layout_height="wrap_content"
                             android:text="--°C"
                             android:textColor="@color/text_muted"
-                            android:textSize="11sp" />
+                            android:textSize="14sp" />
                     </LinearLayout>
 
                     <!-- Front-Right TPMS (Top-Right) -->
@@ -1349,7 +1349,7 @@
                             android:layout_height="wrap_content"
                             android:text="-- kPa"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -1358,7 +1358,7 @@
                             android:layout_height="wrap_content"
                             android:text="--°C"
                             android:textColor="@color/text_muted"
-                            android:textSize="11sp" />
+                            android:textSize="14sp" />
                     </LinearLayout>
 
                     <!-- Left Windows Indicator (Middle Left) -->
@@ -1375,7 +1375,7 @@
                             android:layout_height="wrap_content"
                             android:text="Kính T1: 0%"
                             android:textColor="@color/accent_emerald"
-                            android:textSize="11sp"
+                            android:textSize="14sp"
                             android:textStyle="bold"
                             android:background="@drawable/bg_btn_inactive"
                             android:paddingStart="6dp"
@@ -1390,7 +1390,7 @@
                             android:layout_height="wrap_content"
                             android:text="Kính S1: 0%"
                             android:textColor="@color/accent_emerald"
-                            android:textSize="11sp"
+                            android:textSize="14sp"
                             android:textStyle="bold"
                             android:background="@drawable/bg_btn_inactive"
                             android:paddingStart="6dp"
@@ -1414,7 +1414,7 @@
                             android:layout_height="wrap_content"
                             android:text="Kính P1: 0%"
                             android:textColor="@color/accent_emerald"
-                            android:textSize="11sp"
+                            android:textSize="14sp"
                             android:textStyle="bold"
                             android:background="@drawable/bg_btn_inactive"
                             android:paddingStart="6dp"
@@ -1429,7 +1429,7 @@
                             android:layout_height="wrap_content"
                             android:text="Kính P2: 0%"
                             android:textColor="@color/accent_emerald"
-                            android:textSize="11sp"
+                            android:textSize="14sp"
                             android:textStyle="bold"
                             android:background="@drawable/bg_btn_inactive"
                             android:paddingStart="6dp"
@@ -1454,7 +1454,7 @@
                             android:layout_height="wrap_content"
                             android:text="-- kPa"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -1463,7 +1463,7 @@
                             android:layout_height="wrap_content"
                             android:text="--°C"
                             android:textColor="@color/text_muted"
-                            android:textSize="11sp" />
+                            android:textSize="14sp" />
                     </LinearLayout>
 
                     <!-- Rear-Right TPMS (Bottom-Right) -->
@@ -1483,7 +1483,7 @@
                             android:layout_height="wrap_content"
                             android:text="-- kPa"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -1492,7 +1492,7 @@
                             android:layout_height="wrap_content"
                             android:text="--°C"
                             android:textColor="@color/text_muted"
-                            android:textSize="11sp" />
+                            android:textSize="14sp" />
                     </LinearLayout>
                 </RelativeLayout>
             </LinearLayout>
@@ -1512,14 +1512,14 @@
                     android:layout_height="wrap_content"
                     android:text="Điều khiển Kính"
                     android:textColor="@color/text_secondary"
-                    android:textSize="13sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
 
                 <!-- 3 Window Actions Row (48dp height) -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="64dp"
                     android:orientation="horizontal"
                     android:layout_marginBottom="8dp">
 
@@ -1530,7 +1530,7 @@
                         android:layout_weight="1"
                         android:text="Đóng kín (0%)"
                         android:textColor="@color/text_primary"
-                        android:textSize="13sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:gravity="center"
                         android:background="@drawable/bg_btn_inactive"
@@ -1543,7 +1543,7 @@
                         android:layout_weight="1"
                         android:text="Hé thoáng (15%)"
                         android:textColor="@color/accent_emerald"
-                        android:textSize="13sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:gravity="center"
                         android:background="@drawable/bg_btn_inactive"
@@ -1556,7 +1556,7 @@
                         android:layout_weight="1"
                         android:text="Hạ hết (100%)"
                         android:textColor="@color/text_primary"
-                        android:textSize="13sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:gravity="center"
                         android:background="@drawable/bg_btn_inactive" />
@@ -1565,7 +1565,7 @@
                 <!-- Trunk & Speed Limit Sign Row (48dp height) -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="56dp"
                     android:gravity="center"
                     android:orientation="horizontal">
 
@@ -1594,15 +1594,15 @@
                             android:layout_height="wrap_content"
                             android:text="Mở cốp sau"
                             android:textColor="@color/text_primary"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
                     <!-- Speed Limit Sign Badge -->
                     <LinearLayout
                         android:id="@+id/btnSpeedLimitSign"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
                         android:orientation="horizontal"
                         android:gravity="center"
                         android:background="@drawable/bg_speed_limit"

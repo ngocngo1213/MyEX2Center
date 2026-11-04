@@ -28,8 +28,8 @@
             android:focusable="true">
 
             <ImageView
-                android:layout_width="38dp"
-                android:layout_height="38dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:src="@drawable/ic_store"
                 android:background="@drawable/bg_btn_active"
                 android:padding="8dp"
@@ -53,7 +53,7 @@
                     android:layout_height="wrap_content"
                     android:text="Cài đặt và cập nhật ứng dụng cho xe"
                     android:textColor="@color/text_secondary"
-                    android:textSize="11sp" />
+                    android:textSize="14sp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -65,7 +65,7 @@
         <!-- Available Storage Pill -->
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="38dp"
+            android:layout_height="48dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:background="@drawable/bg_btn_inactive"
@@ -77,7 +77,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="💾"
-                android:textSize="12sp"
+                android:textSize="14sp"
                 android:layout_marginEnd="6dp" />
 
             <TextView
@@ -86,14 +86,14 @@
                 android:layout_height="wrap_content"
                 android:text="Bộ nhớ trống: -- GB"
                 android:textColor="@color/accent_emerald"
-                android:textSize="11sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
         <!-- Wi-Fi Status Pill -->
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="38dp"
+            android:layout_height="48dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:background="@drawable/bg_btn_inactive"
@@ -118,7 +118,7 @@
                     android:layout_height="wrap_content"
                     android:text="Wi-Fi"
                     android:textColor="@color/text_primary"
-                    android:textSize="11sp"
+                    android:textSize="14sp"
                     android:textStyle="bold"
                     android:maxLines="1"
                     android:ellipsize="end" />
@@ -129,7 +129,7 @@
                     android:layout_height="wrap_content"
                     android:text="--"
                     android:textColor="@color/text_secondary"
-                    android:textSize="9sp" />
+                    android:textSize="14sp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -137,7 +137,7 @@
         <LinearLayout
             android:id="@+id/btnInstallFromStorage"
             android:layout_width="wrap_content"
-            android:layout_height="38dp"
+            android:layout_height="48dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:background="@drawable/bg_btn_inactive"
@@ -158,15 +158,15 @@
                 android:layout_height="wrap_content"
                 android:text="Cài từ USB / Máy"
                 android:textColor="@color/accent_emerald"
-                android:textSize="11sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
         <!-- Refresh Button -->
         <ImageView
             android:id="@+id/btnRefreshCatalog"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:src="@drawable/ic_refresh"
             android:background="@drawable/bg_btn_inactive"
             android:padding="9dp"
@@ -188,7 +188,7 @@
         android:layout_gravity="center"
         android:layout_marginTop="32dp"
         android:textColor="@color/text_muted"
-        android:textSize="14sp"
+        android:textSize="16sp"
         android:visibility="gone" />
 
     <!-- 4x2 Grid of Applications -->

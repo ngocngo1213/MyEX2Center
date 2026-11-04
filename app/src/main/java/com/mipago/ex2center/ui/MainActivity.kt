@@ -520,11 +520,12 @@ class MainActivity : Activity() {
         tvTpmsRrKpa.text = if (tpms.rrKpa != null) "${tpms.rrKpa} kPa" else "-- kPa"
         tvTpmsRrTemp.text = if (tpms.rrTemp != null) "${tpms.rrTemp}°C" else "--°C"
 
+        setTpmsVisible(tpms.flKpa != null || tpms.frKpa != null || tpms.rlKpa != null || tpms.rrKpa != null)
         if (tpms.isValid) {
             val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
             tvTpmsUpdated.text = "Cập nhật ${sdf.format(Date())}"
         } else {
-            tvTpmsUpdated.text = "Xe chưa cung cấp dữ liệu TPMS"
+            tvTpmsUpdated.text = "Xe không cung cấp dữ liệu áp suất lốp"
         }
 
         // Window Positions (real VHAL readback only)
@@ -550,9 +551,16 @@ class MainActivity : Activity() {
         tvTpmsRrKpa.text = "-- kPa"
         tvTpmsRrTemp.text = "--°C"
         tvTpmsUpdated.text = "Chưa kết nối xe"
+        setTpmsVisible(false)
         updateWindowPositionUI(arrayOfNulls(4))
         lastControls = ControlSnapshot()
         renderControls()
+    }
+
+    /** TPMS chips are hidden (not shown as permanent "--") when the car provides no tire data. */
+    private fun setTpmsVisible(visible: Boolean) {
+        val state = if (visible) View.VISIBLE else View.INVISIBLE // keep the car image centred
+        listOf(tvTpmsFlKpa, tvTpmsFrKpa, tvTpmsRlKpa, tvTpmsRrKpa).forEach { (it.parent as? View)?.visibility = state }
     }
 
     /** Runs on [telemetryExecutor]. */
@@ -675,6 +683,23 @@ class MainActivity : Activity() {
             true -> "AVAS: Đã tắt âm"
             false -> "AVAS: Đang bật"
         }
+
+        // "Sending" state: a control whose command is still awaiting the car's confirmation
+        // is shown slightly dimmed, so the driver can tell requested from confirmed.
+        fun sending(view: View, key: String) {
+            if (pending.isPending(key)) view.alpha = 0.7f
+        }
+        sending(btnAcCompressor, K_AC)
+        sending(btnRecirc, K_RECIRC)
+        sending(btnDefrostFront, K_DEFROST_FRONT)
+        sending(btnDefrostRear, K_DEFROST_REAR)
+        sending(btnVentFace, K_VENT)
+        sending(btnVentFloor, K_VENT)
+        sending(btnAvasToggle, K_AVAS)
+        listOf(btnDriveEco, btnDriveComfort, btnDriveSport).forEach { sending(it, K_DRIVE) }
+        listOf(btnRegenLow, btnRegenMid, btnRegenHigh).forEach { sending(it, K_REGEN) }
+        tvClimateTargetTemp.alpha = if (pending.isPending(K_TEMP)) 0.7f else 1f
+        tvClimateFanSpeed.alpha = if (pending.isPending(K_FAN)) 0.7f else 1f
     }
 
     /** null = unknown → neutral + dimmed, so the driver never sees a guessed state. */

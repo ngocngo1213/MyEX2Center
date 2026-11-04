@@ -156,7 +156,7 @@ class AppCatalogActivity : Activity() {
 
     private fun setupRecyclerView() {
         adapter = CatalogRecyclerAdapter(appList)
-        rvAppCatalog.layoutManager = GridLayoutManager(this, 3)
+        rvAppCatalog.layoutManager = GridLayoutManager(this, 2) // 2 large cards per row: easier to read and hit in the car
         rvAppCatalog.adapter = adapter
         // Progress changes are applied in place; skip the default change cross-fade.
         (rvAppCatalog.itemAnimator as? androidx.recyclerview.widget.SimpleItemAnimator)?.supportsChangeAnimations = false

@@ -22,10 +22,15 @@
 | `accent_secondary` | `#F59E0B` | Cảnh báo, Valet, ESC OFF, "Làm mát nhanh" |
 | `accent_danger` | `#EF4444` | Nguy hiểm/xóa, 12V < 12.0V |
 
-**Quy tắc Driver-Centric:**
-- Vùng chạm tối thiểu 48–54dp (nút +/- nhiệt độ & quạt gió 48dp).
-- Chữ nhãn ≥ 13–14sp; tốc độ 48sp; gear đang chọn nền Emerald, chữ trắng `#FFFFFF`.
-- Nút Active luôn chữ trắng (không dùng chữ xám mờ).
+**Quy tắc Driver-Centric** (màn 1920×1080, 1dp = 1px, nhìn từ ~75 cm):
+- Cỡ chữ tối thiểu **14sp**; nhãn nút **16sp**; giá trị chính 22–48sp. Không dùng 9–13sp.
+- Vùng chạm: header 52dp (thanh header 60dp), chế độ lái / Regen 60dp, media 56dp, điều hòa (hàng nút, +/-) 56dp, hàng kính 64dp. Nút nổi 64dp.
+- Gear đang chọn nền Emerald, chữ trắng; nút Active luôn chữ trắng.
+- **4 trạng thái nút điều khiển xe:** chưa biết (mờ 0.6, hiện `--`) · đang gửi (mờ 0.7 tới khi xe xác nhận) · active (Emerald, chữ trắng) · lỗi (toast "Xe không nhận lệnh: …", trở về trạng thái thật). Bị chặn do không ở số P → toast lý do.
+- Ô TPMS bị ẩn khi xe không cung cấp dữ liệu lốp (không hiện `-- kPa` cố định).
+- Nút nổi mặc định ở mép phải, phần dưới màn hình (không đè cần số/HUD); vị trí kéo được ghi nhớ.
+- Màn hình đêm hiện gợi ý "Chạm bất kỳ đâu để thoát" 3 giây rồi mờ dần.
+- Kho ứng dụng: lưới **2 cột** thẻ lớn, chữ 14–20sp, nút 56dp.
 
 ---
 
@@ -48,7 +53,7 @@
 - **Khởi động lại:** chỉ cho phép ở số P và xe đứng yên (`ParkGate`, kiểm tra cả trước và sau hộp thoại). `confirmAndReboot()` hiện hộp thoại xác nhận overlay (`TYPE_APPLICATION_OVERLAY`) với chuỗi `confirm_reboot_title`/`confirm_reboot_msg`; chỉ reboot khi xác nhận (`executeReboot()`).
 
 ### Module 3: Wi-Fi App Catalog & Installer — `AppCatalogActivity.kt`, `AppRepository.kt`, `PackageInstallerHelper.kt`
-- Lưới 3 cột, 4 mục:
+- Lưới 2 cột, 4 mục:
   1. **MyEX2Center** (`com.mipago.ex2center`, `self: true`) — tự cập nhật qua GitHub Releases; không có nút gỡ; app tự khởi động lại, `BootReceiver` (`MY_PACKAGE_REPLACED`) xác nhận.
   2. **VIETMAP LIVE** (`vn.vietmap.live`, `.xapk`, chỉ có split `armeabi-v7a`) — chưa phát hành qua mạng (`apkUrl` rỗng, không tự host bản APKPure) → nút "Cài từ USB / Máy".
   3. **SmartTube** (`org.smarttube.stable` 32.68, bản arm64 chính thức từ `yuliskov/SmartTube`, MIT).
