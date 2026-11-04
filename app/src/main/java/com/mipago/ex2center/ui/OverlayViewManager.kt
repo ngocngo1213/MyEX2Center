@@ -42,6 +42,8 @@ class OverlayViewManager(private val context: Context) {
         const val TAG = "OverlayViewManager"
         private const val BLACKOUT_GEAR_CHECK_MS = 500L
         private const val BUBBLE_SIZE_DP = 64
+        private const val BUBBLE_TOP_CLEARANCE_DP = 112   // header band of every screen
+        private const val BUBBLE_BOTTOM_CLEARANCE_DP = 96 // gesture bar / bottom buttons
         private const val BUBBLE_PREFS = "ex2_overlay"
         private const val KEY_BUBBLE_X = "bubble_x"
         private const val KEY_BUBBLE_Y = "bubble_y"
@@ -125,7 +127,7 @@ class OverlayViewManager(private val context: Context) {
         // Default: right edge, lower third — clear of the gear selector / HUD and of the
         // top status bar of navigation apps. A dragged position is remembered.
         val defaultX = metrics.widthPixels - size - dpToPx(12)
-        val defaultY = metrics.heightPixels - size - dpToPx(150)
+        val defaultY = metrics.heightPixels - size - dpToPx(152)
         val bubblePrefs = context.getSharedPreferences(BUBBLE_PREFS, Context.MODE_PRIVATE)
         val params = WindowManager.LayoutParams(
             size, size,
@@ -134,8 +136,9 @@ class OverlayViewManager(private val context: Context) {
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = bubblePrefs.getInt(KEY_BUBBLE_X, defaultX).coerceIn(0, metrics.widthPixels - size)
-            y = bubblePrefs.getInt(KEY_BUBBLE_Y, defaultY).coerceIn(0, metrics.heightPixels - size)
+            val saved = snapToEdge(bubblePrefs.getInt(KEY_BUBBLE_X, defaultX), bubblePrefs.getInt(KEY_BUBBLE_Y, defaultY), size)
+            x = saved.first
+            y = saved.second
         }
         bubbleLayoutParams = params
 
@@ -157,7 +160,7 @@ class OverlayViewManager(private val context: Context) {
         val icon = ImageView(context).apply {
             setImageResource(R.drawable.ic_bubble_ex2)
             scaleType = ImageView.ScaleType.FIT_CENTER
-            val pad = dpToPx(13)
+            val pad = dpToPx(16)
             setPadding(pad, pad, pad, pad)
             contentDescription = "EX2 Center – điều khiển nhanh"
         }
@@ -197,6 +200,11 @@ class OverlayViewManager(private val context: Context) {
                         if (isClick) {
                             togglePanel()
                         } else {
+                            // Snap to the nearest side edge and keep clear of header/gesture bar.
+                            val (sx, sy) = snapToEdge(p.x, p.y, size)
+                            p.x = sx
+                            p.y = sy
+                            try { windowManager.updateViewLayout(bubble, p) } catch (_: Throwable) {}
                             bubblePrefs.edit().putInt(KEY_BUBBLE_X, p.x).putInt(KEY_BUBBLE_Y, p.y).apply()
                         }
                         return true
@@ -213,6 +221,20 @@ class OverlayViewManager(private val context: Context) {
         } catch (t: Throwable) {
             Log.e(TAG, "Error displaying bubble: ${t.message}", t)
         }
+    }
+
+    /**
+     * Bubble placement for a landscape tablet: always docked to the left or right edge
+     * (12dp inset), never inside the top header band (where every screen has its title,
+     * back and action buttons) nor over the bottom gesture area.
+     */
+    private fun snapToEdge(x: Int, y: Int, size: Int): Pair<Int, Int> {
+        val m = context.resources.displayMetrics
+        val inset = dpToPx(12)
+        val minY = dpToPx(BUBBLE_TOP_CLEARANCE_DP)
+        val maxY = (m.heightPixels - size - dpToPx(BUBBLE_BOTTOM_CLEARANCE_DP)).coerceAtLeast(minY)
+        val snappedX = if (x + size / 2 < m.widthPixels / 2) inset else m.widthPixels - size - inset
+        return snappedX to y.coerceIn(minY, maxY)
     }
 
     fun hideBubble() {
@@ -371,7 +393,7 @@ class OverlayViewManager(private val context: Context) {
             setPadding(dpToPx(12), dpToPx(12), dpToPx(12), dpToPx(12))
             background = GradientDrawable().apply {
                 setColor(context.getColor(R.color.card_inner_surface))
-                cornerRadius = dpToPx(10).toFloat()
+                cornerRadius = dpToPx(12).toFloat()
             }
         }
 
@@ -403,7 +425,7 @@ class OverlayViewManager(private val context: Context) {
         val tempRow = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dpToPx(10), 0, dpToPx(10))
+            setPadding(0, dpToPx(8), 0, dpToPx(8))
         }
         val lblTemp = TextView(context).apply {
             text = context.getString(R.string.overlay_temp_label)
@@ -453,7 +475,7 @@ class OverlayViewManager(private val context: Context) {
         val fanRow = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dpToPx(4), 0, dpToPx(6))
+            setPadding(0, dpToPx(8), 0, dpToPx(8))
         }
         val lblFan = TextView(context).apply {
             text = context.getString(R.string.overlay_fan_label)
@@ -571,9 +593,9 @@ class OverlayViewManager(private val context: Context) {
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             background = GradientDrawable().apply {
                 setColor(context.getColor(R.color.btn_inactive))
-                cornerRadius = dpToPx(18).toFloat()
+                cornerRadius = dpToPx(28).toFloat()
             }
-            layoutParams = LinearLayout.LayoutParams(dpToPx(52), dpToPx(52))
+            layoutParams = LinearLayout.LayoutParams(dpToPx(56), dpToPx(56))
             setPadding(0, 0, 0, 0)
         }
     }
@@ -661,8 +683,9 @@ class OverlayViewManager(private val context: Context) {
     fun showSplitControlBar() {
         if (splitControlView != null) return
 
-        val barW = dpToPx(48)
-        val barH = dpToPx(230)
+        // 4 icon buttons of 56dp + 12dp gaps + 8dp padding (8pt grid)
+        val barW = dpToPx(72)
+        val barH = dpToPx(288)
 
         val params = WindowManager.LayoutParams(
             barW, barH,
@@ -685,9 +708,9 @@ class OverlayViewManager(private val context: Context) {
                 setColor(context.getColor(R.color.overlay_bg)) // Obsidian semi-transparent
                 setStroke(dpToPx(1), context.getColor(R.color.accent_primary)) // Emerald border
             }
-            val pad = dpToPx(6)
-            setPadding(pad, dpToPx(10), pad, dpToPx(10))
-            elevation = dpToPx(10).toFloat()
+            val pad = dpToPx(8)
+            setPadding(pad, dpToPx(8), pad, dpToPx(0))
+            elevation = dpToPx(8).toFloat()
         }
 
         fun createPillButton(iconRes: Int, colorRes: Int, label: String, onClick: () -> Unit): ImageView {
@@ -695,10 +718,10 @@ class OverlayViewManager(private val context: Context) {
                 setImageResource(iconRes)
                 setColorFilter(context.getColor(colorRes))
                 contentDescription = label
-                val pad = dpToPx(11)
+                val pad = dpToPx(16)
                 setPadding(pad, pad, pad, pad)
-                val btnSize = dpToPx(48)
-                layoutParams = LinearLayout.LayoutParams(btnSize, btnSize).apply { bottomMargin = dpToPx(8) }
+                val btnSize = dpToPx(56)
+                layoutParams = LinearLayout.LayoutParams(btnSize, btnSize).apply { bottomMargin = dpToPx(12) }
                 background = GradientDrawable().apply {
                     shape = GradientDrawable.OVAL
                     setColor(context.getColor(R.color.btn_inactive))

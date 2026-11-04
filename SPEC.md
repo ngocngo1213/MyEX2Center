@@ -24,7 +24,8 @@
 
 **Quy tắc Driver-Centric** (màn 1920×1080, 1dp = 1px, nhìn từ ~75 cm):
 - Cỡ chữ tối thiểu **14sp**; nhãn nút **16sp**; giá trị chính 22–48sp. Không dùng 9–13sp.
-- Vùng chạm: header 52dp (thanh header 60dp), chế độ lái / Regen 60dp, media 56dp, điều hòa (hàng nút, +/-) 56dp, hàng kính 64dp. Nút nổi 64dp.
+- **Lưới 8pt** (`res/values/dimens.xml`): mọi khoảng cách/kích thước là bội số của 8dp (4 và 12 cho chi tiết/khe giữa nút). Vùng chạm tối thiểu 48dp, nút dùng khi lái ≥ 56dp, nút chính 64dp, khe giữa các nút ≥ 8dp (12dp cho nút điều khiển xe). Chi tiết đo trước/sau: `docs/UI_AUDIT_8PT.md`.
+- Vùng chạm: header 56dp (thanh 64dp), chế độ lái / Regen 64dp, điều hòa (hàng nút, +/−) 64dp, kính 64dp, media 56dp, thanh trượt 56dp (rãnh 8dp, núm 28dp). Tốc độ 72sp. Nút nổi 64dp, hút về mép trái/phải, tránh dải header 112dp và vùng cử chỉ 96dp.
 - Gear đang chọn nền Emerald, chữ trắng; nút Active luôn chữ trắng.
 - **4 trạng thái nút điều khiển xe:** chưa biết (mờ 0.6, hiện `--`) · đang gửi (mờ 0.7 tới khi xe xác nhận) · active (Emerald, chữ trắng) · lỗi (toast "Xe không nhận lệnh: …", trở về trạng thái thật). Bị chặn do không ở số P → toast lý do.
 - Ô TPMS bị ẩn khi xe không cung cấp dữ liệu lốp (không hiện `-- kPa` cố định).

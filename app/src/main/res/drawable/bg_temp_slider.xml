@@ -8,5 +8,5 @@
         android:centerColor="#22C55E"
         android:endColor="#EF4444" />
     <corners android:radius="4dp" />
-    <size android:height="6dp" />
+    <size android:height="8dp" />
 </shape>

@@ -133,14 +133,14 @@ class SettingsActivity : Activity() {
         val back = text("‹  Quay lại", 18f, R.color.text_primary, bold = true).apply {
             setBackgroundResource(R.drawable.bg_btn_inactive)
             gravity = Gravity.CENTER
-            setPadding(dp(20), 0, dp(24), 0)
+            setPadding(dp(24), 0, dp(24), 0)
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(56))
             setOnClickListener { finish() }
         }
         top.addView(back)
         top.addView(text("Cài đặt", 28f, R.color.text_primary, bold = true).apply {
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                .apply { marginStart = dp(20) }
+                .apply { marginStart = dp(24) }
         })
         root.addView(top)
 
@@ -151,8 +151,8 @@ class SettingsActivity : Activity() {
         }
         val left = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val right = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        columns.addView(left, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = dp(10) })
-        columns.addView(right, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = dp(10) })
+        columns.addView(left, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = dp(8) })
+        columns.addView(right, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = dp(8) })
 
         left.addView(profileSection())
         left.addView(appearanceSection())
@@ -172,14 +172,14 @@ class SettingsActivity : Activity() {
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundResource(R.drawable.bg_card)
-            setPadding(dp(22), dp(18), dp(22), dp(10))
+            setPadding(dp(24), dp(16), dp(24), dp(8))
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                 .apply { bottomMargin = dp(16) }
         }
         val header = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, 0, 0, dp(6))
+            setPadding(0, 0, 0, dp(8))
         }
         header.addView(ImageView(this).apply {
             setImageResource(iconRes)
@@ -193,7 +193,9 @@ class SettingsActivity : Activity() {
 
     private fun divider() = View(this).apply {
         setBackgroundColor(color(R.color.surface_stroke))
+        // 4dp air above and below the hairline: adjacent row targets stay >= 8dp apart.
         layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(1))
+            .apply { topMargin = dp(4); bottomMargin = dp(4) }
     }
 
     /** Title + subtitle on the left, [trailing] on the right; the whole row is the touch target. */
@@ -201,8 +203,8 @@ class SettingsActivity : Activity() {
         val rowView = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            minimumHeight = dp(76)
-            setPadding(0, dp(10), 0, dp(10))
+            minimumHeight = dp(80)
+            setPadding(0, dp(8), 0, dp(8))
             if (onClick != null) {
                 isClickable = true
                 isFocusable = true
@@ -213,7 +215,7 @@ class SettingsActivity : Activity() {
         texts.addView(text(title, 20f, R.color.text_primary, bold = true))
         val sub = text(subtitle ?: "", 16f, R.color.text_secondary).apply {
             visibility = if (subtitle == null) View.GONE else View.VISIBLE
-            setPadding(0, dp(2), 0, 0)
+            setPadding(0, dp(4), 0, 0)
         }
         texts.addView(sub)
         rowView.addView(texts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
@@ -237,6 +239,11 @@ class SettingsActivity : Activity() {
             // the car / Wi-Fi state must never write back — a replayed "false" would turn off
             // the head unit's Wi-Fi.
             setOnClickListener { onChange(isChecked) }
+            // The whole row is the touch target: the 32dp switch itself takes no touches, so
+            // there is no small target inside a big one. (After setOnClickListener, which
+            // re-enables clickable.) Row taps call performClick(), which still toggles.
+            isClickable = false
+            isFocusable = false
         }
         val (rowView, sub) = row(title, subtitle, sw) { sw.performClick() }
         if (addDivider && parent.childCount > 1) parent.addView(divider())
@@ -262,10 +269,10 @@ class SettingsActivity : Activity() {
         val head = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(10), 0, dp(14))
+            setPadding(0, dp(8), 0, dp(16))
         }
         ivAvatar = ImageView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(dp(88), dp(88)).apply { marginEnd = dp(18) }
+            layoutParams = LinearLayout.LayoutParams(dp(88), dp(88)).apply { marginEnd = dp(16) }
             setBackgroundResource(R.drawable.bg_btn_inactive)
             setOnClickListener { pickPhoto() }
         }
@@ -289,10 +296,10 @@ class SettingsActivity : Activity() {
 
     private fun appearanceSection(): View {
         val card = section("Giao diện", R.drawable.ic_brightness)
-        card.addView(text("Chế độ hiển thị", 16f, R.color.text_secondary).apply { setPadding(0, dp(6), 0, dp(10)) })
+        card.addView(text("Chế độ hiển thị", 16f, R.color.text_secondary).apply { setPadding(0, dp(8), 0, dp(8)) })
         val seg = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            setPadding(0, 0, 0, dp(14))
+            setPadding(0, 0, 0, dp(16))
         }
         val current = ThemeManager.getMode(this)
         listOf(ThemeManager.MODE_SYSTEM, ThemeManager.MODE_LIGHT, ThemeManager.MODE_DARK).forEachIndexed { i, mode ->
@@ -301,7 +308,7 @@ class SettingsActivity : Activity() {
                 gravity = Gravity.CENTER
                 setBackgroundResource(if (active) R.drawable.bg_btn_active else R.drawable.bg_btn_inactive)
                 if (active) setTextColor(0xFFFFFFFF.toInt())
-                layoutParams = LinearLayout.LayoutParams(0, dp(60), 1f).apply { if (i > 0) marginStart = dp(10) }
+                layoutParams = LinearLayout.LayoutParams(0, dp(64), 1f).apply { if (i > 0) marginStart = dp(12) }
                 setOnClickListener { applyTheme(mode) }
             })
         }

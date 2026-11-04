@@ -6,16 +6,16 @@
     android:background="@color/bg_dark"
     android:paddingStart="20dp"
     android:paddingEnd="20dp"
-    android:paddingTop="14dp"
-    android:paddingBottom="24dp">
+    android:paddingTop="@dimen/space_16"
+    android:paddingBottom="@dimen/space_24">
 
     <!-- Top Action Bar -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="52dp"
+        android:layout_height="56dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="12dp">
+        android:layout_marginBottom="@dimen/space_12">
 
         <!-- Left: Back / Store Title Container -->
         <LinearLayout
@@ -33,8 +33,8 @@
                 android:src="@drawable/ic_store"
                 android:tint="#FFFFFF"
                 android:background="@drawable/bg_btn_active"
-                android:padding="11dp"
-                android:layout_marginEnd="12dp" />
+                android:padding="@dimen/space_12"
+                android:layout_marginEnd="@dimen/space_12" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -66,20 +66,20 @@
         <!-- Available Storage Pill -->
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
+            android:layout_height="@dimen/touch_drive"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:background="@drawable/bg_btn_inactive"
-            android:paddingStart="12dp"
-            android:paddingEnd="14dp"
-            android:layout_marginEnd="10dp">
+            android:paddingStart="@dimen/space_12"
+            android:paddingEnd="@dimen/space_16"
+            android:layout_marginEnd="@dimen/space_8">
 
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:src="@drawable/ic_storage"
                 android:tint="@color/accent_emerald"
-                android:layout_marginEnd="6dp"
+                android:layout_marginEnd="@dimen/space_12"
                 android:contentDescription="Bộ nhớ" />
 
             <TextView
@@ -95,20 +95,20 @@
         <!-- Wi-Fi Status Pill -->
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
+            android:layout_height="@dimen/touch_drive"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:background="@drawable/bg_btn_inactive"
-            android:paddingStart="12dp"
-            android:paddingEnd="14dp"
-            android:layout_marginEnd="12dp">
+            android:paddingStart="@dimen/space_12"
+            android:paddingEnd="@dimen/space_16"
+            android:layout_marginEnd="@dimen/space_12">
 
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:src="@drawable/ic_wifi"
                 android:tint="@color/text_secondary"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginEnd="@dimen/space_8" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -140,13 +140,13 @@
         <LinearLayout
             android:id="@+id/btnInstallFromStorage"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
+            android:layout_height="@dimen/touch_min"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:background="@drawable/bg_btn_inactive"
-            android:paddingStart="12dp"
-            android:paddingEnd="14dp"
-            android:layout_marginEnd="10dp"
+            android:paddingStart="@dimen/space_12"
+            android:paddingEnd="@dimen/space_16"
+            android:layout_marginEnd="@dimen/space_8"
             android:clickable="true"
             android:focusable="true">
 
@@ -155,7 +155,7 @@
                 android:layout_height="20dp"
                 android:src="@drawable/ic_folder"
                 android:tint="@color/accent_emerald"
-                android:layout_marginEnd="6dp" />
+                android:layout_marginEnd="@dimen/space_12" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -169,12 +169,12 @@
         <!-- Refresh Button -->
         <ImageView
             android:id="@+id/btnRefreshCatalog"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="@dimen/touch_min"
+            android:layout_height="@dimen/touch_min"
             android:src="@drawable/ic_refresh"
             android:tint="@color/text_primary"
             android:background="@drawable/bg_btn_inactive"
-            android:padding="12dp"
+            android:padding="@dimen/space_12"
             android:contentDescription="Làm mới danh sách" />
     </LinearLayout>
 
@@ -183,7 +183,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="@dimen/space_32"
         android:visibility="gone" />
 
     <TextView
@@ -191,7 +191,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="@dimen/space_32"
         android:textColor="@color/text_muted"
         android:textSize="16sp"
         android:visibility="gone" />

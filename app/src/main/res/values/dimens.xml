@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  8-point grid for the in-car tablet (1920x1080 @ 160dpi, 1dp = 1px, viewed at ~75 cm,
+  operated by one outstretched hand). Every margin, padding and size is a multiple of 8;
+  4 and 12 are allowed half-steps for fine detail and gaps between adjacent buttons.
+-->
+<resources>
+    <!-- Spacing scale -->
+    <dimen name="space_4">4dp</dimen>
+    <dimen name="space_8">8dp</dimen>
+    <dimen name="space_12">12dp</dimen>
+    <dimen name="space_16">16dp</dimen>
+    <dimen name="space_24">24dp</dimen>
+    <dimen name="space_32">32dp</dimen>
+
+    <!-- Touch targets: Material minimum, while-driving, primary driving controls -->
+    <dimen name="touch_min">48dp</dimen>
+    <dimen name="touch_drive">56dp</dimen>
+    <dimen name="touch_primary">64dp</dimen>
+    <!-- Gap between adjacent touch targets (>= 8dp rule; 12dp for driving controls) -->
+    <dimen name="touch_gap">12dp</dimen>
+
+    <!-- Icons -->
+    <dimen name="icon_sm">20dp</dimen>
+    <dimen name="icon_md">24dp</dimen>
+
+    <!-- Corners -->
+    <dimen name="radius_sm">8dp</dimen>
+    <dimen name="radius_md">12dp</dimen>
+    <dimen name="radius_lg">16dp</dimen>
+
+    <!-- Layout -->
+    <dimen name="screen_gutter">16dp</dimen>
+    <dimen name="card_padding">16dp</dimen>
+    <dimen name="card_gap">16dp</dimen>
+    <dimen name="header_height">64dp</dimen>
+    <dimen name="slider_touch_height">56dp</dimen>
+</resources>
