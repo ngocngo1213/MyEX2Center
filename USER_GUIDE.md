@@ -250,20 +250,20 @@ Kết quả đúng:
 ## 5. Tải MyEX2Center và kiểm tra file
 
 1. Mở trang phát hành chính thức: **https://github.com/ngocngo1213/MyEX2Center/releases**
-2. Chọn bản **mới nhất** (trên cùng, có nhãn *Latest*). Ở mục **Assets**, tải file **`MyEX2Center-<phiên bản>.apk`**. Ví dụ dưới đây dùng **v1.1.0**; nếu có bản mới hơn, hãy thay số phiên bản trong các lệnh.
+2. Chọn bản **mới nhất** (trên cùng, có nhãn *Latest*). Ở mục **Assets**, tải file **`MyEX2Center-<phiên bản>.apk`**. Ví dụ dưới đây dùng **v1.2.0**; nếu có bản mới hơn, hãy thay số phiên bản trong các lệnh.
 3. **Kiểm tra file không bị lỗi hay bị sửa** bằng mã SHA-256 ghi ở phần mô tả của bản phát hành.
 
    **macOS** (trong Terminal, đứng ở thư mục chứa file, thường là `~/Downloads`):
    ```bash
-   shasum -a 256 MyEX2Center-1.1.0.apk
+   shasum -a 256 MyEX2Center-1.2.0.apk
    ```
    **Windows** (PowerShell):
    ```powershell
-   certutil -hashfile MyEX2Center-1.1.0.apk SHA256
+   certutil -hashfile MyEX2Center-1.2.0.apk SHA256
    ```
-   Kết quả phải **trùng khớp** với mã SHA-256 ghi trên trang Release của đúng bản bạn tải. Ví dụ với v1.1.0:
+   Kết quả phải **trùng khớp** với mã SHA-256 ghi trên trang Release của đúng bản bạn tải. Ví dụ với v1.2.0:
    ```
-   f8c368410c1a102650ebfc3e5962baf0aca5bd0d987bc463a4493f4246795585
+   31d1ce90d569d99308667e93d3d5d6812a3b66797baeba509b4d29ca06a250dd
    ```
    Không trùng → **không cài**, tải lại.
 
@@ -277,16 +277,16 @@ Kết quả đúng:
 Xe vẫn ở **P**, máy tính vẫn đang nối với xe (mục 4.3). Đứng trong thư mục chứa file APK:
 
 ```bash
-adb install -r MyEX2Center-1.1.0.apk
+adb install -r MyEX2Center-1.2.0.apk
 ```
 
-Chờ đến khi thấy **`Success`** (file khoảng 7 MB, mất vài giây đến một phút qua Wi-Fi).
+Chờ đến khi thấy **`Success`** (file khoảng 6–7 MB, mất vài giây đến một phút qua Wi-Fi).
 
 Kiểm tra app đã chạy với quyền hệ thống:
 ```bash
 adb shell dumpsys package com.mipago.ex2center | grep -E "userId=|versionName"
 ```
-Kết quả đúng có **`userId=1000`** và `versionName=1.1.0`.
+Kết quả đúng có **`userId=1000`** và `versionName=1.2.0` (hoặc bản bạn vừa cài).
 
 > App hệ thống **không hiện** trong lệnh `adb shell pm list packages -3`. Đó là bình thường, không phải lỗi.
 
@@ -374,7 +374,7 @@ Cài đè **giữ nguyên** cài đặt của bạn: tên xe, ảnh xe, giao di�
 ## 11. Sử dụng app
 
 > [!NOTE]
-> Phần này mô tả giao diện **từ bản 1.2.0**: Cài đặt mới, giao diện Sáng/Tối, hồ sơ xe, công tắc "Ghi nhớ", hình xe nhìn từ trên xuống, bộ icon mới. Nếu đang dùng **v1.1.0**, một số mục sẽ khác. Hãy cập nhật lên bản mới nhất (Phần 10).
+> Phần này mô tả giao diện **từ bản 1.2.0**: Cài đặt mới, giao diện Sáng/Tối, hồ sơ xe, công tắc "Ghi nhớ", hình xe nhìn từ trên xuống, bộ icon mới. Nếu đang dùng **v1.1.0**, hãy cập nhật lên bản mới nhất (Phần 10).
 
 ### Thanh trên cùng
 - **Hồ sơ xe** (ảnh + tên): chạm vào để mở Cài đặt.

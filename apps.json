@@ -2,19 +2,19 @@
   {
     "name": "MyEX2Center",
     "packageName": "com.mipago.ex2center",
-    "versionCode": 2,
-    "versionName": "1.1.0",
-    "sizeMb": 8.0,
+    "versionCode": 3,
+    "versionName": "1.2.0",
+    "sizeMb": 6.2,
     "type": "apk",
     "abis": [],
     "minSdk": 28,
     "requiresPark": true,
     "self": true,
-    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/v1.1.0/MyEX2Center-1.1.0.apk",
+    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/v1.2.0/MyEX2Center-1.2.0.apk",
     "browserUrl": "https://github.com/ngocngo1213/MyEX2Center/releases",
     "iconResName": "img_my_ex2",
     "description": "Cập nhật hệ thống điều khiển trung tâm EX2 Center. Ứng dụng sẽ tự khởi động lại sau khi cập nhật.",
-    "sha256": "f8c368410c1a102650ebfc3e5962baf0aca5bd0d987bc463a4493f4246795585"
+    "sha256": "31d1ce90d569d99308667e93d3d5d6812a3b66797baeba509b4d29ca06a250dd"
   },
   {
     "name": "VIETMAP LIVE",
