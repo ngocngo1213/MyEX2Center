@@ -14,4 +14,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "MyEX2Center"
-include ':app'
+include ':core'
+include ':app'      // MyEX2Center (com.mipago.ex2center)
+include ':store'    // EX2 Store   (com.mipago.ex2store)

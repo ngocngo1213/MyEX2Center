@@ -900,7 +900,7 @@ class MainActivity : Activity() {
         // Top Header Actions
         // ---------------------------------------------------------
         btnOpenCatalogHeader.setOnClickListener {
-            startActivity(Intent(this, AppCatalogActivity::class.java))
+            com.mipago.ex2center.utils.StoreLauncher.open(this)
         }
 
         btnNightBlackout.setOnClickListener {

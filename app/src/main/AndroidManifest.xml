@@ -44,16 +44,12 @@
             </intent-filter>
         </activity>
 
-        <!-- Module 3: App Catalog Activity (Có icon riêng trong danh sách ứng dụng xe) -->
+        <!-- Built-in catalog (shared with EX2 Store via :core). Fallback only: the
+             "Kho ứng dụng" button opens EX2 Store (com.mipago.ex2store) when installed. -->
         <activity
             android:name=".ui.AppCatalogActivity"
-            android:exported="true"
-            android:label="Kho ứng dụng">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="false"
+            android:label="Kho ứng dụng" />
 
         <!-- Settings (grouped toggles, connections, car profile, appearance) -->
         <activity
@@ -84,10 +80,6 @@
             </intent-filter>
         </receiver>
 
-        <!-- Silent Package Installer Status Receiver -->
-        <receiver
-            android:name=".utils.PackageInstallerStatusReceiver"
-            android:exported="false" />
 
     </application>
 

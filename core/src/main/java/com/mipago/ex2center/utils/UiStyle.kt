@@ -1,7 +1,7 @@
 package com.mipago.ex2center.utils
 
 import android.widget.Switch
-import com.mipago.ex2center.R
+import com.mipago.ex2center.core.R
 
 /** Shared styling helpers so toggles look identical on the Dashboard and in Cài đặt. */
 object UiStyle {

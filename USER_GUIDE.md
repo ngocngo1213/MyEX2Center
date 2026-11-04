@@ -505,9 +505,10 @@ Mã nguồn: https://github.com/ngocngo1213/MyEX2Center. Đặc tả kỹ thuậ
 ```bash
 # Gradle 8.11 cần JDK 17–21 (JBR 25 của Android Studio mới quá mới)
 export JAVA_HOME=~/Library/Java/JavaVirtualMachines/jbr-21.0.11/Contents/Home
-./gradlew assembleDebug      # app/build/outputs/apk/debug/app-debug.apk (cài emulator: adb install -r -t)
-./gradlew assembleRelease    # app/build/outputs/apk/release/app-release.apk, ký bằng signing/platform.p12
+./gradlew :app:assembleDebug :store:assembleDebug   # bản debug (cài emulator: adb install -r -t)
+./scripts/build-release.sh                          # 2 APK release ký platform vào dist/ + SHA-256
 ```
+- Repo gồm 3 module: `:core` (thư viện chung), `:app` (MyEX2Center), `:store` (EX2 Store). Xem [SPEC.md](SPEC.md) mục 6.
 - Thư mục `signing/` (khóa platform) **không có trong repo** và không bao giờ được đưa lên GitHub.
 - Kiểm tra chữ ký: `apksigner verify --print-certs app-release.apk`.
 

@@ -47,7 +47,7 @@ object ThemeManager {
     /** Status / navigation bar colours that match the current appearance. */
     fun applyWindow(activity: android.app.Activity) {
         val window = activity.window
-        val bg = activity.getColor(com.mipago.ex2center.R.color.bg_primary)
+        val bg = activity.getColor(com.mipago.ex2center.core.R.color.bg_primary)
         window.statusBarColor = bg
         window.navigationBarColor = bg
         val decor = window.decorView

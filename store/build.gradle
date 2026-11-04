@@ -1,0 +1,62 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+// EX2 Store: installs and updates MyEX2Center and the other catalog apps from GitHub Releases.
+// Platform-signed (android.uid.system in release) for silent installs.
+android {
+    namespace 'com.mipago.ex2store'
+    compileSdk 28
+
+    defaultConfig {
+        applicationId 'com.mipago.ex2store'
+        minSdk 28
+        targetSdk 28
+        versionCode 1
+        versionName "1.0.0"
+
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+    }
+
+    signingConfigs {
+        platform {
+            storeFile file("${rootProject.projectDir}/signing/platform.p12")
+            storeType "PKCS12"
+            storePassword "android"
+            keyAlias "platform"
+            keyPassword "android"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.platform
+        }
+        debug {
+            debuggable true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    lint {
+        // System app for the Geely IHU629G (Android 9 / API 28) — never distributed via Google Play.
+        disable 'ExpiredTargetSdkVersion'
+    }
+}
+
+dependencies {
+    compileOnly files("${rootProject.projectDir}/core/libs/car-stubs.jar")
+    implementation project(':core')
+}

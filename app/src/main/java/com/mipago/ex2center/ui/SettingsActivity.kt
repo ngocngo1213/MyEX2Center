@@ -366,7 +366,7 @@ class SettingsActivity : Activity() {
             if (on) startService(intent) else stopService(intent)
         }
         actionRow(card, "Kho ứng dụng", "Cài đặt và cập nhật ứng dụng cho xe") {
-            startActivity(Intent(this, AppCatalogActivity::class.java))
+            com.mipago.ex2center.utils.StoreLauncher.open(this)
         }
         val version = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (_: Throwable) { "?" }
         actionRow(card, "Phiên bản $version", "github.com/ngocngo1213/MyEX2Center") {

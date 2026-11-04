@@ -133,25 +133,33 @@ Bố cục 3 cột (32% / 38% / 30%) + thanh Header.
 - Permissions: `INSTALL_PACKAGES`, `DELETE_PACKAGES`, `INJECT_EVENTS`, `SYSTEM_ALERT_WINDOW`, `WRITE_SECURE_SETTINGS`, `RECEIVE_BOOT_COMPLETED`, `INTERNET`, `ACCESS_NETWORK_STATE`, (kho ứng dụng yêu cầu thêm `READ_EXTERNAL_STORAGE` lúc chạy).
 
 ## 6. Project Directory Structure
+
+Một repo, 3 module Gradle (giai đoạn 1 của việc tách EX2 Store):
+
 ```text
 MyEX2Center/
-├── SPEC.md
-├── my_ex2_icon.png
-├── catalog_apks/                  # APK nguồn mở tải sẵn (local install)
-├── apps.json                      # catalog gốc (bản sao: app/src/main/assets/apps.json)
-├── app/libs/car-stubs.jar
-├── app/src/main/
-│   ├── java/com/mipago/ex2center/
-│   │   ├── launcher/SplitScreenLauncher.kt
-│   │   ├── repository/AppRepository.kt
-│   │   ├── service/{CarAutomationService,FloatingControlService}.kt
-│   │   ├── ui/{MainActivity,AppCatalogActivity,OverlayViewManager}.kt
-│   │   └── utils/{CarApiHelper,PackageInstallerHelper}.kt
-│   ├── res/ (drawable: img_my_ex2, ic_app_*, bg_btn_*, bg_gear_active, bg_pill_*; mipmap-*: ic_launcher)
-│   └── AndroidManifest.xml
-├── reference/
-└── build.gradle
+├── core/        # thư viện dùng chung (namespace com.mipago.ex2center.core)
+│   ├── libs/car-stubs.jar
+│   └── src/main/
+│       ├── java/com/mipago/ex2center/
+│       │   ├── utils/   CarApiHelper, ParkGate, PackageInstallerHelper(+StatusReceiver),
+│       │   │            LocalApkFinder, StoreLauncher, ThemeManager, UiStyle, WifiStatus
+│       │   ├── model/   AppInfo
+│       │   ├── repository/ AppRepository (catalog + tải resumable)
+│       │   └── ui/      AppCatalogActivity (màn hình Kho, dùng cho cả Store)
+│       ├── res/         theme Sáng/Tối, dimens 8pt, font, bộ icon, layout Kho
+│       └── assets/apps.json (catalog dự phòng)
+├── app/         # MyEX2Center  (com.mipago.ex2center): Dashboard, VHAL, dịch vụ, nút nổi, Cài đặt
+├── store/       # EX2 Store    (com.mipago.ex2store): launcher = màn hình Kho; cài/cập nhật app
+├── apps.json    # catalog phát hành (raw.githubusercontent.com/ngocngo1213/MyEX2Center/main/apps.json)
+├── scripts/build-release.sh   # build + ký platform 2 APK vào dist/, in SHA-256
+└── .github/workflows/build.yml # CI: build debug 2 app, kiểm tra JSON catalog (không ký)
 ```
+
+- Cả hai app ký cùng khóa platform, bản release có `sharedUserId=android.uid.system`.
+- Nút **Kho ứng dụng** (Dashboard, Cài đặt) gọi `StoreLauncher.open()`: mở EX2 Store nếu đã cài, nếu chưa thì mở Kho tích hợp (dự phòng, sẽ gỡ ở giai đoạn 3).
+- Trong Store, MyEX2Center là một app thường (cập nhật không làm tắt Store); chỉ EX2 Store tự cập nhật chính nó (`StoreUpdateReceiver` xác nhận qua `MY_PACKAGE_REPLACED`).
+- Khóa ký **không** có trong repo hay CI; ký bằng `scripts/build-release.sh` trên máy có `signing/platform.p12`.
 
 ## 7. Verification Status
 - **Verified (emulator, Android API 36 tablet 1920×1080):** build thành công; Dashboard hiển thị `--` khi không có VHAL; Auto Hold/HDC/ESC hiển thị `(N/A)` và bị vô hiệu; Valet bật/tắt đổi Pill + nút; Kho ứng dụng mở, 3×2, logo riêng từng app, Google Maps hiển thị "Đã cài".

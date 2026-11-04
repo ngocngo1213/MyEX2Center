@@ -25,3 +25,11 @@ platform.key
 *.xapk
 *.apks
 /app/release/
+
+# Release build output (scripts/build-release.sh)
+/dist/
+/app/release-dist/
+
+# Module build output
+/core/build
+/store/build

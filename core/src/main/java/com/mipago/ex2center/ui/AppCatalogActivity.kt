@@ -24,7 +24,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.mipago.ex2center.R
+import com.mipago.ex2center.core.R
 import com.mipago.ex2center.model.AppInfo
 import com.mipago.ex2center.repository.AppRepository
 import com.mipago.ex2center.utils.LocalApkFinder
@@ -125,6 +125,10 @@ class AppCatalogActivity : Activity() {
         btnRefreshCatalog = findViewById(R.id.btnRefreshCatalog)
         btnBackToDashboard = findViewById(R.id.btnBackToDashboard)
         btnInstallFromStorage = findViewById(R.id.btnInstallFromStorage)
+        // Same screen runs as EX2 Store (standalone app) or as MyEX2Center's built-in fallback.
+        if (packageName == com.mipago.ex2center.utils.StoreLauncher.STORE_PACKAGE) {
+            findViewById<TextView>(R.id.tvStoreTitle)?.text = packageManager.getApplicationLabel(applicationInfo)
+        }
 
         updateStorageInfo()
 

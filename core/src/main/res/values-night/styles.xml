@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Base application theme using Be Vietnam Pro -->
-    <style name="AppTheme" parent="android:Theme.DeviceDefault.Light.NoActionBar">
+    <!-- Dark variant (night): Be Vietnam Pro on Obsidian -->
+    <style name="AppTheme" parent="android:Theme.DeviceDefault.NoActionBar">
         <item name="android:fontFamily">@font/be_vietnam_pro</item>
-        <item name="fontFamily">@font/be_vietnam_pro</item>
         <item name="android:windowBackground">@color/bg_dark</item>
         <item name="android:colorBackground">@color/bg_dark</item>
         <item name="android:textColor">@color/text_primary</item>
@@ -13,11 +12,9 @@
 
     <style name="BeVietnamTextView" parent="android:Widget.TextView">
         <item name="android:fontFamily">@font/be_vietnam_pro</item>
-        <item name="fontFamily">@font/be_vietnam_pro</item>
     </style>
 
     <style name="BeVietnamButton" parent="android:Widget.Button">
         <item name="android:fontFamily">@font/be_vietnam_pro</item>
-        <item name="fontFamily">@font/be_vietnam_pro</item>
     </style>
 </resources>

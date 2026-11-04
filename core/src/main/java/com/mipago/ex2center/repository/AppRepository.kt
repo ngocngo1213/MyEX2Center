@@ -142,7 +142,8 @@ class AppRepository(private val context: Context) {
                     abis = abis,
                     minSdk = obj.optInt("minSdk", 0),
                     requiresPark = obj.optBoolean("requiresPark", true),
-                    isSelf = obj.optBoolean("self", false) || pkg == context.packageName
+                    // "self" = the app showing this catalog (EX2 Store, or MyEX2Center's built-in fallback).
+                    isSelf = pkg == context.packageName
                 )
 
                 // Update installation status

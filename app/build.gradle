@@ -64,7 +64,8 @@ android {
 
 dependencies {
     // Car API compilation stubs (real classes provided at runtime by Geely IHU OS)
-    compileOnly files('libs/car-stubs.jar')
+    compileOnly files("${rootProject.projectDir}/core/libs/car-stubs.jar")
+    implementation project(':core')
 
     // Core Android libraries compatible with API 28
     implementation 'androidx.core:core-ktx:1.3.2'
