@@ -17,6 +17,7 @@ import argparse, base64, glob, hashlib, json, os, re, subprocess, sys, tempfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = "ngocngo1213/MyEX2Center"
 KEY = os.path.join(ROOT, "signing", "catalog-signing-key.pem")
+BUNDLED = os.path.join(ROOT, "core", "src", "main", "assets", "apps.json")
 ASSETS = {  # file prefix -> (package, tag prefix)
     "MyEX2Center": ("com.mipago.ex2center", "v"),
     "EX2Store": ("com.mipago.ex2store", "store-v"),
@@ -83,7 +84,14 @@ def main():
                 sys.exit(f"{apk}: package {got_pkg}, expected {pkg}")
             entry = next((e for e in catalog if e.get("packageName") == pkg), None)
             if entry is None:
-                sys.exit(f"catalog has no entry for {pkg}")
+                # First release of EX2 Store: copy the template from the bundled catalog. Placed
+                # right after MyEX2Center so 1.2.0 users see it at the top of their built-in Kho.
+                bundled = json.load(open(BUNDLED, encoding="utf-8"))
+                entry = next((dict(e) for e in bundled if e.get("packageName") == pkg), None)
+                if entry is None:
+                    sys.exit(f"no entry for {pkg} in the catalog nor in {BUNDLED}")
+                catalog.insert(1 if catalog and catalog[0].get("packageName") == "com.mipago.ex2center" else 0, entry)
+                print(f"- {prefix}: entry added from bundled catalog")
             name = os.path.basename(apk)
             entry.update({
                 "versionCode": vc,

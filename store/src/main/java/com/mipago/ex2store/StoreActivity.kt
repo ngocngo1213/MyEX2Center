@@ -1,4 +1,4 @@
-package com.mipago.ex2center.ui
+package com.mipago.ex2store
 
 import android.app.Activity
 import android.app.AlertDialog
@@ -24,7 +24,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.mipago.ex2center.core.R
+import com.mipago.ex2store.R
 import com.mipago.ex2center.model.AppInfo
 import com.mipago.ex2center.repository.AppRepository
 import com.mipago.ex2center.utils.LocalApkFinder
@@ -36,7 +36,7 @@ import java.io.FileOutputStream
 import java.util.concurrent.Executors
 
 /**
- * Module 3: App Catalog Activity (Kho ứng dụng)
+ * EX2 Store main screen (moved from MyEX2Center's built-in "Kho ứng dụng" in phase 3)
  *
  * - Catalog from [AppRepository] (remote, bundled fallback), 3-column grid.
  * - Downloads are resumable and cancellable (the install button becomes "Hủy"), verified by
@@ -46,7 +46,7 @@ import java.util.concurrent.Executors
  *   recycled ViewHolder never shows another app's icon.
  * - Storage scans (USB / Download) parse package files and always run off the main thread.
  */
-class AppCatalogActivity : Activity() {
+class StoreActivity : Activity() {
 
     companion object {
         private const val REQUEST_CODE_PICK_APK = 1001
@@ -125,10 +125,7 @@ class AppCatalogActivity : Activity() {
         btnRefreshCatalog = findViewById(R.id.btnRefreshCatalog)
         btnBackToDashboard = findViewById(R.id.btnBackToDashboard)
         btnInstallFromStorage = findViewById(R.id.btnInstallFromStorage)
-        // Same screen runs as EX2 Store (standalone app) or as MyEX2Center's built-in fallback.
-        if (packageName == com.mipago.ex2center.utils.StoreLauncher.STORE_PACKAGE) {
-            findViewById<TextView>(R.id.tvStoreTitle)?.text = packageManager.getApplicationLabel(applicationInfo)
-        }
+        findViewById<TextView>(R.id.tvStoreTitle)?.text = packageManager.getApplicationLabel(applicationInfo)
 
         updateStorageInfo()
 

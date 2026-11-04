@@ -3,8 +3,10 @@
     package="com.mipago.ex2center">
 
     <!-- System privileges -->
+    <!-- INSTALL_PACKAGES: only to install EX2 Store when it is missing (StoreLauncher) -->
     <uses-permission android:name="android.permission.INSTALL_PACKAGES" />
-    <uses-permission android:name="android.permission.DELETE_PACKAGES" />
+    <!-- Fallback confirmation dialog when silent install is not possible (non-system build) -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.INJECT_EVENTS" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
@@ -43,13 +45,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <!-- Built-in catalog (shared with EX2 Store via :core). Fallback only: the
-             "Kho ứng dụng" button opens EX2 Store (com.mipago.ex2store) when installed. -->
-        <activity
-            android:name=".ui.AppCatalogActivity"
-            android:exported="false"
-            android:label="Kho ứng dụng" />
 
         <!-- Settings (grouped toggles, connections, car profile, appearance) -->
         <activity

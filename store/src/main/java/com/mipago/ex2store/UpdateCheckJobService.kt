@@ -11,7 +11,7 @@ import android.content.Intent
 import android.util.Log
 import com.mipago.ex2center.model.AppInfo
 import com.mipago.ex2center.repository.AppRepository
-import com.mipago.ex2center.ui.AppCatalogActivity
+
 import com.mipago.ex2center.utils.ParkGate
 
 /**
@@ -91,7 +91,7 @@ class UpdateCheckJobService : JobService() {
         )
         val open = PendingIntent.getActivity(
             this, 0,
-            Intent(this, AppCatalogActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            Intent(this, StoreActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
             PendingIntent.FLAG_UPDATE_CURRENT
         )
         val title = if (updates.size == 1) "Có bản cập nhật: ${updates[0].name}" else "Có ${updates.size} bản cập nhật"
