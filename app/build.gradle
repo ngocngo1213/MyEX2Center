@@ -1,0 +1,103 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.mipago.ex2center'
+    compileSdk 28
+
+    defaultConfig {
+        applicationId 'com.mipago.ex2center'
+        minSdk 28
+        targetSdk 28
+        versionCode 2
+        versionName "1.1.0"
+
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+    }
+
+    signingConfigs {
+        platform {
+            storeFile file("${rootProject.projectDir}/signing/platform.p12")
+            storeType "PKCS12"
+            storePassword "android"
+            keyAlias "platform"
+            keyPassword "android"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.platform
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            applicationIdSuffix ""
+            debuggable true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    lint {
+        // System app for the Geely IHU629G (Android 9 / API 28) — never distributed via Google Play.
+        disable 'ExpiredTargetSdkVersion'
+    }
+
+    sourceSets {
+        main {
+            assets.srcDirs = ['src/main/assets']
+        }
+    }
+}
+
+dependencies {
+    // Car API compilation stubs (real classes provided at runtime by Geely IHU OS)
+    compileOnly files('libs/car-stubs.jar')
+
+    // Core Android libraries compatible with API 28
+    implementation 'androidx.core:core-ktx:1.3.2'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+}
+
+// Hook to sign the output APK with Geely Platform Keys (platform.pk8 & platform.x509.pem)
+tasks.register('signWithPlatformKey') {
+    group = 'build'
+    description = 'Signs the release APK using the AOSP / Geely platform test keys.'
+    dependsOn 'assembleRelease'
+
+    doLast {
+        def releaseApkDir = file("${buildDir}/outputs/apk/release")
+        def unsignedApk = file("${releaseApkDir}/app-release-unsigned.apk")
+        def targetApk = unsignedApk.exists() ? unsignedApk : file("${releaseApkDir}/app-release.apk")
+        def signedApk = file("${releaseApkDir}/EX2Center-geely-platform-signed.apk")
+        def keyFile = file("${rootProject.projectDir}/signing/platform.pk8")
+        def certFile = file("${rootProject.projectDir}/signing/platform.x509.pem")
+
+        if (targetApk.exists() && keyFile.exists() && certFile.exists()) {
+            println "Signing APK with Platform keys: ${targetApk.name} -> ${signedApk.name}"
+            exec {
+                commandLine 'apksigner', 'sign',
+                        '--key', keyFile.absolutePath,
+                        '--cert', certFile.absolutePath,
+                        '--out', signedApk.absolutePath,
+                        targetApk.absolutePath
+            }
+            println "Platform signed APK created successfully at: ${signedApk.absolutePath}"
+        } else {
+            println "Platform signing skipped: Missing APK or key files."
+        }
+    }
+}

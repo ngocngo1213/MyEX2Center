@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EX2 Center</string>
+    <string name="app_desc">Hệ thống điều khiển &amp; tự động hóa Geely EX2</string>
+
+    <!-- Navigation / Titles -->
+    <string name="nav_dashboard">Bảng điều khiển</string>
+    <string name="nav_automation">Tự động hóa</string>
+    <string name="nav_catalog">Kho ứng dụng</string>
+    <string name="nav_split_screen">Chia đôi màn hình</string>
+
+    <!-- Automation Settings -->
+    <string name="title_automation_settings">Thiết lập tự động khi vào số D / Khởi động</string>
+    <string name="switch_auto_avas">Tự động tắt âm cảnh báo người đi bộ (AVAS)</string>
+    <string name="desc_auto_avas">Tự động tắt âm thanh cảnh báo bên ngoài khi chuyển sang số D hoặc khởi động xe.</string>
+    <string name="switch_auto_drive_mode">Tự động đặt Chế độ lái (Drive Mode)</string>
+    <string name="switch_auto_regen_mode">Tự động đặt Mức hồi năng lượng (Regen)</string>
+    <string name="mode_eco">Tiết kiệm (ECO)</string>
+    <string name="mode_comfort">Êm ái (Comfort)</string>
+    <string name="mode_sport">Thể thao (Sport)</string>
+    <string name="regen_low">Thấp (Low)</string>
+    <string name="regen_mid">Vừa (Medium)</string>
+    <string name="regen_high">Cao (High)</string>
+
+    <!-- Floating Bubble / Overlay Controls -->
+    <string name="switch_floating_bubble">Bật nút nổi điều khiển nhanh (Overlay)</string>
+    <string name="desc_floating_bubble">Hiển thị nút nổi trên màn hình để truy cập nhanh Điều hòa, Chế độ đêm và Khởi động lại.</string>
+    <string name="overlay_hvac_title">Điều hòa (Climate)</string>
+    <string name="overlay_ac_on">Bật A/C</string>
+    <string name="overlay_ac_off">Tắt A/C</string>
+    <string name="overlay_temp_label">Nhiệt độ</string>
+    <string name="overlay_fan_label">Gió</string>
+    <string name="overlay_outside_temp">Ngoài trời: %s°C</string>
+    <string name="overlay_blackout">Màn hình đêm</string>
+    <string name="overlay_reboot">Khởi động lại</string>
+    <string name="blackout_hint">Chạm vào bất kỳ điểm nào trên màn hình để mở sáng</string>
+    <string name="confirm_reboot_title">Khởi động lại màn hình</string>
+    <string name="confirm_reboot_msg">Bạn có chắc chắn muốn khởi động lại hệ thống màn hình (HU) không?</string>
+    <string name="btn_confirm">Đồng ý</string>
+    <string name="btn_cancel">Hủy</string>
+
+    <!-- Module 3: App Catalog -->
+    <string name="catalog_title">Kho ứng dụng ô tô</string>
+    <string name="catalog_refresh">Làm mới danh sách</string>
+    <string name="catalog_source_url">Nguồn URL danh mục (apps.json):</string>
+    <string name="catalog_btn_save_url">Lưu URL</string>
+    <string name="catalog_status_installed">Đã cài đặt</string>
+    <string name="catalog_status_not_installed">Chưa cài đặt</string>
+    <string name="catalog_status_update_available">Có bản cập nhật mới</string>
+    <string name="catalog_status_downloading">Đang tải xuống (%d%%)...</string>
+    <string name="catalog_status_installing">Đang cài đặt ngầm...</string>
+    <string name="catalog_btn_install">Cài đặt</string>
+    <string name="catalog_btn_update">Cập nhật</string>
+    <string name="catalog_btn_open">Mở ứng dụng</string>
+    <string name="catalog_install_success">Cài đặt thành công: %s</string>
+    <string name="catalog_install_failed">Cài đặt thất bại: %s</string>
+
+    <!-- Module 4: Split-Screen Launcher -->
+    <string name="split_title">Chia đôi màn hình (Vietmap + SmartTube)</string>
+    <string name="split_btn_launch">Kích hoạt chia đôi màn hình</string>
+    <string name="split_desc">Mở đồng thời Vietmap Live bên trái và SmartTube bên phải.</string>
+    <string name="split_err_missing_apps">Vui lòng cài đặt Vietmap Live hoặc SmartTube từ Kho ứng dụng trước khi kích hoạt.</string>
+
+    <!-- Notifications -->
+    <string name="notif_service_title">EX2 Center đang chạy ngầm</string>
+    <string name="notif_service_desc">Tự động giám sát trạng thái xe, cần số và chế độ lái.</string>
+    <string name="notif_overlay_title">EX2 Bảng điều khiển nổi</string>
+
+    <!-- Crash Guard Safety Mechanism -->
+    <string name="guard_tripped_warning">Cơ chế Crash Guard đã tạm ngắt tự động hóa do phát hiện 2 lỗi VHAL liên tiếp trong 60 giây. Hệ thống xe an toàn.</string>
+    <string name="guard_reset_btn">Kích hoạt lại tự động hóa</string>
+</resources>

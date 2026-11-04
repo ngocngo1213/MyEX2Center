@@ -1,0 +1,42 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="60dp"
+    android:height="100dp"
+    android:viewportWidth="60"
+    android:viewportHeight="100">
+  <!-- 4 Tires (Green when normal) -->
+  <!-- Front-Left (x=2, y=12, w=8, h=18) -->
+  <path
+      android:fillColor="#22C55E"
+      android:pathData="M 6,12 C 8.2,12 10,13.8 10,16 L 10,26 C 10,28.2 8.2,30 6,30 C 3.8,30 2,28.2 2,26 L 2,16 C 2,13.8 3.8,12 6,12 Z"/>
+  <!-- Front-Right (x=50, y=12, w=8, h=18) -->
+  <path
+      android:fillColor="#22C55E"
+      android:pathData="M 54,12 C 56.2,12 58,13.8 58,16 L 58,26 C 58,28.2 56.2,30 54,30 C 51.8,30 50,28.2 50,26 L 50,16 C 50,13.8 51.8,12 54,12 Z"/>
+  <!-- Rear-Left (x=2, y=70, w=8, h=18) -->
+  <path
+      android:fillColor="#22C55E"
+      android:pathData="M 6,70 C 8.2,70 10,71.8 10,74 L 10,84 C 10,86.2 8.2,88 6,88 C 3.8,88 2,86.2 2,84 L 2,74 C 2,71.8 3.8,70 6,70 Z"/>
+  <!-- Rear-Right (x=50, y=70, w=8, h=18) -->
+  <path
+      android:fillColor="#22C55E"
+      android:pathData="M 54,70 C 56.2,70 58,71.8 58,74 L 58,84 C 58,86.2 56.2,88 54,88 C 51.8,88 50,86.2 50,84 L 50,74 C 50,71.8 51.8,70 54,70 Z"/>
+
+  <!-- Car body -->
+  <path
+      android:fillColor="#2A3440"
+      android:strokeColor="#475569"
+      android:strokeWidth="1.5"
+      android:pathData="M16,10 C16,4 44,4 44,10 L48,25 C48,25 48,75 48,82 C48,94 12,94 12,82 L12,25 Z"/>
+  <!-- Windshield -->
+  <path
+      android:fillColor="#0F172A"
+      android:pathData="M17,25 L43,25 L40,38 L20,38 Z"/>
+  <!-- Rear window -->
+  <path
+      android:fillColor="#0F172A"
+      android:pathData="M18,68 L42,68 L40,77 L20,77 Z"/>
+  <!-- Roof -->
+  <path
+      android:fillColor="#1E293B"
+      android:pathData="M 23,42 L 37,42 C 38.6,42 40,43.4 40,45 L 40,61 C 40,62.6 38.6,64 37,64 L 23,64 C 21.4,64 20,62.6 20,61 L 20,45 C 20,43.4 21.4,42 23,42 Z"/>
+</vector>

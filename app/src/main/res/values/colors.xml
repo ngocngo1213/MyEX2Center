@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ======================================================== -->
+    <!-- CYBER EMERALD & OBSIDIAN THEME (Driver-Centric Cockpit) -->
+    <!-- ======================================================== -->
+
+    <!-- Primary Backgrounds (Obsidian) -->
+    <color name="bg_primary">#090D14</color>
+    <color name="bg_dark">#090D14</color>
+    <color name="blackout">#000000</color>
+    <color name="overlay_bg">#E6090D14</color>
+
+    <!-- Cards & Surfaces -->
+    <color name="card_surface">#121824</color>
+    <color name="surface_card">#121824</color>
+    <color name="surface_stroke">#1F293D</color>
+    <color name="card_stroke">#1F293D</color>
+    <color name="card_inner_surface">#182030</color>
+
+    <!-- Inactive Buttons & Controls -->
+    <color name="btn_inactive">#182232</color>
+    <color name="btn_inactive_stroke">#24324A</color>
+
+    <!-- Primary Accent (Emerald Green #10B981) -->
+    <color name="accent_primary">#10B981</color>
+    <color name="primary_accent">#10B981</color>
+    <color name="accent_emerald">#10B981</color>
+    <color name="accent_emerald_light">#34D399</color>
+    <color name="accent_emerald_bg">#13382C</color>
+    <color name="accent_blue">#10B981</color>
+    <color name="accent_blue_light">#34D399</color>
+
+    <!-- Secondary Accent (Amber Gold #F59E0B) -->
+    <color name="accent_secondary">#F59E0B</color>
+    <color name="accent_amber">#F59E0B</color>
+    <color name="accent_amber_light">#FBBF24</color>
+    <color name="accent_amber_bg">#3D2E14</color>
+    <color name="status_orange">#F59E0B</color>
+    <color name="status_orange_bg">#3D2E14</color>
+    <color name="status_orange_text">#FBBF24</color>
+
+    <!-- Danger & Delete Accent (#EF4444) -->
+    <color name="accent_danger">#EF4444</color>
+    <color name="status_red">#EF4444</color>
+    <color name="status_red_bg">#3B1C22</color>
+    <color name="status_red_text">#F87171</color>
+
+    <!-- Status Colors -->
+    <color name="status_green">#10B981</color>
+    <color name="status_green_bg">#13382C</color>
+    <color name="status_green_text">#34D399</color>
+
+    <color name="status_gray_bg">#1E2638</color>
+    <color name="status_gray_text">#94A3B8</color>
+
+    <!-- Typography -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#94A3B8</color>
+    <color name="text_muted">#64748B</color>
+    <color name="text_emerald">#34D399</color>
+    <color name="text_amber">#FBBF24</color>
+</resources>

@@ -1,0 +1,27 @@
+*.iml
+.gradle
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+/app/build
+
+# --- Never publish ---
+# Geely platform signing keys (anyone holding these can sign system apps for the car)
+/signing/
+*.pk8
+*.p12
+*.jks
+*.keystore
+platform.key
+# Third-party reference projects and binaries (other licenses / redistribution rights)
+/reference/
+/catalog_apks/
+/pylib/
+*.apk
+*.xapk
+*.apks
+/app/release/

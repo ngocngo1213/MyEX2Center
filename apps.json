@@ -1,0 +1,76 @@
+[
+  {
+    "name": "MyEX2Center",
+    "packageName": "com.mipago.ex2center",
+    "versionCode": 2,
+    "versionName": "1.1.0",
+    "sizeMb": 8.0,
+    "type": "apk",
+    "abis": [],
+    "minSdk": 28,
+    "requiresPark": true,
+    "self": true,
+    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/v1.1.0/MyEX2Center-1.1.0.apk",
+    "browserUrl": "https://github.com/ngocngo1213/MyEX2Center/releases",
+    "iconResName": "img_my_ex2",
+    "description": "Cập nhật hệ thống điều khiển trung tâm EX2 Center. Ứng dụng sẽ tự khởi động lại sau khi cập nhật.",
+    "sha256": "f8c368410c1a102650ebfc3e5962baf0aca5bd0d987bc463a4493f4246795585"
+  },
+  {
+    "name": "VIETMAP LIVE",
+    "packageName": "vn.vietmap.live",
+    "versionCode": 179327630,
+    "versionName": "3.4.4",
+    "sizeMb": 166.0,
+    "type": "xapk",
+    "abis": [
+      "armeabi-v7a"
+    ],
+    "minSdk": 26,
+    "requiresPark": true,
+    "apkUrl": "",
+    "browserUrl": "https://apkpure.com/vietmap-live-mimi-ai/vn.vietmap.live",
+    "iconResName": "ic_app_vietmap",
+    "description": "Bản đồ dẫn đường cho ô tô, cảnh báo tốc độ và camera phạt nguội. Gói .xapk (split APK) — cài từ USB / máy.",
+    "sha256": "e18bda84a5562cdaec5156dfd6b11e3e3f52824619ba23e029d58e2eb2533c4c"
+  },
+  {
+    "name": "SmartTube",
+    "packageName": "org.smarttube.stable",
+    "versionCode": 2458,
+    "versionName": "32.68",
+    "sizeMb": 25.1,
+    "type": "apk",
+    "abis": [
+      "arm64-v8a"
+    ],
+    "minSdk": 17,
+    "requiresPark": true,
+    "apkUrl": "https://github.com/yuliskov/SmartTube/releases/download/32.68s/SmartTube_stable_32.68_arm64-v8a.apk",
+    "browserUrl": "https://github.com/yuliskov/SmartTube/releases",
+    "iconResName": "ic_app_smarttube",
+    "description": "Xem YouTube không quảng cáo, tối ưu cho màn hình ngang ô tô, phát nền và không cần MicroG.",
+    "sha256": "0a3d3f024eae66b8468f75fe85ab421169177f5ea1223a5d097d1dc9e1c84cf3"
+  },
+  {
+    "name": "Trình duyệt Web",
+    "packageName": "com.aaex.carbrowser",
+    "versionCode": 11,
+    "versionName": "2.3",
+    "sizeMb": 4.1,
+    "type": "apk",
+    "abis": [
+      "arm64-v8a",
+      "armeabi-v7a",
+      "x86",
+      "x86_64"
+    ],
+    "minSdk": 26,
+    "requiresPark": true,
+    "apkUrl": "https://raw.githubusercontent.com/swimapps/CentralEXAuto/main/AAExCarBrowser-2.3.apk",
+    "browserUrl": "https://github.com/swimapps/CentralEXAuto",
+    "iconResName": "ic_app_browser",
+    "description": "Trình duyệt web siêu nhẹ tối ưu cho màn hình xe Geely EX2, hỗ trợ mở link và đăng nhập Wi-Fi.",
+    "sha256": "c78e11d12f1f90a642d0f279858f466066da7a979b5bb31e3a3560d24cf33b6b"
+  }
+]

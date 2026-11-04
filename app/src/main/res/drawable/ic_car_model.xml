@@ -1,0 +1,46 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="90dp"
+    android:viewportWidth="160"
+    android:viewportHeight="90">
+  <!-- White car body with black roof -->
+  <path
+      android:fillColor="#E2E8F0"
+      android:strokeColor="#CBD5E1"
+      android:strokeWidth="1"
+      android:pathData="M15,62 L25,48 L50,30 L110,28 L138,45 L150,56 C152,65 145,68 135,68 L125,68 C125,58 107,58 107,68 L53,68 C53,58 35,58 35,68 L20,68 C14,68 12,65 15,62 Z"/>
+  <!-- Black Roof & Pillars -->
+  <path
+      android:fillColor="#0F172A"
+      android:pathData="M52,32 L108,30 L132,45 L50,45 Z"/>
+  <!-- Windows -->
+  <path
+      android:fillColor="#38BDF8"
+      android:pathData="M55,34 L80,34 L80,44 L53,44 Z"/>
+  <path
+      android:fillColor="#38BDF8"
+      android:pathData="M84,34 L106,32 L125,44 L84,44 Z"/>
+  <!-- Wheels Outer (cx=44, cy=68, r=12) -->
+  <path
+      android:fillColor="#1E293B"
+      android:strokeColor="#94A3B8"
+      android:strokeWidth="2"
+      android:pathData="M 32,68 a 12,12 0 1,0 24,0 a 12,12 0 1,0 -24,0"/>
+  <!-- Wheels Inner (cx=44, cy=68, r=6) -->
+  <path
+      android:fillColor="#64748B"
+      android:pathData="M 38,68 a 6,6 0 1,0 12,0 a 6,6 0 1,0 -12,0"/>
+  <!-- Wheels Outer (cx=116, cy=68, r=12) -->
+  <path
+      android:fillColor="#1E293B"
+      android:strokeColor="#94A3B8"
+      android:strokeWidth="2"
+      android:pathData="M 104,68 a 12,12 0 1,0 24,0 a 12,12 0 1,0 -24,0"/>
+  <!-- Wheels Inner (cx=116, cy=68, r=6) -->
+  <path
+      android:fillColor="#64748B"
+      android:pathData="M 110,68 a 6,6 0 1,0 12,0 a 6,6 0 1,0 -12,0"/>
+  <!-- Headlight & Taillight -->
+  <path android:fillColor="#38BDF8" android:pathData="M145,52 L150,56 L144,58 Z"/>
+  <path android:fillColor="#EF4444" android:pathData="M15,58 L20,58 L18,63 Z"/>
+</vector>
