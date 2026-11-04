@@ -3,6 +3,8 @@ package com.mipago.ex2center.repository
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.os.StatFs
+import android.os.SystemClock
 import android.util.Log
 import com.mipago.ex2center.model.AppInfo
 import com.mipago.ex2center.utils.PackageInstallerHelper
@@ -14,6 +16,7 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Module 3: App Repository
@@ -33,6 +36,9 @@ class AppRepository(private val context: Context) {
         const val GITHUB_REPO = "ngocngo1213/MyEX2Center"
         const val DEFAULT_CATALOG_URL = "https://raw.githubusercontent.com/$GITHUB_REPO/main/apps.json"
         private const val UNSET_OWNER = "__GH_OWNER__"
+
+        /** Error value passed to onComplete when the user cancelled (not a failure). */
+        const val ERROR_CANCELLED = "__cancelled__"
     }
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -67,11 +73,15 @@ class AppRepository(private val context: Context) {
                 conn.readTimeout = 2500
                 conn.requestMethod = "GET"
 
-                if (conn.responseCode == HttpURLConnection.HTTP_OK) {
-                    jsonString = conn.inputStream.bufferedReader().use { it.readText() }
-                    Log.i(TAG, "Fetched catalog from remote: $targetUrl")
-                } else {
-                    Log.w(TAG, "Remote fetch HTTP ${conn.responseCode}, trying local asset fallback.")
+                try {
+                    if (conn.responseCode == HttpURLConnection.HTTP_OK) {
+                        jsonString = conn.inputStream.bufferedReader().use { it.readText() }
+                        Log.i(TAG, "Fetched catalog from remote: $targetUrl")
+                    } else {
+                        Log.w(TAG, "Remote fetch HTTP ${conn.responseCode}, trying local asset fallback.")
+                    }
+                } finally {
+                    conn.disconnect()
                 }
             } catch (t: Throwable) {
                 Log.w(TAG, "Remote fetch error: ${t.message}. Falling back to assets.")
@@ -93,7 +103,15 @@ class AppRepository(private val context: Context) {
                 return@Thread
             }
 
-            val appList = parseCatalog(jsonString)
+            var appList = parseCatalog(jsonString)
+            if (appList.isEmpty()) {
+                // A broken remote catalog must not empty the store: fall back to the bundled one.
+                appList = try {
+                    parseCatalog(context.assets.open("apps.json").bufferedReader().use { it.readText() })
+                } catch (_: Throwable) {
+                    emptyList()
+                }
+            }
             mainHandler.post { onResult(appList, null) }
         }.start()
     }
@@ -149,124 +167,215 @@ class AppRepository(private val context: Context) {
         return list
     }
 
+    // ---------------------------------------------------------------------------------------
+    // DOWNLOADS (resumable, cancellable, verified)
+    // ---------------------------------------------------------------------------------------
+
+    /** Returned by [downloadApk]; [cancel] stops the transfer and keeps the partial for resume. */
+    class DownloadHandle internal constructor() {
+        private val cancelled = AtomicBoolean(false)
+        @Volatile internal var connection: HttpURLConnection? = null
+
+        val isCancelled: Boolean get() = cancelled.get()
+
+        fun cancel() {
+            if (cancelled.compareAndSet(false, true)) {
+                // disconnect() unblocks a read that is waiting on the socket.
+                try { connection?.disconnect() } catch (_: Throwable) {}
+            }
+        }
+    }
+
+    private class Cancelled : Exception()
+
+    private val downloadDir: File
+        get() = File(context.filesDir, "downloads").apply { mkdirs() }
+
+    private fun partFileFor(app: AppInfo): File {
+        val ext = if (app.type == AppInfo.TYPE_XAPK) "xapk" else "apk"
+        // Keyed by the expected hash: a partial is only ever resumed into the same exact file.
+        return File(downloadDir, "${app.sha256.lowercase().take(16)}.$ext.part")
+    }
+
     /**
-     * Downloads an APK file to the app's cache directory with redirect handling and local file support.
+     * Deletes leftovers in filesDir/downloads: partials whose hash is no longer in the catalog and
+     * finished files older than 10 minutes (an install deletes its own file when it ends).
+     */
+    fun cleanupDownloads(catalog: List<AppInfo>) {
+        val keep = catalog.mapNotNull { a -> a.sha256.lowercase().take(16).takeIf { it.length == 16 } }.toSet()
+        val now = System.currentTimeMillis()
+        Thread {
+            downloadDir.listFiles()?.forEach { f ->
+                val stale = if (f.name.endsWith(".part")) f.name.substringBefore('.') !in keep
+                else now - f.lastModified() > 10 * 60_000L
+                if (stale && f.delete()) Log.i(TAG, "Removed stale download ${f.name}")
+            }
+            // Legacy location used by older builds.
+            context.cacheDir.listFiles()?.filter {
+                it.name.endsWith(".apk") || it.name.endsWith(".xapk") || it.name.startsWith("picked_")
+            }?.forEach { if (now - it.lastModified() > 10 * 60_000L) it.delete() }
+        }.start()
+    }
+
+    /**
+     * Downloads [app] into filesDir/downloads. Resumes a previous partial with an HTTP Range
+     * request, checks free space first, verifies SHA-256 and only then hands back the file.
+     * [onProgress] / [onComplete] run on the main thread. On cancel, [onComplete] receives
+     * (null, [ERROR_CANCELLED]) and the partial is kept so the next attempt resumes.
      */
     fun downloadApk(
         app: AppInfo,
         onProgress: (Int) -> Unit,
         onComplete: (File?, String?) -> Unit
-    ) {
+    ): DownloadHandle {
+        val handle = DownloadHandle()
         Thread {
-            val ext = if (app.type == AppInfo.TYPE_XAPK) "xapk" else "apk"
-            val destination = File(context.cacheDir, "${app.packageName}.$ext")
-            if (destination.exists()) destination.delete()
-
-            try {
-                // Catalog entries may only point to HTTPS downloads with a pinned SHA-256.
-                // Local paths are refused: a remote catalog must never pick files on the device.
-                if (!app.isPublished) {
-                    mainHandler.post { onComplete(null, "Ứng dụng này chưa được phát hành để tải qua mạng. Hãy cài từ USB / máy.") }
-                    return@Thread
+            val (file, error) = try {
+                doDownload(app, handle) { p -> mainHandler.post { onProgress(p) } }
+            } catch (_: Cancelled) {
+                Log.i(TAG, "Download of ${app.packageName} cancelled; partial kept for resume.")
+                null to ERROR_CANCELLED
+            } catch (t: Throwable) {
+                if (handle.isCancelled) {
+                    null to ERROR_CANCELLED
+                } else {
+                    Log.e(TAG, "Download failed: ${t.message}", t)
+                    null to "Lỗi mạng khi tải: ${t.message ?: t.javaClass.simpleName}. Bấm lại để tải tiếp phần còn lại."
                 }
-                if (!app.apkUrl.startsWith("https://")) {
-                    mainHandler.post { onComplete(null, "Lỗi bảo mật: Chỉ cho phép tải qua HTTPS.") }
-                    return@Thread
+            } finally {
+                handle.connection = null
+            }
+            mainHandler.post { onComplete(file, error) }
+        }.start()
+        return handle
+    }
+
+    private fun doDownload(app: AppInfo, handle: DownloadHandle, progress: (Int) -> Unit): Pair<File?, String?> {
+        // Catalog entries may only point to HTTPS downloads with a pinned SHA-256.
+        // Local paths are refused: a remote catalog must never pick files on the device.
+        if (!app.isPublished) {
+            return null to "Ứng dụng này chưa được phát hành để tải qua mạng. Hãy cài từ USB / máy."
+        }
+        if (!app.apkUrl.startsWith("https://")) return null to "Lỗi bảo mật: Chỉ cho phép tải qua HTTPS."
+        if (!app.sha256.matches(Regex("^[0-9a-fA-F]{64}$"))) {
+            return null to "Lỗi bảo mật: Mục này thiếu mã SHA-256 hợp lệ, không thể tải an toàn."
+        }
+
+        val part = partFileFor(app)
+        var resumeFrom = if (part.exists()) part.length() else 0L
+
+        val conn = openWithRedirects(app.apkUrl, resumeFrom, handle) ?: return null to "Lỗi bảo mật: Máy chủ chuyển hướng sang kết nối không mã hóa."
+        try {
+            val code = conn.responseCode
+            val total: Long
+            when {
+                code == 206 -> {
+                    total = parseContentRangeTotal(conn.getHeaderField("Content-Range"))
+                        ?: (resumeFrom + conn.contentLengthLong)
+                    Log.i(TAG, "Resuming ${app.packageName} at ${resumeFrom / 1_048_576} MB")
                 }
-                if (!app.sha256.matches(Regex("^[0-9a-fA-F]{64}$"))) {
-                    mainHandler.post { onComplete(null, "Lỗi bảo mật: Mục này thiếu mã SHA-256 hợp lệ, không thể tải an toàn.") }
-                    return@Thread
+                code == 416 && resumeFrom > 0 -> {
+                    // Partial already complete — verify below.
+                    total = resumeFrom
                 }
-
-                // Follow HTTP/HTTPS redirects safely (up to 5 redirects)
-                var currentUrl = app.apkUrl
-                var conn: HttpURLConnection? = null
-                var redirects = 0
-                val maxRedirects = 5
-
-                while (redirects < maxRedirects) {
-                    val url = URL(currentUrl)
-                    conn = (url.openConnection() as HttpURLConnection).apply {
-                        instanceFollowRedirects = true
-                        connectTimeout = 15000
-                        readTimeout = 30000
-                        setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile; MyEX2Center)")
-                    }
-                    conn.connect()
-
-                    val code = conn.responseCode
-                    if (code in 300..399) {
-                        val location = conn.getHeaderField("Location")
-                        if (!location.isNullOrEmpty()) {
-                            currentUrl = if (location.startsWith("http")) location else URL(url, location).toString()
-                            if (!currentUrl.startsWith("https://")) {
-                                conn.disconnect()
-                                mainHandler.post { onComplete(null, "Lỗi bảo mật: Máy chủ chuyển hướng sang kết nối không mã hóa.") }
-                                return@Thread
-                            }
-                            conn.disconnect()
-                            redirects++
-                            continue
-                        }
-                    }
-                    break
+                code in 200..299 -> {
+                    resumeFrom = 0L // server ignored Range: start over
+                    total = conn.contentLengthLong
                 }
-
-                val finalConn = conn
-                val responseCode = finalConn?.responseCode ?: -1
-                if (finalConn == null || responseCode !in 200..299) {
-                    val errMsg = when (responseCode) {
-                        404 -> "HTTP 404: Tệp tin APK không tồn tại trên máy chủ tải về."
-                        451 -> "HTTP 451: Tệp tin bị giới hạn bản quyền tải xuống trên kho lưu trữ."
-                        403 -> "HTTP 403: Máy chủ từ chối quyền truy cập hoặc cần xác minh Captcha."
-                        else -> "Máy chủ phản hồi mã lỗi HTTP: $responseCode"
-                    }
-                    mainHandler.post { onComplete(null, errMsg) }
-                    return@Thread
+                else -> return null to when (code) {
+                    404 -> "HTTP 404: Tệp cài đặt không tồn tại trên máy chủ."
+                    403 -> "HTTP 403: Máy chủ từ chối truy cập."
+                    451 -> "HTTP 451: Tệp bị giới hạn tải xuống."
+                    else -> "Máy chủ phản hồi mã lỗi HTTP: $code"
                 }
+            }
 
-                val totalLength = finalConn.contentLengthLong
-                var downloaded = 0L
+            if (total > 0) {
+                val free = try { StatFs(context.filesDir.path).availableBytes } catch (_: Throwable) { Long.MAX_VALUE }
+                // remaining download + the installer's own staged copy + a small margin
+                val needed = (total - resumeFrom) + total + 50L * 1_048_576
+                if (free < needed) {
+                    return null to "Không đủ bộ nhớ trống để tải: cần ~${needed / 1_048_576} MB, còn ${free / 1_048_576} MB."
+                }
+            }
 
-                finalConn.inputStream.use { input ->
-                    FileOutputStream(destination).use { output ->
-                        val buffer = ByteArray(32768)
-                        var bytesRead: Int
-                        var lastProgress = 0
-
-                        while (input.read(buffer).also { bytesRead = it } != -1) {
-                            output.write(buffer, 0, bytesRead)
-                            downloaded += bytesRead
-
-                            if (totalLength > 0) {
-                                val progress = ((downloaded * 100) / totalLength).toInt()
-                                if (progress != lastProgress) {
-                                    lastProgress = progress
-                                    mainHandler.post { onProgress(progress) }
+            if (code != 416) {
+                conn.inputStream.use { input ->
+                    FileOutputStream(part, resumeFrom > 0).use { output ->
+                        val buffer = ByteArray(64 * 1024)
+                        var downloaded = resumeFrom
+                        var lastPercent = -1
+                        var lastPostAt = 0L
+                        while (true) {
+                            if (handle.isCancelled) throw Cancelled()
+                            val n = input.read(buffer)
+                            if (n == -1) break
+                            output.write(buffer, 0, n)
+                            downloaded += n
+                            if (total > 0) {
+                                val percent = ((downloaded * 100) / total).toInt().coerceIn(0, 100)
+                                val now = SystemClock.elapsedRealtime()
+                                if (percent != lastPercent && now - lastPostAt >= 250L) {
+                                    lastPercent = percent
+                                    lastPostAt = now
+                                    progress(percent)
                                 }
                             }
                         }
                         output.flush()
                     }
                 }
-
-                // Verify SHA-256 checksum if specified
-                if (!verifySha256(destination, app.sha256)) {
-                    Log.e(TAG, "SHA-256 mismatch for ${app.name}! Aborting installation.")
-                    if (destination.exists()) destination.delete()
-                    mainHandler.post { onComplete(null, "Lỗi bảo mật: Xác thực mã băm SHA-256 thất bại. Tệp tin không an toàn.") }
-                    return@Thread
-                }
-
-                Log.i(TAG, "APK downloaded and verified successfully: ${destination.absolutePath}")
-                mainHandler.post { onComplete(destination, null) }
-
-            } catch (t: Throwable) {
-                Log.e(TAG, "Download failed: ${t.message}", t)
-                if (destination.exists()) destination.delete()
-                mainHandler.post { onComplete(null, "Lỗi tải về: ${t.message}") }
             }
-        }.start()
+        } finally {
+            try { conn.disconnect() } catch (_: Throwable) {}
+        }
+        if (handle.isCancelled) throw Cancelled()
+
+        if (!verifySha256(part, app.sha256)) {
+            Log.e(TAG, "SHA-256 mismatch for ${app.name}; deleting partial.")
+            part.delete()
+            return null to "Lỗi bảo mật: Mã SHA-256 không khớp, tệp đã bị xóa. Hãy thử tải lại."
+        }
+        val ext = if (app.type == AppInfo.TYPE_XAPK) "xapk" else "apk"
+        val finalFile = File(downloadDir, "${app.packageName}-${app.sha256.lowercase().take(8)}.$ext")
+        if (finalFile.exists()) finalFile.delete()
+        if (!part.renameTo(finalFile)) return null to "Không thể hoàn tất tệp tải về."
+        Log.i(TAG, "Downloaded and verified ${finalFile.name} (${finalFile.length() / 1_048_576} MB)")
+        return finalFile to null
+    }
+
+    /** Follows up to 5 redirects manually so that every hop is checked to stay on HTTPS. */
+    private fun openWithRedirects(startUrl: String, resumeFrom: Long, handle: DownloadHandle): HttpURLConnection? {
+        var current = startUrl
+        repeat(6) {
+            if (handle.isCancelled) throw Cancelled()
+            val url = URL(current)
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                instanceFollowRedirects = false
+                connectTimeout = 15_000
+                readTimeout = 30_000
+                setRequestProperty("User-Agent", "MyEX2Center/${versionName()} (Android ${android.os.Build.VERSION.RELEASE})")
+                if (resumeFrom > 0) setRequestProperty("Range", "bytes=$resumeFrom-")
+            }
+            handle.connection = conn
+            val code = conn.responseCode
+            if (code !in 300..399) return conn
+            val location = conn.getHeaderField("Location")
+            conn.disconnect()
+            if (location.isNullOrEmpty()) return conn
+            current = URL(url, location).toString()
+            if (!current.startsWith("https://")) return null
+        }
+        throw java.io.IOException("Quá nhiều lần chuyển hướng.")
+    }
+
+    private fun parseContentRangeTotal(header: String?): Long? =
+        header?.substringAfterLast('/', "")?.trim()?.toLongOrNull()
+
+    private fun versionName(): String = try {
+        context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "?"
+    } catch (_: Throwable) {
+        "?"
     }
 
     private fun verifySha256(file: File, expectedHash: String): Boolean {

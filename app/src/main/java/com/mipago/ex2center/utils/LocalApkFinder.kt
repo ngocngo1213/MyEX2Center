@@ -94,42 +94,24 @@ object LocalApkFinder {
     }
 
     /**
-     * Looks for an APK matching the specific package name or keywords.
+     * Looks for a local .apk / .xapk whose manifest declares exactly [packageName].
+     * File names are never trusted (a keyword match could silently install the wrong app).
+     * Blocking — parses package files; call off the main thread.
      */
-    fun findApkForPackage(context: Context, packageName: String, keywords: List<String> = emptyList()): File? {
-        val pm = context.packageManager
-        val searchKeywords = (keywords + packageName).map { it.lowercase() }
-
+    fun findApkForPackage(context: Context, packageName: String): File? {
         for (dir in getCandidateDirectories()) {
             try {
                 val files = dir.listFiles { file -> isPackageFile(file) } ?: continue
-
-                // Pass 1: package name read from the APK manifest / XAPK manifest.json
                 for (f in files) {
                     if (PackageInstallerHelper.inspect(context, f)?.packageName == packageName) {
                         Log.i(TAG, "Found exact package match for $packageName at ${f.absolutePath}")
                         return f
                     }
                 }
-
-                // Pass 2: Keyword match in filename (plain APKs only)
-                for (f in files.filter { it.name.endsWith(".apk", ignoreCase = true) }) {
-                    val nameLower = f.name.lowercase()
-                    if (searchKeywords.any { term -> nameLower.contains(term) }) {
-                        try {
-                            val info = pm.getPackageArchiveInfo(f.absolutePath, 0)
-                            if (info != null) {
-                                Log.i(TAG, "Found keyword match for $packageName: ${f.name} at ${f.absolutePath}")
-                                return f
-                            }
-                        } catch (ignored: Throwable) {}
-                    }
-                }
             } catch (t: Throwable) {
                 Log.w(TAG, "Error searching in ${dir.absolutePath}: ${t.message}")
             }
         }
-
         return null
     }
 }
