@@ -143,16 +143,23 @@ class OverlayViewManager(private val context: Context) {
         val bubble = FrameLayout(context).apply {
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(Color.parseColor("#E60091FF")) // Semi-transparent blue
+                // Emerald disc with a white ring: same accent as the dashboard, readable on any app.
+                colors = intArrayOf(Color.parseColor("#34D399"), Color.parseColor("#059669"))
+                gradientType = GradientDrawable.LINEAR_GRADIENT
+                orientation = GradientDrawable.Orientation.TL_BR
                 setStroke(dpToPx(2), Color.WHITE)
             }
             elevation = dpToPx(8).toFloat()
         }
 
+        // A vector glyph sized for the circle — the square launcher artwork (rounded frame,
+        // transparent corners) looked like a misplaced tile inside the round bubble.
         val icon = ImageView(context).apply {
-            setImageResource(R.drawable.ic_launcher)
-            val pad = dpToPx(12)
+            setImageResource(R.drawable.ic_bubble_ex2)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            val pad = dpToPx(13)
             setPadding(pad, pad, pad, pad)
+            contentDescription = "EX2 Center – điều khiển nhanh"
         }
         bubble.addView(icon, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
 
@@ -313,9 +320,9 @@ class OverlayViewManager(private val context: Context) {
             orientation = LinearLayout.VERTICAL
             setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16))
             background = GradientDrawable().apply {
-                setColor(Color.parseColor("#F0141920")) // Dark slate
+                setColor(context.getColor(R.color.surface_card)) // Dark slate
                 cornerRadius = dpToPx(16).toFloat()
-                setStroke(dpToPx(1), Color.parseColor("#2A3440"))
+                setStroke(dpToPx(1), context.getColor(R.color.btn_inactive))
             }
         }
 
@@ -326,14 +333,14 @@ class OverlayViewManager(private val context: Context) {
         }
         val title = TextView(context).apply {
             text = context.getString(R.string.app_name) + " - Bảng điều khiển"
-            setTextColor(Color.WHITE)
+            setTextColor(context.getColor(R.color.text_primary))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
             setTypeface(null, android.graphics.Typeface.BOLD)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
         val btnClose = TextView(context).apply {
             text = "✕"
-            setTextColor(Color.parseColor("#90A4AE"))
+            setTextColor(context.getColor(R.color.text_secondary))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
             setPadding(dpToPx(8), dpToPx(4), dpToPx(8), dpToPx(4))
             setOnClickListener { hidePanel() }
@@ -350,7 +357,7 @@ class OverlayViewManager(private val context: Context) {
             } else {
                 "Ngoài trời: --°C"
             }
-            setTextColor(Color.parseColor("#90A4AE"))
+            setTextColor(context.getColor(R.color.text_secondary))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             setPadding(0, dpToPx(4), 0, dpToPx(12))
         }
@@ -361,7 +368,7 @@ class OverlayViewManager(private val context: Context) {
             orientation = LinearLayout.VERTICAL
             setPadding(dpToPx(12), dpToPx(12), dpToPx(12), dpToPx(12))
             background = GradientDrawable().apply {
-                setColor(Color.parseColor("#1E252D"))
+                setColor(context.getColor(R.color.card_inner_surface))
                 cornerRadius = dpToPx(10).toFloat()
             }
         }
@@ -398,14 +405,14 @@ class OverlayViewManager(private val context: Context) {
         }
         val lblTemp = TextView(context).apply {
             text = context.getString(R.string.overlay_temp_label)
-            setTextColor(Color.WHITE)
+            setTextColor(context.getColor(R.color.text_primary))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
         val btnTempMinus = createRoundButton("-")
         val txtTemp = TextView(context).apply {
             text = tempText()
-            setTextColor(Color.parseColor("#0091FF"))
+            setTextColor(context.getColor(R.color.accent_primary))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
             setTypeface(null, android.graphics.Typeface.BOLD)
             setPadding(dpToPx(12), 0, dpToPx(12), 0)
@@ -448,14 +455,14 @@ class OverlayViewManager(private val context: Context) {
         }
         val lblFan = TextView(context).apply {
             text = context.getString(R.string.overlay_fan_label)
-            setTextColor(Color.WHITE)
+            setTextColor(context.getColor(R.color.text_primary))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
         val btnFanMinus = createRoundButton("-")
         val txtFan = TextView(context).apply {
             text = fanText()
-            setTextColor(Color.parseColor("#00C853"))
+            setTextColor(context.getColor(R.color.accent_primary))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
             setTypeface(null, android.graphics.Typeface.BOLD)
             setPadding(dpToPx(12), 0, dpToPx(12), 0)
@@ -502,9 +509,9 @@ class OverlayViewManager(private val context: Context) {
         // Blackout button
         val btnBlackout = Button(context).apply {
             text = context.getString(R.string.overlay_blackout)
-            setTextColor(Color.WHITE)
+            setTextColor(context.getColor(R.color.text_primary))
             background = GradientDrawable().apply {
-                setColor(Color.parseColor("#2A3440"))
+                setColor(context.getColor(R.color.btn_inactive))
                 cornerRadius = dpToPx(8).toFloat()
             }
             layoutParams = LinearLayout.LayoutParams(0, dpToPx(56), 1f).apply {
@@ -542,14 +549,14 @@ class OverlayViewManager(private val context: Context) {
             btn.text = "Điều hòa A/C: ĐANG BẬT"
             btn.setTextColor(Color.WHITE)
             btn.background = GradientDrawable().apply {
-                setColor(Color.parseColor("#00C853"))
+                setColor(context.getColor(R.color.accent_primary))
                 cornerRadius = dpToPx(8).toFloat()
             }
         } else {
             btn.text = "Điều hòa A/C: ĐANG TẮT"
-            btn.setTextColor(Color.parseColor("#90A4AE"))
+            btn.setTextColor(context.getColor(R.color.text_secondary))
             btn.background = GradientDrawable().apply {
-                setColor(Color.parseColor("#2A3440"))
+                setColor(context.getColor(R.color.btn_inactive))
                 cornerRadius = dpToPx(8).toFloat()
             }
         }
@@ -558,10 +565,10 @@ class OverlayViewManager(private val context: Context) {
     private fun createRoundButton(label: String): Button {
         return Button(context).apply {
             text = label
-            setTextColor(Color.WHITE)
+            setTextColor(context.getColor(R.color.text_primary))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             background = GradientDrawable().apply {
-                setColor(Color.parseColor("#2A3440"))
+                setColor(context.getColor(R.color.btn_inactive))
                 cornerRadius = dpToPx(18).toFloat()
             }
             layoutParams = LinearLayout.LayoutParams(dpToPx(52), dpToPx(52))
@@ -599,7 +606,7 @@ class OverlayViewManager(private val context: Context) {
         // Faint hint for the first 3 s so the driver knows how to get the screen back.
         val hint = TextView(context).apply {
             text = "Màn hình đêm • Chạm bất kỳ đâu để thoát"
-            setTextColor(Color.parseColor("#64748B"))
+            setTextColor(context.getColor(R.color.text_muted))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
         }
         blackout.addView(
@@ -673,8 +680,8 @@ class OverlayViewManager(private val context: Context) {
             background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
                 cornerRadius = dpToPx(24).toFloat()
-                setColor(Color.parseColor("#E6090D14")) // Obsidian semi-transparent
-                setStroke(dpToPx(1), Color.parseColor("#10B981")) // Emerald border
+                setColor(context.getColor(R.color.overlay_bg)) // Obsidian semi-transparent
+                setStroke(dpToPx(1), context.getColor(R.color.accent_primary)) // Emerald border
             }
             val pad = dpToPx(6)
             setPadding(pad, dpToPx(10), pad, dpToPx(10))
@@ -695,8 +702,8 @@ class OverlayViewManager(private val context: Context) {
                 layoutParams = lp
                 background = GradientDrawable().apply {
                     shape = GradientDrawable.OVAL
-                    setColor(Color.parseColor("#182232"))
-                    setStroke(dpToPx(1), Color.parseColor("#24324A"))
+                    setColor(context.getColor(R.color.btn_inactive))
+                    setStroke(dpToPx(1), context.getColor(R.color.btn_inactive_stroke))
                 }
                 setOnClickListener { onClick() }
             }

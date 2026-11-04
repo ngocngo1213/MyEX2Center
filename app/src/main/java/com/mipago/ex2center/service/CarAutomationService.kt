@@ -14,6 +14,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
+import android.os.SystemClock
 import android.util.Log
 import com.mipago.ex2center.R
 import com.mipago.ex2center.ui.MainActivity
@@ -25,8 +26,8 @@ import com.mipago.ex2center.utils.CarApiHelper
  * Policy (mirrors reference/drive_assist ModeHelperService, proven on IHU629G):
  * - AVAS mute is re-asserted on EVERY tick: the car re-arms AVAS on wake/power-on and the
  *   head unit suspends instead of restarting this process, so "apply once on P→D" is not enough.
- * - Drive/Regen preference is enforced while PARKED and once when the car enters D;
- *   a mode the driver picks live during a drive is respected until the next stop.
+ * - Drive/Regen ("Ghi nhớ"): after a start/wake the last used mode is restored; afterwards the
+ *   driver's choices are only remembered, never fought (see [ModeMemory]).
  * - Every write is verified by readback on the next tick. A feature whose write does not take
  *   after [MAX_WRITE_ATTEMPTS] tries is suspended until the next wake / Park (never fights the car).
  * - All VHAL calls run on a dedicated HandlerThread, never on the main thread.
@@ -64,6 +65,12 @@ class CarAutomationService : Service() {
         private const val MAX_WRITE_ATTEMPTS = 3
         // Gear unreadable this many ticks in a row while "connected" => dead binder, reconnect.
         private const val MAX_GEAR_READ_FAILURES = 5
+
+        // "Ghi nhớ": window after start/wake in which the saved mode is restored.
+        private const val RESTORE_WINDOW_MS = 20_000L
+        private const val UI_CHANGE_GRACE_MS = 10_000L
+        /** Set by the Dashboard when the driver picks a mode there (epoch ms). */
+        const val KEY_MODE_CHANGED_AT = "key_mode_changed_at"
     }
 
     /** Tracks write attempts that have not (yet) been confirmed by readback. */
@@ -110,8 +117,6 @@ class CarAutomationService : Service() {
     @Volatile private var isCrashGuardHalted = false
 
     private val avasEnforcer = Enforcer("AVAS")
-    private val driveEnforcer = Enforcer("DriveMode")
-    private val regenEnforcer = Enforcer("RegenMode")
 
     private val tickRunnable = Runnable { tick() }
 
@@ -139,6 +144,7 @@ class CarAutomationService : Service() {
 
         registerReceiver(wakeReceiver, IntentFilter(Intent.ACTION_SCREEN_ON))
         carHelper.acquire(this, HOLDER)
+        worker.post { resetEnforcers() } // service start == car start (boot / app update)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -252,7 +258,7 @@ class CarAutomationService : Service() {
         if (gear != previousGear) {
             Log.i(TAG, "Gear $previousGear -> $gear")
             lastGear = gear
-            if (gear == CarApiHelper.GEAR_PARK) resetEnforcers() // fresh chances at every stop
+            if (gear == CarApiHelper.GEAR_PARK) avasEnforcer.reset() // fresh chances at every stop
         }
 
         // 1. AVAS mute — every tick, any gear (the car re-arms it on wake).
@@ -260,25 +266,78 @@ class CarAutomationService : Service() {
             avasEnforcer.enforce(carHelper.getAvasMode(), 0) { carHelper.setAvasMode(it) }
         }
 
-        // 2./3. Drive & Regen — hold the preference while parked, apply once when entering D.
-        val parked = gear == CarApiHelper.GEAR_PARK
-        val enteringDrive = gear == CarApiHelper.GEAR_DRIVE && previousGear != CarApiHelper.GEAR_DRIVE
-        if (parked || enteringDrive) {
-            if (prefs.getBoolean(KEY_AUTO_DRIVE_MODE, true)) {
-                val wanted = prefs.getInt(KEY_PREFERRED_DRIVE_MODE, CarApiHelper.DRIVE_ECO)
-                driveEnforcer.enforce(carHelper.readDriveMode(), wanted) { carHelper.writeDriveMode(it) }
+        // 2./3. "Ghi nhớ" Drive & Regen: restore after a start/wake, then remember changes.
+        driveMemory.tick()
+        regenMemory.tick()
+    }
+
+    /**
+     * Remembers the last used mode across car restarts (Dashboard switch "Ghi nhớ").
+     *
+     * - Restore phase ([RESTORE_WINDOW_MS] after the service starts or the head unit wakes):
+     *   the car boots into its own default, so the saved mode is written back (readback-verified,
+     *   at most [MAX_WRITE_ATTEMPTS] tries).
+     * - Tracking phase: whatever mode the driver selects (here or on the car's own screen) is
+     *   saved once it has been stable for two ticks, so it is the one restored next time.
+     * Nothing is ever enforced while driving after the restore window.
+     */
+    private inner class ModeMemory(
+        private val name: String,
+        private val enabledKey: String,
+        private val savedKey: String,
+        private val read: () -> Int?,
+        private val write: (Int) -> Boolean
+    ) {
+        private val enforcer = Enforcer(name)
+        private var restoreUntil = 0L
+        private var candidate: Int? = null
+
+        fun startRestore() {
+            restoreUntil = SystemClock.elapsedRealtime() + RESTORE_WINDOW_MS
+            candidate = null
+            enforcer.reset()
+        }
+
+        fun tick() {
+            if (!prefs.getBoolean(enabledKey, true)) return
+            val current = read() ?: return
+            val saved = prefs.getInt(savedKey, -1)
+            if (saved == -1) {
+                prefs.edit().putInt(savedKey, current).apply() // first run: adopt the car's mode
+                return
             }
-            if (prefs.getBoolean(KEY_AUTO_REGEN_MODE, true)) {
-                val wanted = prefs.getInt(KEY_PREFERRED_REGEN_MODE, CarApiHelper.REGEN_MID)
-                regenEnforcer.enforce(carHelper.readRegenMode(), wanted) { carHelper.writeRegenMode(it) }
+            if (SystemClock.elapsedRealtime() < restoreUntil) {
+                enforcer.enforce(current, saved) { write(it) }
+                return
+            }
+            // A selection made in our own UI is saved directly; give the car time to report it.
+            if (System.currentTimeMillis() - prefs.getLong(KEY_MODE_CHANGED_AT, 0L) < UI_CHANGE_GRACE_MS) return
+            if (current == saved) {
+                candidate = null
+            } else if (candidate == current) {
+                prefs.edit().putInt(savedKey, current).apply()
+                candidate = null
+                Log.i(TAG, "$name: remembered driver's choice $current")
+            } else {
+                candidate = current
             }
         }
     }
 
+    private val driveMemory = ModeMemory(
+        "DriveMode", KEY_AUTO_DRIVE_MODE, KEY_PREFERRED_DRIVE_MODE,
+        { carHelper.readDriveMode() }, { carHelper.writeDriveMode(it) }
+    )
+    private val regenMemory = ModeMemory(
+        "RegenMode", KEY_AUTO_REGEN_MODE, KEY_PREFERRED_REGEN_MODE,
+        { carHelper.readRegenMode() }, { carHelper.writeRegenMode(it) }
+    )
+
+    /** Start / wake: re-arm AVAS enforcement and restore the remembered modes. */
     private fun resetEnforcers() {
         avasEnforcer.reset()
-        driveEnforcer.reset()
-        regenEnforcer.reset()
+        driveMemory.startRestore()
+        regenMemory.startRestore()
     }
 
     /**

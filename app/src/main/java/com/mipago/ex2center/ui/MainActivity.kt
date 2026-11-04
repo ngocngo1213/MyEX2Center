@@ -33,6 +33,10 @@ import com.mipago.ex2center.service.FloatingControlService
 import com.mipago.ex2center.utils.CarApiHelper
 import com.mipago.ex2center.utils.ParkGate
 import com.mipago.ex2center.utils.WifiStatus
+import com.mipago.ex2center.utils.CarProfile
+import com.mipago.ex2center.utils.ThemeManager
+import com.mipago.ex2center.utils.UiStyle
+import android.widget.Switch
 import com.mipago.ex2center.utils.PendingWrites
 import java.net.InetAddress
 import java.nio.ByteBuffer
@@ -133,6 +137,18 @@ class MainActivity : Activity() {
     private lateinit var btnOpenCatalogHeader: ImageView
     private lateinit var btnNightBlackout: ImageView
     private lateinit var btnSettings: ImageView
+    private lateinit var layoutCarProfile: LinearLayout
+    private lateinit var ivHeaderCarAvatar: ImageView
+    private lateinit var tvHeaderCarName: TextView
+    private lateinit var swRememberDrive: Switch
+    private lateinit var swRememberRegen: Switch
+    private lateinit var vWheelFl: View
+    private lateinit var vWheelFr: View
+    private lateinit var vWheelRl: View
+    private lateinit var vWheelRr: View
+
+    /** Appearance this Activity was created with; recreated when Cài đặt changes it. */
+    private var createdThemeMode = -1
 
     // Column 1: Driver Zone
     private lateinit var tvGearP: TextView
@@ -231,9 +247,15 @@ class MainActivity : Activity() {
         }
     }
 
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(ThemeManager.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        createdThemeMode = ThemeManager.getMode(this)
         setContentView(R.layout.activity_main)
+        com.mipago.ex2center.utils.ThemeManager.applyWindow(this)
 
         prefs = getSharedPreferences(CarAutomationService.PREFS_NAME, Context.MODE_PRIVATE)
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -255,6 +277,12 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        if (ThemeManager.getMode(this) != createdThemeMode) {
+            recreate() // appearance changed in Cài đặt
+            return
+        }
+        bindCarProfile()
+        bindRememberSwitches()
         mainHandler.post(clockRunnable)
         setupWifiInfo()
         updateAutomationPillUI()
@@ -307,6 +335,17 @@ class MainActivity : Activity() {
         btnOpenCatalogHeader = findViewById(R.id.btnOpenCatalogHeader)
         btnNightBlackout = findViewById(R.id.btnNightBlackout)
         btnSettings = findViewById(R.id.btnSettings)
+        layoutCarProfile = findViewById(R.id.layoutCarProfile)
+        ivHeaderCarAvatar = findViewById(R.id.ivHeaderCarAvatar)
+        tvHeaderCarName = findViewById(R.id.tvHeaderCarName)
+        swRememberDrive = findViewById(R.id.swRememberDrive)
+        swRememberRegen = findViewById(R.id.swRememberRegen)
+        UiStyle.styleSwitch(swRememberDrive)
+        UiStyle.styleSwitch(swRememberRegen)
+        vWheelFl = findViewById(R.id.vWheelFl)
+        vWheelFr = findViewById(R.id.vWheelFr)
+        vWheelRl = findViewById(R.id.vWheelRl)
+        vWheelRr = findViewById(R.id.vWheelRr)
 
         // Column 1: Driver Zone
         tvGearP = findViewById(R.id.tvGearP)
@@ -501,13 +540,13 @@ class MainActivity : Activity() {
         if (v12 != null) {
             tvBattery12v.text = String.format(Locale.US, "%.1f V • Ắc quy", v12)
             if (v12 < 12.0f) {
-                tvBattery12v.setTextColor(Color.parseColor("#EF4444")) // Red alert
+                tvBattery12v.setTextColor(getColor(R.color.accent_danger)) // Red alert
             } else {
-                tvBattery12v.setTextColor(Color.parseColor("#10B981")) // Emerald normal
+                tvBattery12v.setTextColor(getColor(R.color.accent_primary)) // Emerald normal
             }
         } else {
             tvBattery12v.text = "-- V • Ắc quy"
-            tvBattery12v.setTextColor(Color.parseColor("#94A3B8"))
+            tvBattery12v.setTextColor(getColor(R.color.text_secondary))
         }
 
         // TPMS
@@ -520,7 +559,10 @@ class MainActivity : Activity() {
         tvTpmsRrKpa.text = if (tpms.rrKpa != null) "${tpms.rrKpa} kPa" else "-- kPa"
         tvTpmsRrTemp.text = if (tpms.rrTemp != null) "${tpms.rrTemp}°C" else "--°C"
 
-        setTpmsVisible(tpms.flKpa != null || tpms.frKpa != null || tpms.rlKpa != null || tpms.rrKpa != null)
+        renderTire(tvTpmsFlKpa, vWheelFl, tpms.flKpa)
+        renderTire(tvTpmsFrKpa, vWheelFr, tpms.frKpa)
+        renderTire(tvTpmsRlKpa, vWheelRl, tpms.rlKpa)
+        renderTire(tvTpmsRrKpa, vWheelRr, tpms.rrKpa)
         if (tpms.isValid) {
             val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
             tvTpmsUpdated.text = "Cập nhật ${sdf.format(Date())}"
@@ -540,7 +582,7 @@ class MainActivity : Activity() {
         tvEstimatedRange.text = "-- km"
         tvOutsideTemp.text = "--°C"
         tvBattery12v.text = "-- V • Ắc quy"
-        tvBattery12v.setTextColor(Color.parseColor("#94A3B8"))
+        tvBattery12v.setTextColor(getColor(R.color.text_secondary))
 
         tvTpmsFlKpa.text = "-- kPa"
         tvTpmsFlTemp.text = "--°C"
@@ -551,16 +593,50 @@ class MainActivity : Activity() {
         tvTpmsRrKpa.text = "-- kPa"
         tvTpmsRrTemp.text = "--°C"
         tvTpmsUpdated.text = "Chưa kết nối xe"
-        setTpmsVisible(false)
+        listOf(tvTpmsFlKpa to vWheelFl, tvTpmsFrKpa to vWheelFr, tvTpmsRlKpa to vWheelRl, tvTpmsRrKpa to vWheelRr)
+            .forEach { (tv, wheel) -> renderTire(tv, wheel, null) }
         updateWindowPositionUI(arrayOfNulls(4))
         lastControls = ControlSnapshot()
         renderControls()
     }
 
-    /** TPMS chips are hidden (not shown as permanent "--") when the car provides no tire data. */
-    private fun setTpmsVisible(visible: Boolean) {
-        val state = if (visible) View.VISIBLE else View.INVISIBLE // keep the car image centred
-        listOf(tvTpmsFlKpa, tvTpmsFrKpa, tvTpmsRlKpa, tvTpmsRrKpa).forEach { (it.parent as? View)?.visibility = state }
+    /**
+     * Tire status at a glance: wheel marker + pressure colour.
+     * Normal 200–300 kPa (emerald) · outside that range amber · below 170 / above 330 red · no data grey.
+     */
+    private fun renderTire(label: TextView, wheel: View, kpa: Int?) {
+        val color = when {
+            kpa == null -> getColor(R.color.text_muted)
+            kpa < 170 || kpa > 330 -> getColor(R.color.accent_danger)
+            kpa < 200 || kpa > 300 -> getColor(R.color.accent_secondary)
+            else -> getColor(R.color.accent_primary)
+        }
+        (wheel.background?.mutate() as? android.graphics.drawable.GradientDrawable)?.setColor(color)
+        label.setTextColor(if (kpa == null) getColor(R.color.text_muted) else getColor(R.color.text_primary))
+    }
+
+    private fun bindCarProfile() {
+        tvHeaderCarName.text = CarProfile.getName(this)
+        CarProfile.bindPhoto(this, ivHeaderCarAvatar)
+    }
+
+    /** "Ghi nhớ" = keep the last used mode and restore it after the car restarts. */
+    private fun bindRememberSwitches() {
+        swRememberDrive.isSaveEnabled = false
+        swRememberRegen.isSaveEnabled = false
+        swRememberDrive.isChecked = prefs.getBoolean(CarAutomationService.KEY_AUTO_DRIVE_MODE, true)
+        swRememberRegen.isChecked = prefs.getBoolean(CarAutomationService.KEY_AUTO_REGEN_MODE, true)
+        // Click listeners: only a real tap changes the preference.
+        swRememberDrive.setOnClickListener {
+            val on = swRememberDrive.isChecked
+            prefs.edit().putBoolean(CarAutomationService.KEY_AUTO_DRIVE_MODE, on).apply()
+            Toast.makeText(this, if (on) "Sẽ ghi nhớ chế độ lái khi tắt/mở xe" else "Đã tắt ghi nhớ chế độ lái", Toast.LENGTH_SHORT).show()
+        }
+        swRememberRegen.setOnClickListener {
+            val on = swRememberRegen.isChecked
+            prefs.edit().putBoolean(CarAutomationService.KEY_AUTO_REGEN_MODE, on).apply()
+            Toast.makeText(this, if (on) "Sẽ ghi nhớ mức phanh tái sinh khi tắt/mở xe" else "Đã tắt ghi nhớ phanh tái sinh", Toast.LENGTH_SHORT).show()
+        }
     }
 
     /** Runs on [telemetryExecutor]. */
@@ -677,7 +753,7 @@ class MainActivity : Activity() {
         val muted = s.avas?.let { it == 0 }
         btnAvasToggle.setBackgroundResource(if (muted == true) R.drawable.bg_btn_active else R.drawable.bg_btn_inactive)
         btnAvasToggle.alpha = if (muted == null) 0.6f else 1f
-        tvAvasLabel.setTextColor(if (muted == true) Color.WHITE else Color.parseColor("#94A3B8"))
+        tvAvasLabel.setTextColor(if (muted == true) Color.WHITE else getColor(R.color.text_secondary))
         tvAvasLabel.text = when (muted) {
             null -> "AVAS: --"
             true -> "AVAS: Đã tắt âm"
@@ -705,7 +781,7 @@ class MainActivity : Activity() {
     /** null = unknown → neutral + dimmed, so the driver never sees a guessed state. */
     private fun renderToggle(view: TextView, active: Boolean?) {
         view.setBackgroundResource(if (active == true) R.drawable.bg_btn_active else R.drawable.bg_btn_inactive)
-        view.setTextColor(if (active == true) Color.WHITE else Color.parseColor("#94A3B8"))
+        view.setTextColor(if (active == true) Color.WHITE else getColor(R.color.text_secondary))
         view.alpha = if (active == null) 0.6f else 1f
     }
 
@@ -744,16 +820,16 @@ class MainActivity : Activity() {
         val inactiveBg = Color.TRANSPARENT
 
         tvGearP.setBackgroundResource(if (gear == CarApiHelper.GEAR_PARK) activeBg else inactiveBg)
-        tvGearP.setTextColor(if (gear == CarApiHelper.GEAR_PARK) Color.WHITE else Color.parseColor("#94A3B8"))
+        tvGearP.setTextColor(if (gear == CarApiHelper.GEAR_PARK) Color.WHITE else getColor(R.color.text_secondary))
 
         tvGearR.setBackgroundResource(if (gear == CarApiHelper.GEAR_REVERSE) activeBg else inactiveBg)
-        tvGearR.setTextColor(if (gear == CarApiHelper.GEAR_REVERSE) Color.WHITE else Color.parseColor("#94A3B8"))
+        tvGearR.setTextColor(if (gear == CarApiHelper.GEAR_REVERSE) Color.WHITE else getColor(R.color.text_secondary))
 
         tvGearN.setBackgroundResource(if (gear == CarApiHelper.GEAR_NEUTRAL) activeBg else inactiveBg)
-        tvGearN.setTextColor(if (gear == CarApiHelper.GEAR_NEUTRAL) Color.WHITE else Color.parseColor("#94A3B8"))
+        tvGearN.setTextColor(if (gear == CarApiHelper.GEAR_NEUTRAL) Color.WHITE else getColor(R.color.text_secondary))
 
         tvGearD.setBackgroundResource(if (gear == CarApiHelper.GEAR_DRIVE) activeBg else inactiveBg)
-        tvGearD.setTextColor(if (gear == CarApiHelper.GEAR_DRIVE) Color.WHITE else Color.parseColor("#94A3B8"))
+        tvGearD.setTextColor(if (gear == CarApiHelper.GEAR_DRIVE) Color.WHITE else getColor(R.color.text_secondary))
     }
 
     private fun updateAutomationPillUI() {
@@ -766,21 +842,21 @@ class MainActivity : Activity() {
             tvAutomationStatus.setTextColor(Color.WHITE)
             ivAutomationIcon.setColorFilter(Color.WHITE)
             btnValetMode.setBackgroundResource(R.drawable.bg_btn_inactive)
-            tvValetLabel.setTextColor(Color.parseColor("#94A3B8"))
+            tvValetLabel.setTextColor(getColor(R.color.text_secondary))
         } else if (isValet) {
             layoutAutomationPill.setBackgroundResource(R.drawable.bg_pill_valet)
             tvAutomationStatus.text = "Chế độ Bảo dưỡng: Đang bật"
-            tvAutomationStatus.setTextColor(Color.parseColor("#FBBF24"))
-            ivAutomationIcon.setColorFilter(Color.parseColor("#FBBF24"))
+            tvAutomationStatus.setTextColor(getColor(R.color.text_amber))
+            ivAutomationIcon.setColorFilter(getColor(R.color.text_amber))
             btnValetMode.setBackgroundResource(R.drawable.bg_btn_active_amber)
             tvValetLabel.setTextColor(Color.WHITE)
         } else {
             layoutAutomationPill.setBackgroundResource(R.drawable.bg_pill_automation)
             tvAutomationStatus.text = "Tự động hóa: Đang bật"
-            tvAutomationStatus.setTextColor(Color.parseColor("#34D399"))
-            ivAutomationIcon.setColorFilter(Color.parseColor("#34D399"))
+            tvAutomationStatus.setTextColor(getColor(R.color.text_emerald))
+            ivAutomationIcon.setColorFilter(getColor(R.color.text_emerald))
             btnValetMode.setBackgroundResource(R.drawable.bg_btn_inactive)
-            tvValetLabel.setTextColor(Color.parseColor("#94A3B8"))
+            tvValetLabel.setTextColor(getColor(R.color.text_secondary))
         }
     }
 
@@ -791,15 +867,15 @@ class MainActivity : Activity() {
             when {
                 percent == null -> {
                     views[i].text = "Kính: --"
-                    views[i].setTextColor(Color.parseColor("#64748B"))
+                    views[i].setTextColor(getColor(R.color.text_muted))
                 }
                 percent == 0 -> {
                     views[i].text = "Kính: 0%"
-                    views[i].setTextColor(Color.parseColor("#10B981"))
+                    views[i].setTextColor(getColor(R.color.accent_primary))
                 }
                 else -> {
                     views[i].text = "Kính: $percent%"
-                    views[i].setTextColor(Color.parseColor("#F59E0B"))
+                    views[i].setTextColor(getColor(R.color.accent_secondary))
                 }
             }
         }
@@ -829,7 +905,10 @@ class MainActivity : Activity() {
         }
 
         btnSettings.setOnClickListener {
-            showSettingsDialog()
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+        layoutCarProfile.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
 
         layoutAutomationPill.setOnClickListener {
@@ -1080,21 +1159,24 @@ class MainActivity : Activity() {
 
     private fun updateCompoundButtonStyle(button: LinearLayout, isActive: Boolean) {
         button.setBackgroundResource(if (isActive) R.drawable.bg_btn_active else R.drawable.bg_btn_inactive)
+        val fg = if (isActive) Color.WHITE else getColor(R.color.text_secondary)
         for (i in 0 until button.childCount) {
-            val child = button.getChildAt(i)
-            if (child is TextView) {
-                child.setTextColor(if (isActive) Color.WHITE else Color.parseColor("#94A3B8"))
+            when (val child = button.getChildAt(i)) {
+                is TextView -> child.setTextColor(fg)
+                is ImageView -> child.setColorFilter(fg) // icons stay readable on emerald and in light mode
             }
         }
     }
 
     private fun selectDriveMode(mode: Int) {
-        prefs.edit().putInt(CarAutomationService.KEY_PREFERRED_DRIVE_MODE, mode).apply()
+        prefs.edit().putInt(CarAutomationService.KEY_PREFERRED_DRIVE_MODE, mode)
+            .putLong(CarAutomationService.KEY_MODE_CHANGED_AT, System.currentTimeMillis()).apply()
         commandControl(K_DRIVE, mode, "Chế độ lái") { carHelper.writeDriveMode(mode) }
     }
 
     private fun selectRegenMode(mode: Int) {
-        prefs.edit().putInt(CarAutomationService.KEY_PREFERRED_REGEN_MODE, mode).apply()
+        prefs.edit().putInt(CarAutomationService.KEY_PREFERRED_REGEN_MODE, mode)
+            .putLong(CarAutomationService.KEY_MODE_CHANGED_AT, System.currentTimeMillis()).apply()
         commandControl(K_REGEN, mode, "Phanh tái sinh") { carHelper.writeRegenMode(mode) }
     }
 
@@ -1109,50 +1191,6 @@ class MainActivity : Activity() {
             intent.putExtra(Intent.EXTRA_KEY_EVENT, KeyEvent(KeyEvent.ACTION_DOWN, keyCode))
             sendOrderedBroadcast(intent, null)
         }
-    }
-
-    private fun showSettingsDialog() {
-        val isValet = prefs.getBoolean(CarAutomationService.KEY_VALET_MODE, false)
-        val options = arrayOf(
-            "Tự động tắt âm AVAS khi vào số D: ${if (prefs.getBoolean(CarAutomationService.KEY_AUTO_AVAS, true)) "BẬT" else "TẮT"}",
-            "Chế độ Bảo dưỡng / Rửa xe (Valet): ${if (isValet) "ĐANG BẬT" else "TẮT"}",
-            "Mở Kho ứng dụng Wi-Fi",
-            "Bật/Tắt Nút nổi điều khiển nhanh (Overlay)"
-        )
-
-        AlertDialog.Builder(this)
-            .setTitle("Cài đặt hệ thống EX2 Center")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> {
-                        val current = prefs.getBoolean(CarAutomationService.KEY_AUTO_AVAS, true)
-                        prefs.edit().putBoolean(CarAutomationService.KEY_AUTO_AVAS, !current).apply()
-                        Toast.makeText(this, "Đã lưu cài đặt tự động AVAS.", Toast.LENGTH_SHORT).show()
-                    }
-                    1 -> {
-                        toggleValetMode()
-                    }
-                    2 -> {
-                        startActivity(Intent(this, AppCatalogActivity::class.java))
-                    }
-                    3 -> {
-                        val current = prefs.getBoolean("key_floating_bubble_enabled", true)
-                        prefs.edit().putBoolean("key_floating_bubble_enabled", !current).apply()
-                        if (!current) {
-                            val overlayIntent = Intent(this, FloatingControlService::class.java)
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                startForegroundService(overlayIntent)
-                            } else {
-                                startService(overlayIntent)
-                            }
-                        } else {
-                            stopService(Intent(this, FloatingControlService::class.java))
-                        }
-                    }
-                }
-            }
-            .setNegativeButton("Đóng", null)
-            .show()
     }
 
     private fun startCoreServices() {

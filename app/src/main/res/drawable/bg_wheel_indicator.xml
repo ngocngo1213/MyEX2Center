@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tire status marker; colour is set at runtime (normal / warning / unknown). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/text_muted" />
+    <corners android:radius="5dp" />
+</shape>

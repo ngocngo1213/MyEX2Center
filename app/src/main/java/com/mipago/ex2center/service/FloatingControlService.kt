@@ -48,7 +48,7 @@ class FloatingControlService : Service() {
         startForegroundNotification()
         // The overlay reads/writes HVAC and watches the gear for Blackout: hold the shared link.
         CarApiHelper.getInstance().acquire(this, VHAL_HOLDER)
-        overlayViewManager = OverlayViewManager(this)
+        overlayViewManager = OverlayViewManager(com.mipago.ex2center.utils.ThemeManager.wrap(this))
         if (isBubbleEnabled()) overlayViewManager?.showBubble()
     }
 

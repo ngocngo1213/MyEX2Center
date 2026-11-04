@@ -77,6 +77,11 @@ class CarApiHelper private constructor() {
         // unknown ADAS property is unsafe. Re-add only after a directed snapshot diff on the car.
         const val PROP_AEB = 557858874 // Autonomous Emergency Braking (boolean)
 
+        // Cabin ambient lighting master switch — verified (field-catalog.md §7): boolean, area 0.
+        const val PROP_AMBIENT_LIGHT_ON = 557885013
+
+        // Front trunk (frunk): NO verified property in reference/ yet — intentionally absent.
+
         // TPMS — AOSP TIRE_PRESSURE 0x17600309 (WHEEL | FLOAT, kPa). Not yet confirmed on EX2;
         // the previous id 0x15400309 had SEAT|INT32 type bits and could never be read as float.
         const val PROP_TIRE_PRESSURE = 392168201
@@ -779,6 +784,25 @@ class CarApiHelper private constructor() {
     fun closeAllWindows(): Boolean = setAllWindowsPosition(0)
     fun ventAllWindows(): Boolean = setAllWindowsPosition(15)
     fun openAllWindows(): Boolean = setAllWindowsPosition(100)
+
+    // -------------------------------------------------------------
+    // CABIN AMBIENT LIGHT (ĐÈN VIỀN NỘI THẤT)
+    // -------------------------------------------------------------
+    fun readAmbientLight(): Boolean? {
+        val mgr = cpm ?: return null
+        return try { mgr.getBooleanProperty(PROP_AMBIENT_LIGHT_ON, 0) } catch (_: Throwable) { null }
+    }
+
+    fun setAmbientLight(on: Boolean): Boolean {
+        val mgr = cpm ?: return false
+        return try {
+            mgr.setBooleanProperty(PROP_AMBIENT_LIGHT_ON, 0, on)
+            true
+        } catch (t: Throwable) {
+            Log.w(TAG, "setAmbientLight error: ${t.message}")
+            false
+        }
+    }
 
     // -------------------------------------------------------------
     // ADAS & SAFETY

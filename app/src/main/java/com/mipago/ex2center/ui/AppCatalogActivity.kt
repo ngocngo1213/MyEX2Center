@@ -81,9 +81,14 @@ class AppCatalogActivity : Activity() {
     /** Package-file parsing (USB scans, picked files) — off the main thread, one at a time. */
     private val scanExecutor = Executors.newSingleThreadExecutor()
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(com.mipago.ex2center.utils.ThemeManager.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_app_catalog)
+        com.mipago.ex2center.utils.ThemeManager.applyWindow(this)
 
         appRepo = AppRepository(this)
 
@@ -508,7 +513,7 @@ class AppCatalogActivity : Activity() {
 
             when (app.status) {
                 AppInfo.InstallStatus.INSTALLED -> {
-                    badge(holder, "Đã cài", "#4ADE80", R.drawable.bg_badge_installed)
+                    badge(holder, "Đã cài", R.color.text_emerald, R.drawable.bg_badge_installed)
                     holder.pbProgress.visibility = View.GONE
                     holder.layoutInstall.visibility = View.GONE
                     holder.layoutInstalled.visibility = View.VISIBLE
@@ -523,7 +528,7 @@ class AppCatalogActivity : Activity() {
                     if (!app.isSelf) holder.btnDelete.setOnClickListener { handleUninstall(app) }
                 }
                 AppInfo.InstallStatus.UPDATE_AVAILABLE -> {
-                    badge(holder, "Có cập nhật", "#FBBF24", R.drawable.bg_badge_update)
+                    badge(holder, "Có cập nhật", R.color.text_amber, R.drawable.bg_badge_update)
                     showInstallButton(holder)
                     holder.tvInstallText.text = when {
                         !app.isPublished -> "Cập nhật từ USB / Máy"
@@ -533,7 +538,7 @@ class AppCatalogActivity : Activity() {
                     holder.layoutInstall.setOnClickListener { handleInstall(app) }
                 }
                 AppInfo.InstallStatus.NOT_INSTALLED -> {
-                    badge(holder, "Chưa cài", "#94A3B8", R.drawable.bg_badge_not_installed)
+                    badge(holder, "Chưa cài", R.color.text_secondary, R.drawable.bg_badge_not_installed)
                     showInstallButton(holder)
                     holder.tvInstallText.text = if (app.isPublished) "Cài đặt" else "Cài từ USB / Máy"
                     holder.layoutInstall.setOnClickListener { handleInstall(app) }
@@ -546,7 +551,7 @@ class AppCatalogActivity : Activity() {
                     bindProgress(holder, app)
                 }
                 AppInfo.InstallStatus.INSTALLING -> {
-                    badge(holder, "Đang cài...", "#4ADE80", R.drawable.bg_badge_installed)
+                    badge(holder, "Đang cài...", R.color.text_emerald, R.drawable.bg_badge_installed)
                     showInstallButton(holder)
                     holder.tvInstallText.text = "Đang xử lý..."
                 }
@@ -555,14 +560,14 @@ class AppCatalogActivity : Activity() {
 
         private fun bindProgress(holder: ViewHolder, app: AppInfo) {
             if (app.status != AppInfo.InstallStatus.DOWNLOADING) return
-            badge(holder, "${app.downloadProgress}%", "#38BDF8", R.drawable.bg_badge_not_installed)
+            badge(holder, "${app.downloadProgress}%", R.color.accent_primary, R.drawable.bg_badge_not_installed)
             holder.pbProgress.progress = app.downloadProgress
             holder.tvInstallText.text = "Hủy tải (${app.downloadProgress}%)"
         }
 
-        private fun badge(holder: ViewHolder, text: String, color: String, bg: Int) {
+        private fun badge(holder: ViewHolder, text: String, colorRes: Int, bg: Int) {
             holder.tvBadge.text = text
-            holder.tvBadge.setTextColor(Color.parseColor(color))
+            holder.tvBadge.setTextColor(getColor(colorRes))
             holder.tvBadge.setBackgroundResource(bg)
         }
 

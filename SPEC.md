@@ -74,13 +74,23 @@
 ### Module 5: Dashboard — `MainActivity.kt`, `activity_main.xml`
 Bố cục 3 cột (32% / 38% / 30%) + thanh Header.
 
-**Header:** logo xe, giờ `HH:mm`, nhiệt độ ngoài, điện áp 12V (đỏ nếu < 12.0V), Pill Tự động hóa (xanh = bật; cam = Valet; cam cảnh báo = Crash Guard đã ngắt, bấm để reset), Wi-Fi SSID + IP, nút Kho ứng dụng / Blackout / Cài đặt.
+**Header:** hồ sơ xe (ảnh tròn + tên, chạm → Cài đặt), giờ `HH:mm`, nhiệt độ ngoài, điện áp 12V (đỏ nếu < 12.0V), Pill Tự động hóa (xanh = bật; cam = Valet; cam cảnh báo = Crash Guard đã ngắt, bấm để reset), Wi-Fi SSID + IP, nút Kho ứng dụng / Blackout / Cài đặt.
 
-**Cột 1 (lái):** HUD (P R N D, tốc độ, % pin, km ước tính + progress); chế độ lái (Tiết kiệm/Thoải mái/Thể thao) và Regen (Thấp/Vừa/Cao); phím tắt: Tắt âm AVAS, Camera 360, Bảo dưỡng (Valet). Auto Hold / HDC / ESC **đã ẩn** (mã VHAL chưa được kiểm chứng, nằm trong khối ADAS thật).
+**Cột 1 (lái):** HUD (P R N D, **biển giới hạn tốc độ ngay cạnh tốc độ**, % pin, km ước tính + progress); chế độ lái (Tiết kiệm/Thoải mái/Thể thao) và Regen (Thấp/Vừa/Cao), mỗi nhóm có công tắc **"Ghi nhớ"**; phím tắt: Tắt âm AVAS, Camera 360, Bảo dưỡng (Valet). Auto Hold / HDC / ESC **đã ẩn** (mã VHAL chưa được kiểm chứng, nằm trong khối ADAS thật).
 
-**Cột 2:** nút "Chạy Đôi: Vietmap + YouTube", media (prev/play/next, volume); điều hòa (A/C, Gió trong (nút AUTO đã bỏ vì `HVAC_AUTO_ON` là NOOP trên xe), ⚡Làm mát nhanh; nhiệt độ 17–32°C; quạt 1–8; gió mặt/chân; sấy trước/sau).
+**Cột 2:** nút "Chạy Đôi: Vietmap + YouTube", media (prev/play/next, volume); điều hòa (A/C, Gió trong (nút AUTO đã bỏ vì `HVAC_AUTO_ON` là NOOP trên xe), ⚡Làm mát nhanh; nhiệt độ 17–32°C và quạt 1–8 **trên 2 dòng riêng**; gió mặt/chân; sấy trước/sau).
 
-**Cột 3:** mô hình xe 160×160dp, 4 ô TPMS (kPa/°C), 4 chỉ báo kính (đọc thật từ VHAL, không đọc được → `Kính: --`); Đóng/Hé (15%)/Hạ hết kính (Hạ hết chỉ khi < 30 km/h), biển tốc độ (mở Vietmap). Nút mở cốp **đã ẩn** (`DOOR_POS` chỉ đọc, chưa có mã cốp).
+**Cột 3:** ảnh vector EX2 nhìn từ trên xuống (`img_ex2_top_down`, tự vẽ, 130×260dp), chỉ báo màu ở từng bánh (xanh 200–300 kPa, vàng ngoài khoảng, đỏ <170 / >330, xám chưa có dữ liệu), áp suất + nhiệt độ cạnh mỗi bánh, 4 chỉ báo kính cạnh mỗi cửa (đọc thật từ VHAL, không đọc được → `Kính: --`); Đóng/Hé (15%)/Hạ hết kính (Hạ hết chỉ khi < 30 km/h), biển tốc độ (mở Vietmap). Nút mở cốp **đã ẩn** (`DOOR_POS` chỉ đọc, chưa có mã cốp).
+
+**"Ghi nhớ" chế độ lái / phanh tái sinh** (`KEY_AUTO_DRIVE_MODE`, `KEY_AUTO_REGEN_MODE`): trong 20s sau khi service khởi động hoặc head unit thức dậy, chế độ đã lưu được ghi lại vào xe (đọc lại xác nhận, tối đa 3 lần); sau đó chỉ theo dõi — lựa chọn của người lái (trên Dashboard hoặc màn hình gốc của xe) ổn định qua 2 tick sẽ được lưu. Không còn ép chế độ khi đang lái.
+
+**Cài đặt (`SettingsActivity`):** 2 cột thẻ, mọi tùy chọn là công tắc chỉ phản ứng khi chạm (không bao giờ ghi lại khi đọc trạng thái).
+- Hồ sơ xe: đổi tên (≤ 32 ký tự, "Mặc định"), chọn ảnh (thu nhỏ ≤ 512px, lưu `filesDir/car_photo.jpg`), dùng ảnh mặc định (`utils/CarProfile.kt`).
+- Giao diện: Theo hệ thống / Sáng / Tối (`utils/ThemeManager.kt`; màu sáng `values/`, tối `values-night/`; áp cho Activity và overlay; thanh trạng thái đổi theo).
+- Kết nối: Wi-Fi (SSID ● IP, tắt phải xác nhận), Đèn viền nội thất (VHAL `557885013` boolean, đã kiểm chứng; ghi rồi đọc lại).
+- Lái xe & Tự động hóa: ghi nhớ chế độ lái, ghi nhớ phanh tái sinh, tự động tắt âm AVAS, Valet, Crash Guard (trạng thái + đặt lại).
+- Hệ thống: nút nổi, Kho ứng dụng, phiên bản.
+- **Cốp trước:** chưa có mã VHAL đã kiểm chứng trong `reference/` → chưa thêm nút.
 
 **Quy tắc dữ liệu thật (không fake state):**
 - Không có dữ liệu VHAL → hiển thị `--` (`-- km`, `--%`, `--°C`, `-- kPa`, `-- V • Ắc quy`, "Chưa kết nối xe"); không dùng giá trị cứng.

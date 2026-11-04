@@ -26,15 +26,41 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <!-- Car Avatar on Left Header -->
-            <ImageView
-                android:id="@+id/ivHeaderCarAvatar"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@drawable/img_my_ex2"
-                android:scaleType="fitCenter"
-                android:layout_marginEnd="12dp"
-                android:contentDescription="Geely EX2" />
+            <!-- Car profile (photo + name, editable in Cài đặt → Hồ sơ xe) -->
+            <LinearLayout
+                android:id="@+id/layoutCarProfile"
+                android:layout_width="wrap_content"
+                android:layout_height="52dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_btn_inactive"
+                android:paddingStart="4dp"
+                android:paddingEnd="14dp"
+                android:layout_marginEnd="14dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/ivHeaderCarAvatar"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:src="@drawable/img_my_ex2"
+                    android:scaleType="centerCrop"
+                    android:layout_marginEnd="10dp"
+                    android:contentDescription="Ảnh xe" />
+
+                <TextView
+                    android:id="@+id/tvHeaderCarName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxWidth="220dp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:text="Geely EX2"
+                    android:textColor="@color/text_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <!-- Clock (Enlarged for glanceability) -->
             <TextView
@@ -306,6 +332,29 @@
                         android:layout_height="1dp"
                         android:layout_weight="1" />
 
+                    <!-- Road speed limit, next to the driving speed (tap: open Vietmap) -->
+                    <LinearLayout
+                        android:id="@+id/btnSpeedLimitSign"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:layout_marginEnd="16dp"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:background="@drawable/bg_speed_limit"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:contentDescription="Giới hạn tốc độ">
+
+                        <TextView
+                            android:id="@+id/tvSpeedLimitValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="--"
+                            android:textColor="#111827"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
                     <!-- Speedometer (Large 48sp) -->
                     <TextView
                         android:id="@+id/tvSpeedValue"
@@ -392,14 +441,35 @@
                 android:orientation="vertical">
 
                 <!-- Drive Mode Row -->
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Chế độ lái"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="6dp" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="6dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Chế độ lái"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <!-- Remember the last used mode across car restarts -->
+                    <Switch
+                        android:id="@+id/swRememberDrive"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:minWidth="48dp"
+                        android:text="Ghi nhớ"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp"
+                        android:switchPadding="8dp"
+                        android:thumb="@drawable/sw_thumb"
+                        android:track="@drawable/sw_track" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -446,15 +516,36 @@
                 </LinearLayout>
 
                 <!-- Regen Row -->
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Phanh tái sinh (Regen)"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
                     android:layout_marginTop="8dp"
-                    android:layout_marginBottom="6dp" />
+                    android:layout_marginBottom="6dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Phanh tái sinh (Regen)"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <!-- Remember the last used mode across car restarts -->
+                    <Switch
+                        android:id="@+id/swRememberRegen"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:minWidth="48dp"
+                        android:text="Ghi nhớ"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp"
+                        android:switchPadding="8dp"
+                        android:thumb="@drawable/sw_thumb"
+                        android:track="@drawable/sw_track" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -967,20 +1058,19 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Row 2: Dual Sliders (Temperature & Fan Speed with 48dp +/- Buttons) -->
+                <!-- Row 2: Temperature (top) and Fan speed (bottom), each on its own full-width row -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
+                    android:orientation="vertical"
                     android:layout_marginBottom="12dp">
 
-                    <!-- Left: Temperature Controls -->
+                    <!-- Temperature Controls -->
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:orientation="vertical"
-                        android:layout_marginEnd="8dp">
+                        android:layout_marginBottom="10dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -1051,13 +1141,11 @@
                         </LinearLayout>
                     </LinearLayout>
 
-                    <!-- Right: Fan Speed Controls -->
+                    <!-- Fan Speed Controls -->
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="8dp">
+                        android:orientation="vertical">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -1288,31 +1376,69 @@
                         android:textSize="14sp" />
                 </LinearLayout>
 
-                <!-- Center RelativeLayout with Enlarged Car & Flanking TPMS/Windows -->
+                <!-- Top-down Geely EX2: tire pressure beside each wheel, window position beside
+                     each door. The car vector is 130x260dp (1 viewport unit = 1dp) so the wheel
+                     indicators line up with the drawing. -->
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1">
 
-                    <!-- Car Graphic (Enlarged to 160dp x 160dp) -->
                     <ImageView
                         android:id="@+id/ivCarTopDown"
-                        android:layout_width="160dp"
-                        android:layout_height="160dp"
+                        android:layout_width="130dp"
+                        android:layout_height="260dp"
                         android:layout_centerInParent="true"
-                        android:scaleType="fitCenter"
-                        android:src="@drawable/img_my_ex2"
-                        android:contentDescription="Mô hình xe Geely EX2" />
+                        android:scaleType="fitXY"
+                        android:src="@drawable/img_ex2_top_down"
+                        android:contentDescription="Mô hình xe Geely EX2 nhìn từ trên xuống" />
 
-                    <!-- Front-Left TPMS (Top-Left) -->
+                    <View
+                        android:id="@+id/vWheelFl"
+                        android:layout_width="14dp"
+                        android:layout_height="46dp"
+                        android:layout_alignTop="@id/ivCarTopDown"
+                        android:layout_marginTop="44dp"
+                        android:layout_alignStart="@id/ivCarTopDown"
+                        android:background="@drawable/bg_wheel_indicator" />
+
+                    <View
+                        android:id="@+id/vWheelFr"
+                        android:layout_width="14dp"
+                        android:layout_height="46dp"
+                        android:layout_alignTop="@id/ivCarTopDown"
+                        android:layout_marginTop="44dp"
+                        android:layout_alignEnd="@id/ivCarTopDown"
+                        android:background="@drawable/bg_wheel_indicator" />
+
+                    <View
+                        android:id="@+id/vWheelRl"
+                        android:layout_width="14dp"
+                        android:layout_height="46dp"
+                        android:layout_alignTop="@id/ivCarTopDown"
+                        android:layout_marginTop="174dp"
+                        android:layout_alignStart="@id/ivCarTopDown"
+                        android:background="@drawable/bg_wheel_indicator" />
+
+                    <View
+                        android:id="@+id/vWheelRr"
+                        android:layout_width="14dp"
+                        android:layout_height="46dp"
+                        android:layout_alignTop="@id/ivCarTopDown"
+                        android:layout_marginTop="174dp"
+                        android:layout_alignEnd="@id/ivCarTopDown"
+                        android:background="@drawable/bg_wheel_indicator" />
+
+                    <!-- Tire FL -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:layout_alignParentTop="true"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_btn_inactive"
-                        android:padding="6dp">
+                        android:layout_alignTop="@id/ivCarTopDown"
+                        android:layout_marginTop="36dp"
+                        android:layout_toStartOf="@id/ivCarTopDown"
+                        android:layout_marginEnd="22dp"
+                        android:gravity="end"
+                        android:orientation="vertical">
 
                         <TextView
                             android:id="@+id/tvTpmsFlKpa"
@@ -1320,7 +1446,7 @@
                             android:layout_height="wrap_content"
                             android:text="-- kPa"
                             android:textColor="@color/text_primary"
-                            android:textSize="16sp"
+                            android:textSize="22sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -1332,16 +1458,16 @@
                             android:textSize="14sp" />
                     </LinearLayout>
 
-                    <!-- Front-Right TPMS (Top-Right) -->
+                    <!-- Tire FR -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_alignParentTop="true"
-                        android:orientation="vertical"
-                        android:gravity="end"
-                        android:background="@drawable/bg_btn_inactive"
-                        android:padding="6dp">
+                        android:layout_alignTop="@id/ivCarTopDown"
+                        android:layout_marginTop="36dp"
+                        android:layout_toEndOf="@id/ivCarTopDown"
+                        android:layout_marginStart="22dp"
+                        android:gravity="start"
+                        android:orientation="vertical">
 
                         <TextView
                             android:id="@+id/tvTpmsFrKpa"
@@ -1349,7 +1475,7 @@
                             android:layout_height="wrap_content"
                             android:text="-- kPa"
                             android:textColor="@color/text_primary"
-                            android:textSize="16sp"
+                            android:textSize="22sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -1361,92 +1487,16 @@
                             android:textSize="14sp" />
                     </LinearLayout>
 
-                    <!-- Left Windows Indicator (Middle Left) -->
+                    <!-- Tire RL -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_centerVertical="true"
-                        android:layout_alignParentStart="true"
+                        android:layout_alignTop="@id/ivCarTopDown"
+                        android:layout_marginTop="168dp"
+                        android:layout_toStartOf="@id/ivCarTopDown"
+                        android:layout_marginEnd="22dp"
+                        android:gravity="end"
                         android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tvWindowFl"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Kính T1: 0%"
-                            android:textColor="@color/accent_emerald"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:background="@drawable/bg_btn_inactive"
-                            android:paddingStart="6dp"
-                            android:paddingEnd="6dp"
-                            android:paddingTop="3dp"
-                            android:paddingBottom="3dp"
-                            android:layout_marginBottom="4dp" />
-
-                        <TextView
-                            android:id="@+id/tvWindowRl"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Kính S1: 0%"
-                            android:textColor="@color/accent_emerald"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:background="@drawable/bg_btn_inactive"
-                            android:paddingStart="6dp"
-                            android:paddingEnd="6dp"
-                            android:paddingTop="3dp"
-                            android:paddingBottom="3dp" />
-                    </LinearLayout>
-
-                    <!-- Right Windows Indicator (Middle Right) -->
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_centerVertical="true"
-                        android:layout_alignParentEnd="true"
-                        android:orientation="vertical"
-                        android:gravity="end">
-
-                        <TextView
-                            android:id="@+id/tvWindowFr"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Kính P1: 0%"
-                            android:textColor="@color/accent_emerald"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:background="@drawable/bg_btn_inactive"
-                            android:paddingStart="6dp"
-                            android:paddingEnd="6dp"
-                            android:paddingTop="3dp"
-                            android:paddingBottom="3dp"
-                            android:layout_marginBottom="4dp" />
-
-                        <TextView
-                            android:id="@+id/tvWindowRr"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Kính P2: 0%"
-                            android:textColor="@color/accent_emerald"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:background="@drawable/bg_btn_inactive"
-                            android:paddingStart="6dp"
-                            android:paddingEnd="6dp"
-                            android:paddingTop="3dp"
-                            android:paddingBottom="3dp" />
-                    </LinearLayout>
-
-                    <!-- Rear-Left TPMS (Bottom-Left) -->
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:layout_alignParentBottom="true"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_btn_inactive"
-                        android:padding="6dp">
 
                         <TextView
                             android:id="@+id/tvTpmsRlKpa"
@@ -1454,7 +1504,7 @@
                             android:layout_height="wrap_content"
                             android:text="-- kPa"
                             android:textColor="@color/text_primary"
-                            android:textSize="16sp"
+                            android:textSize="22sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -1466,16 +1516,16 @@
                             android:textSize="14sp" />
                     </LinearLayout>
 
-                    <!-- Rear-Right TPMS (Bottom-Right) -->
+                    <!-- Tire RR -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_alignParentBottom="true"
-                        android:orientation="vertical"
-                        android:gravity="end"
-                        android:background="@drawable/bg_btn_inactive"
-                        android:padding="6dp">
+                        android:layout_alignTop="@id/ivCarTopDown"
+                        android:layout_marginTop="168dp"
+                        android:layout_toEndOf="@id/ivCarTopDown"
+                        android:layout_marginStart="22dp"
+                        android:gravity="start"
+                        android:orientation="vertical">
 
                         <TextView
                             android:id="@+id/tvTpmsRrKpa"
@@ -1483,7 +1533,7 @@
                             android:layout_height="wrap_content"
                             android:text="-- kPa"
                             android:textColor="@color/text_primary"
-                            android:textSize="16sp"
+                            android:textSize="22sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -1494,6 +1544,74 @@
                             android:textColor="@color/text_muted"
                             android:textSize="14sp" />
                     </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvWindowFl"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignTop="@id/ivCarTopDown"
+                        android:layout_marginTop="104dp"
+                        android:layout_toStartOf="@id/ivCarTopDown"
+                        android:layout_marginEnd="22dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="3dp"
+                        android:paddingBottom="3dp"
+                        android:background="@drawable/bg_btn_inactive"
+                        android:text="Kính: --"
+                        android:textColor="@color/text_muted"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvWindowFr"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignTop="@id/ivCarTopDown"
+                        android:layout_marginTop="104dp"
+                        android:layout_toEndOf="@id/ivCarTopDown"
+                        android:layout_marginStart="22dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="3dp"
+                        android:paddingBottom="3dp"
+                        android:background="@drawable/bg_btn_inactive"
+                        android:text="Kính: --"
+                        android:textColor="@color/text_muted"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvWindowRl"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignTop="@id/ivCarTopDown"
+                        android:layout_marginTop="138dp"
+                        android:layout_toStartOf="@id/ivCarTopDown"
+                        android:layout_marginEnd="22dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="3dp"
+                        android:paddingBottom="3dp"
+                        android:background="@drawable/bg_btn_inactive"
+                        android:text="Kính: --"
+                        android:textColor="@color/text_muted"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvWindowRr"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignTop="@id/ivCarTopDown"
+                        android:layout_marginTop="138dp"
+                        android:layout_toEndOf="@id/ivCarTopDown"
+                        android:layout_marginStart="22dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="3dp"
+                        android:paddingBottom="3dp"
+                        android:background="@drawable/bg_btn_inactive"
+                        android:text="Kính: --"
+                        android:textColor="@color/text_muted"
+                        android:textSize="14sp" />
                 </RelativeLayout>
             </LinearLayout>
 
@@ -1562,63 +1680,6 @@
                         android:background="@drawable/bg_btn_inactive" />
                 </LinearLayout>
 
-                <!-- Trunk & Speed Limit Sign Row (48dp height) -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:gravity="center"
-                    android:orientation="horizontal">
-
-                    <!-- Open Trunk Button — hidden: DOOR_POS is read-only, no verified trunk property -->
-                    <LinearLayout
-                        android:id="@+id/btnOpenTrunk"
-                        android:visibility="gone"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1.6"
-                        android:orientation="horizontal"
-                        android:gravity="center"
-                        android:background="@drawable/bg_btn_inactive"
-                        android:layout_marginEnd="6dp"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_trunk"
-                            android:layout_marginEnd="8dp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Mở cốp sau"
-                            android:textColor="@color/text_primary"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <!-- Speed Limit Sign Badge -->
-                    <LinearLayout
-                        android:id="@+id/btnSpeedLimitSign"
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:orientation="horizontal"
-                        android:gravity="center"
-                        android:background="@drawable/bg_speed_limit"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <TextView
-                            android:id="@+id/tvSpeedLimitValue"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="--"
-                            android:textColor="#EF4444"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
