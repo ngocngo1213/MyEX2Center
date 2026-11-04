@@ -54,7 +54,9 @@
 - Điều hòa nhanh (A/C, nhiệt độ, quạt), **Màn hình đêm (Blackout)** (chạm để thoát). Blackout do `FloatingControlService` sở hữu duy nhất (Dashboard gửi `ACTION_TRIGGER_BLACKOUT`), **tự tắt khi vào số R hoặc mất kết nối VHAL** (kiểm tra mỗi 500ms) để không che camera lùi. Nút nổi chỉ hiện khi `key_floating_bubble_enabled` bật.
 - **Khởi động lại:** chỉ cho phép ở số P và xe đứng yên (`ParkGate`, kiểm tra cả trước và sau hộp thoại). `confirmAndReboot()` hiện hộp thoại xác nhận overlay (`TYPE_APPLICATION_OVERLAY`) với chuỗi `confirm_reboot_title`/`confirm_reboot_msg`; chỉ reboot khi xác nhận (`executeReboot()`).
 
-### Module 3: Wi-Fi App Catalog & Installer — `AppCatalogActivity.kt`, `AppRepository.kt`, `PackageInstallerHelper.kt`
+### Module 3: Wi-Fi App Catalog & Installer — EX2 Store `StoreActivity.kt` (module `:store`), `AppRepository.kt`, `PackageInstallerHelper.kt` (`:core`)
+
+Từ 1.3.0 (giai đoạn 3) màn hình Kho chỉ còn trong EX2 Store; MyEX2Center không còn Kho tích hợp.
 - Lưới 2 cột, 4 mục:
   1. **MyEX2Center** (`com.mipago.ex2center`, `self: true`) — tự cập nhật qua GitHub Releases; không có nút gỡ; app tự khởi động lại, `BootReceiver` (`MY_PACKAGE_REPLACED`) xác nhận.
   2. **VIETMAP LIVE** (`vn.vietmap.live`, `.xapk`, chỉ có split `armeabi-v7a`) — chưa phát hành qua mạng (`apkUrl` rỗng, không tự host bản APKPure) → nút "Cài từ USB / Máy".
@@ -134,7 +136,7 @@ Bố cục 3 cột (32% / 38% / 30%) + thanh Header.
 
 ## 6. Project Directory Structure
 
-Một repo, 3 module Gradle (giai đoạn 1 của việc tách EX2 Store):
+Một repo, 3 module Gradle (MyEX2Center và EX2 Store là 2 app riêng):
 
 ```text
 MyEX2Center/
@@ -143,14 +145,13 @@ MyEX2Center/
 │   └── src/main/
 │       ├── java/com/mipago/ex2center/
 │       │   ├── utils/   CarApiHelper, ParkGate, PackageInstallerHelper(+StatusReceiver),
-│       │   │            LocalApkFinder, StoreLauncher, ThemeManager, UiStyle, WifiStatus
+│       │   │            LocalApkFinder, CatalogVerifier, ThemeManager, UiStyle, WifiStatus
 │       │   ├── model/   AppInfo
 │       │   ├── repository/ AppRepository (catalog + tải resumable)
-│       │   └── ui/      AppCatalogActivity (màn hình Kho, dùng cho cả Store)
-│       ├── res/         theme Sáng/Tối, dimens 8pt, font, bộ icon, layout Kho
+│       ├── res/         theme Sáng/Tối, dimens 8pt, font, bộ icon
 │       └── assets/apps.json (catalog dự phòng)
 ├── app/         # MyEX2Center  (com.mipago.ex2center): Dashboard, VHAL, dịch vụ, nút nổi, Cài đặt
-├── store/       # EX2 Store    (com.mipago.ex2store): launcher = màn hình Kho; cài/cập nhật app
+├── store/       # EX2 Store    (com.mipago.ex2store): StoreActivity (màn hình Kho), job kiểm tra cập nhật
 ├── apps.json    # catalog phát hành (raw.githubusercontent.com/ngocngo1213/MyEX2Center/main/apps.json)
 ├── scripts/build-release.sh   # build + ký platform 2 APK vào dist/, in SHA-256
 ├── scripts/update-catalog.py  # điền phiên bản/link/SHA-256 từ dist/ vào apps.json và ký → apps.json.sig
@@ -158,7 +159,8 @@ MyEX2Center/
 ```
 
 - Cả hai app ký cùng khóa platform, bản release có `sharedUserId=android.uid.system`.
-- Nút **Kho ứng dụng** (Dashboard, Cài đặt) gọi `StoreLauncher.open()`: mở EX2 Store nếu đã cài, nếu chưa thì mở Kho tích hợp (dự phòng, sẽ gỡ ở giai đoạn 3).
+- Nút **Kho ứng dụng** (Dashboard, Cài đặt) gọi `StoreLauncher.open()` (module `:app`): mở EX2 Store nếu đã cài. Nếu chưa có, hiện hộp thoại **Cài EX2 Store**: *Tải và cài* (chỉ từ catalog đã xác minh chữ ký — từ mạng hoặc bản đã lưu, kiểm SHA-256, cài ngầm, chỉ khi ở số P) hoặc *Cài từ USB* (tìm `EX2Store-*.apk` trên USB/Download theo đúng package). Cài xong tự mở Store. MyEX2Center chỉ giữ `INSTALL_PACKAGES` cho việc này (đã bỏ `DELETE_PACKAGES`).
+- **Chuyển đổi cho xe đang dùng 1.2.0:** Kho tích hợp của 1.2.0 đọc `apps.json` gốc (không kiểm chữ ký). Khi phát hành, `update-catalog.py` tự thêm mục EX2 Store vào ngay sau MyEX2Center, nên người dùng 1.2.0 có thể (a) cài EX2 Store trực tiếp từ Kho cũ, hoặc (b) cập nhật MyEX2Center lên 1.3.0 rồi bấm Kho ứng dụng → hộp thoại Cài EX2 Store.
 - Trong Store, MyEX2Center là một app thường (cập nhật không làm tắt Store); chỉ EX2 Store tự cập nhật chính nó (`StoreUpdateReceiver` xác nhận qua `MY_PACKAGE_REPLACED`).
 - Khóa ký **không** có trong repo hay CI; ký bằng `scripts/build-release.sh` trên máy có `signing/platform.p12`. Khóa ký catalog `signing/catalog-signing-key.pem` cũng chỉ nằm trên máy phát hành — mất khóa này phải phát hành Store mới với khóa mới.
 - **Tự kiểm tra cập nhật (EX2 Store):** `UpdateScheduler` đặt job định kỳ 3 giờ (khi có mạng, giữ qua khởi động lại) + 1 lần chạy 2 phút sau khi xe khởi động / Store được cập nhật. `UpdateCheckJobService` chỉ tin catalog từ xa đã xác minh chữ ký; có bản mới thì hiện **một** thông báo, chỉ khi xe ở số P (chưa ở P → thử lại sau 10 phút); cùng một nhóm bản cập nhật chỉ báo lại sau 24 giờ. Chạm thông báo → mở Store.
