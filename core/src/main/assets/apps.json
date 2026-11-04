@@ -17,6 +17,22 @@
     "sha256": "__SELF_SHA256__"
   },
   {
+    "name": "EX2 Store",
+    "packageName": "com.mipago.ex2store",
+    "versionCode": 1,
+    "versionName": "1.0.0",
+    "sizeMb": 5.0,
+    "type": "apk",
+    "abis": [],
+    "minSdk": 28,
+    "requiresPark": true,
+    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/store-v1.0.0/EX2Store-1.0.0.apk",
+    "browserUrl": "https://github.com/ngocngo1213/MyEX2Center/releases",
+    "iconResName": "ic_app_ex2store",
+    "description": "Kho ứng dụng cho EX2: cài và cập nhật MyEX2Center cùng các ứng dụng khác. Tự báo khi có bản mới (chỉ khi xe ở số P).",
+    "sha256": "__STORE_SHA256__"
+  },
+  {
     "name": "VIETMAP LIVE",
     "packageName": "vn.vietmap.live",
     "versionCode": 179327630,

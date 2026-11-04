@@ -8,12 +8,16 @@ import android.widget.Toast
 import com.mipago.ex2center.utils.PackageInstallerHelper
 
 /**
- * EX2 Store just replaced itself. The old process was killed during the install, so this is the
- * only place the update can be confirmed to the user.
+ * Boot / wake / self-update hooks for EX2 Store:
+ * - schedules the update check (periodic + one soon after boot or wake),
+ * - confirms a self-update: the old process was killed while its own package was replaced.
  */
 class StoreUpdateReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
-        if (intent?.action != Intent.ACTION_MY_PACKAGE_REPLACED) return
+        val action = intent?.action ?: return
+        UpdateScheduler.schedulePeriodic(context)
+        UpdateScheduler.checkSoon(context, 2 * 60 * 1000L)
+        if (action != Intent.ACTION_MY_PACKAGE_REPLACED) return
         val prefs = context.getSharedPreferences(PackageInstallerHelper.PREFS_NAME, Context.MODE_PRIVATE)
         if (!prefs.contains(PackageInstallerHelper.KEY_PENDING_SELF_UPDATE)) return
         prefs.edit().remove(PackageInstallerHelper.KEY_PENDING_SELF_UPDATE).apply()

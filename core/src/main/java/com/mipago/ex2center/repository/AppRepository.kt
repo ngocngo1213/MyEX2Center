@@ -7,6 +7,7 @@ import android.os.StatFs
 import android.os.SystemClock
 import android.util.Log
 import com.mipago.ex2center.model.AppInfo
+import com.mipago.ex2center.utils.CatalogVerifier
 import com.mipago.ex2center.utils.PackageInstallerHelper
 import org.json.JSONArray
 import org.json.JSONObject
@@ -58,62 +59,79 @@ class AppRepository(private val context: Context) {
     /**
      * Fetches catalog list from remote URL or local assets fallback.
      */
+    /** Where a loaded catalog came from (only [REMOTE_VERIFIED] / [CACHED] are signed). */
+    enum class CatalogSource { REMOTE_VERIFIED, CACHED, BUNDLED }
+
+    data class CatalogResult(val apps: List<AppInfo>, val source: CatalogSource)
+
+    private val cacheFile: File get() = File(context.filesDir, "catalog_verified.json")
+
+    /**
+     * Fetches catalog list from remote URL or local assets fallback (callback on main thread).
+     */
     fun fetchCatalog(onResult: (List<AppInfo>?, String?) -> Unit) {
         Thread {
-            var jsonString: String? = null
-            var errorMsg: String? = null
-
-            val targetUrl = getCatalogUrl()
-            if (targetUrl.contains(UNSET_OWNER) || !targetUrl.startsWith("https://")) {
-                Log.i(TAG, "No remote catalog configured — using bundled assets/apps.json.")
-            } else try {
-                val url = URL(targetUrl)
-                val conn = url.openConnection() as HttpURLConnection
-                conn.connectTimeout = 2500
-                conn.readTimeout = 2500
-                conn.requestMethod = "GET"
-
-                try {
-                    if (conn.responseCode == HttpURLConnection.HTTP_OK) {
-                        jsonString = conn.inputStream.bufferedReader().use { it.readText() }
-                        Log.i(TAG, "Fetched catalog from remote: $targetUrl")
-                    } else {
-                        Log.w(TAG, "Remote fetch HTTP ${conn.responseCode}, trying local asset fallback.")
-                    }
-                } finally {
-                    conn.disconnect()
-                }
-            } catch (t: Throwable) {
-                Log.w(TAG, "Remote fetch error: ${t.message}. Falling back to assets.")
-                errorMsg = t.message
+            val result = loadCatalogBlocking()
+            mainHandler.post {
+                if (result == null) onResult(null, "Không thể tải danh mục ứng dụng.")
+                else onResult(result.apps, null)
             }
-
-            // Fallback to local asset if remote fetch failed or returned empty
-            if (jsonString.isNullOrBlank()) {
-                try {
-                    jsonString = context.assets.open("apps.json").bufferedReader().use { it.readText() }
-                    Log.i(TAG, "Loaded catalog from assets/apps.json fallback.")
-                } catch (t2: Throwable) {
-                    Log.e(TAG, "Failed to load local asset apps.json: ${t2.message}")
-                }
-            }
-
-            if (jsonString.isNullOrBlank()) {
-                mainHandler.post { onResult(null, errorMsg ?: "Không thể tải danh mục ứng dụng.") }
-                return@Thread
-            }
-
-            var appList = parseCatalog(jsonString)
-            if (appList.isEmpty()) {
-                // A broken remote catalog must not empty the store: fall back to the bundled one.
-                appList = try {
-                    parseCatalog(context.assets.open("apps.json").bufferedReader().use { it.readText() })
-                } catch (_: Throwable) {
-                    emptyList()
-                }
-            }
-            mainHandler.post { onResult(appList, null) }
         }.start()
+    }
+
+    /**
+     * Blocking catalog load (call off the main thread), most trusted source first:
+     * 1. remote `apps.json` whose `apps.json.sig` verifies with [CatalogVerifier] (then cached),
+     * 2. the last verified remote catalog kept in app storage,
+     * 3. the catalog bundled inside this signed APK.
+     * An unsigned or tampered remote catalog is never used.
+     */
+    fun loadCatalogBlocking(timeoutMs: Int = 2500): CatalogResult? {
+        val targetUrl = getCatalogUrl()
+        if (!targetUrl.contains(UNSET_OWNER) && targetUrl.startsWith("https://")) {
+            val body = httpGetBytes(targetUrl, timeoutMs)
+            if (body != null) {
+                val sig = httpGetBytes("$targetUrl.sig", timeoutMs)?.toString(Charsets.UTF_8)
+                if (CatalogVerifier.verify(body, sig)) {
+                    val apps = parseCatalog(body.toString(Charsets.UTF_8))
+                    if (apps.isNotEmpty()) {
+                        try { cacheFile.writeBytes(body) } catch (_: Throwable) {}
+                        Log.i(TAG, "Remote catalog verified (${apps.size} apps).")
+                        return CatalogResult(apps, CatalogSource.REMOTE_VERIFIED)
+                    }
+                } else {
+                    Log.w(TAG, "Remote catalog rejected: missing or invalid signature.")
+                }
+            }
+        }
+        if (cacheFile.isFile) {
+            val apps = try { parseCatalog(cacheFile.readText()) } catch (_: Throwable) { emptyList() }
+            if (apps.isNotEmpty()) return CatalogResult(apps, CatalogSource.CACHED)
+        }
+        val bundled = try {
+            parseCatalog(context.assets.open("apps.json").bufferedReader().use { it.readText() })
+        } catch (t: Throwable) {
+            Log.e(TAG, "Failed to load bundled apps.json: ${t.message}")
+            emptyList()
+        }
+        return if (bundled.isEmpty()) null else CatalogResult(bundled, CatalogSource.BUNDLED)
+    }
+
+    /** Small HTTPS GET (catalog + signature); null on any error or non-200. */
+    private fun httpGetBytes(url: String, timeoutMs: Int): ByteArray? = try {
+        val conn = URL(url).openConnection() as HttpURLConnection
+        conn.connectTimeout = timeoutMs
+        conn.readTimeout = timeoutMs
+        conn.useCaches = false
+        try {
+            if (conn.responseCode == HttpURLConnection.HTTP_OK) conn.inputStream.use { it.readBytes() }
+            else { Log.w(TAG, "GET $url -> HTTP ${conn.responseCode}"); null }
+        } finally {
+            conn.disconnect()
+        }
+    } catch (t: Throwable) {
+        Log.w(TAG, "GET $url failed: ${t.message}")
+        null
     }
 
     private fun parseCatalog(json: String): List<AppInfo> {

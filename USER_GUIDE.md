@@ -513,10 +513,13 @@ export JAVA_HOME=~/Library/Java/JavaVirtualMachines/jbr-21.0.11/Contents/Home
 - Kiểm tra chữ ký: `apksigner verify --print-certs app-release.apk`.
 
 **Phát hành bản mới:**
-1. Tăng `versionCode` / `versionName` trong `app/build.gradle`.
-2. `./gradlew assembleRelease`, đổi tên file thành `MyEX2Center-<phiên bản>.apk`, tính SHA-256.
-3. Tạo Release `v<phiên bản>` trên GitHub, đính kèm APK, ghi SHA-256 vào mô tả.
-4. Cập nhật mục MyEX2Center trong `apps.json` ở thư mục gốc (`versionCode`, `versionName`, `apkUrl`, `sha256`), commit và push. Các xe đang dùng app sẽ thấy nút **Cập nhật hệ thống**.
+1. Tăng `versionCode` / `versionName` trong `app/build.gradle` (MyEX2Center) và/hoặc `store/build.gradle` (EX2 Store).
+2. `./scripts/build-release.sh` → `dist/MyEX2Center-<phiên bản>.apk`, `dist/EX2Store-<phiên bản>.apk`.
+3. Tạo Release trên GitHub: tag `v<phiên bản>` cho MyEX2Center, `store-v<phiên bản>` cho EX2 Store, đính kèm APK.
+4. `python3 -I scripts/update-catalog.py` — tự điền phiên bản, link, SHA-256 vào `apps.json` và ký thành `apps.json.sig` (cần `signing/catalog-signing-key.pem`). Commit **cả hai file** và push. EX2 Store trên xe sẽ tự báo có bản mới (khi xe ở số P).
+5. Sửa tay `apps.json` thì phải ký lại: `python3 -I scripts/update-catalog.py --sign-only`. Catalog sai chữ ký sẽ bị Store bỏ qua.
+
+> Sao lưu thư mục `signing/` ra nơi an toàn (USB/ổ cứng riêng). Mất khóa platform thì không cập nhật được app trên xe; mất khóa ký catalog thì phải phát hành Store mới.
 
 **Mẹo thử trên xe:**
 - Thử lại sự kiện khởi động mà không cần reboot:
@@ -525,5 +528,5 @@ export JAVA_HOME=~/Library/Java/JavaVirtualMachines/jbr-21.0.11/Contents/Home
   ```
 - Xem log của app:
   ```bash
-  adb logcat -s CarApiHelper CarAutomationService PackageInstallerHelper AppRepository InstallerReceiver
+  adb logcat -s CarApiHelper CarAutomationService PackageInstallerHelper AppRepository InstallerReceiver UpdateCheck UpdateScheduler
   ```

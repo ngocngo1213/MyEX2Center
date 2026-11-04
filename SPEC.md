@@ -61,7 +61,7 @@
   3. **SmartTube** (`org.smarttube.stable` 32.68, bản arm64 chính thức từ `yuliskov/SmartTube`, MIT).
   4. **Trình duyệt Web** (`com.aaex.carbrowser` 2.3).
   - Đã gỡ tạm thời: Google Maps, VTV Go, YouTube ReVanced / YT Music.
-- **Catalog:** `apps.json` từ repo của dự án (`raw.githubusercontent.com/<owner>/MyEX2Center/main/apps.json`), fallback `assets/apps.json`. Không còn dùng repo bên thứ ba. Trường: `name, packageName, versionCode (long), versionName, sizeMb, type (apk|xapk), abis, minSdk, requiresPark, self, apkUrl, browserUrl, iconResName, description, sha256`.
+- **Catalog:** `apps.json` từ repo của dự án (`raw.githubusercontent.com/<owner>/MyEX2Center/main/apps.json`), fallback `assets/apps.json`. Không còn dùng repo bên thứ ba. **Catalog có chữ ký (giai đoạn 2):** catalog từ xa chỉ được dùng khi `apps.json.sig` (ECDSA P-256 / SHA-256, base64 DER) khớp khóa công khai nhúng trong `CatalogVerifier`; bản đã xác minh được lưu ở `filesDir/catalog_verified.json`. Thứ tự: catalog từ xa đã ký → bản đã lưu → bản đóng gói. Catalog không chữ ký / bị sửa bị bỏ qua. Trường: `name, packageName, versionCode (long), versionName, sizeMb, type (apk|xapk), abis, minSdk, requiresPark, self, apkUrl, browserUrl, iconResName, description, sha256`.
 - **Bảo mật tải:** chỉ HTTPS (kể cả sau redirect); **bắt buộc `sha256`** hợp lệ cho mọi mục tải qua mạng; catalog không được trỏ tới đường dẫn file trên máy.
 - **Tải file lớn (Bước 7):** lưu vào `filesDir/downloads/<sha16>.<ext>.part`, **tải tiếp bằng HTTP Range** khi bị hủy/mất mạng (partial gắn với đúng mã SHA nên không bao giờ ghép nhầm file). Redirect xử lý thủ công, từng bước phải là HTTPS. Kiểm tra bộ nhớ trống trước khi tải (phần còn lại + bản sao của trình cài + 50 MB). Timeout kết nối 15s / đọc 30s. Tiến độ gửi tối đa 4 lần/giây. Nút cài khi đang tải thành **"Hủy tải (x%)"**; rời màn hình Kho → tự hủy, giữ partial. Xong → kiểm SHA-256 → đổi tên thành file hoàn chỉnh → cài → xóa file. `cleanupDownloads()` dọn partial không còn trong catalog và file cũ trong cache. Catalog từ xa lỗi/rỗng → dùng bản đóng gói.
 - **Hiệu năng Kho (Bước 8):** tiến độ chỉ cập nhật đúng thẻ đang tải (`notifyItemChanged` + payload), không vẽ lại cả lưới; mỗi lần bind gỡ listener cũ. Icon: icon app đã cài được cache theo package, icon từ URL qua `LruCache` 4 MB + 2 luồng, gắn `tag` để ViewHolder tái sử dụng không hiện nhầm icon, không tải trùng. Quét USB/Download (đọc manifest APK/XAPK) luôn chạy ở luồng nền; chỉ khớp **đúng package name**, không còn khớp theo tên file. Callback bất đồng bộ bỏ qua khi màn hình đã đóng.
@@ -153,13 +153,16 @@ MyEX2Center/
 ├── store/       # EX2 Store    (com.mipago.ex2store): launcher = màn hình Kho; cài/cập nhật app
 ├── apps.json    # catalog phát hành (raw.githubusercontent.com/ngocngo1213/MyEX2Center/main/apps.json)
 ├── scripts/build-release.sh   # build + ký platform 2 APK vào dist/, in SHA-256
+├── scripts/update-catalog.py  # điền phiên bản/link/SHA-256 từ dist/ vào apps.json và ký → apps.json.sig
 └── .github/workflows/build.yml # CI: build debug 2 app, kiểm tra JSON catalog (không ký)
 ```
 
 - Cả hai app ký cùng khóa platform, bản release có `sharedUserId=android.uid.system`.
 - Nút **Kho ứng dụng** (Dashboard, Cài đặt) gọi `StoreLauncher.open()`: mở EX2 Store nếu đã cài, nếu chưa thì mở Kho tích hợp (dự phòng, sẽ gỡ ở giai đoạn 3).
 - Trong Store, MyEX2Center là một app thường (cập nhật không làm tắt Store); chỉ EX2 Store tự cập nhật chính nó (`StoreUpdateReceiver` xác nhận qua `MY_PACKAGE_REPLACED`).
-- Khóa ký **không** có trong repo hay CI; ký bằng `scripts/build-release.sh` trên máy có `signing/platform.p12`.
+- Khóa ký **không** có trong repo hay CI; ký bằng `scripts/build-release.sh` trên máy có `signing/platform.p12`. Khóa ký catalog `signing/catalog-signing-key.pem` cũng chỉ nằm trên máy phát hành — mất khóa này phải phát hành Store mới với khóa mới.
+- **Tự kiểm tra cập nhật (EX2 Store):** `UpdateScheduler` đặt job định kỳ 3 giờ (khi có mạng, giữ qua khởi động lại) + 1 lần chạy 2 phút sau khi xe khởi động / Store được cập nhật. `UpdateCheckJobService` chỉ tin catalog từ xa đã xác minh chữ ký; có bản mới thì hiện **một** thông báo, chỉ khi xe ở số P (chưa ở P → thử lại sau 10 phút); cùng một nhóm bản cập nhật chỉ báo lại sau 24 giờ. Chạm thông báo → mở Store.
+- EX2 Store có mục riêng trong catalog (tag release `store-v<phiên bản>`) để tự cập nhật; MyEX2Center dùng tag `v<phiên bản>`.
 
 ## 7. Verification Status
 - **Verified (emulator, Android API 36 tablet 1920×1080):** build thành công; Dashboard hiển thị `--` khi không có VHAL; Auto Hold/HDC/ESC hiển thị `(N/A)` và bị vô hiệu; Valet bật/tắt đổi Pill + nút; Kho ứng dụng mở, 3×2, logo riêng từng app, Google Maps hiển thị "Đã cài".
