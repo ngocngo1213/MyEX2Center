@@ -313,7 +313,7 @@ class AppCatalogActivity : Activity() {
             .setTitle("Không thể tải ${app.name}")
             .setMessage("${error ?: "Lỗi kết nối"}\n\nBạn có thể thử lại, hoặc cắm USB chứa file .apk/.xapk để cài trực tiếp.")
             .setPositiveButton("Thử lại") { _, _ -> handleInstall(app) }
-            .setNeutralButton("📁 Chọn từ USB / Máy") { _, _ -> showStorageInstallOptions() }
+            .setNeutralButton("Chọn từ USB / Máy") { _, _ -> showStorageInstallOptions() }
             .setNegativeButton("Đóng", null)
         builder.show()
     }
@@ -335,7 +335,7 @@ class AppCatalogActivity : Activity() {
                 val items = localApks.map { f ->
                     "${f.name} (%.1f MB)".format(java.util.Locale.US, f.length() / (1024.0 * 1024.0))
                 }.toMutableList()
-                items.add("📁 Chọn tệp APK / XAPK khác...")
+                items.add("Chọn tệp APK / XAPK khác...")
                 AlertDialog.Builder(this)
                     .setTitle("Chọn file APK / XAPK trên USB / Thiết bị")
                     .setItems(items.toTypedArray()) { _, which ->
@@ -609,7 +609,7 @@ class AppCatalogActivity : Activity() {
                     imageView.setImageBitmap(cachedBmp)
                     return
                 }
-                imageView.setImageResource(R.drawable.ic_store)
+                imageView.setImageResource(R.drawable.ic_app_placeholder)
                 if (!remoteIconsInFlight.add(app.iconUrl)) return // already being fetched
                 val url = app.iconUrl
                 iconExecutor.execute {
@@ -632,7 +632,7 @@ class AppCatalogActivity : Activity() {
                     }
                 }
             } else {
-                imageView.setImageResource(R.drawable.ic_store)
+                imageView.setImageResource(R.drawable.ic_app_placeholder)
             }
         }
 

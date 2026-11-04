@@ -85,7 +85,7 @@ object ParkGate {
                 when (decision) {
                     is Decision.Allowed -> onAllowed()
                     is Decision.Blocked -> {
-                        Toast.makeText(appContext, "⛔ ${decision.reason}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(appContext, decision.reason, Toast.LENGTH_LONG).show()
                         onBlocked(decision.reason)
                     }
                 }

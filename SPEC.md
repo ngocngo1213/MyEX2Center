@@ -31,6 +31,7 @@
 - Nút nổi mặc định ở mép phải, phần dưới màn hình (không đè cần số/HUD); vị trí kéo được ghi nhớ.
 - Màn hình đêm hiện gợi ý "Chạm bất kỳ đâu để thoát" 3 giây rồi mờ dần.
 - Kho ứng dụng: lưới **2 cột** thẻ lớn, chữ 14–20sp, nút 56dp.
+- **Bộ icon thống nhất:** mọi icon là vector 24×24, glyph Material bo tròn (Material Icons, Apache-2.0) + icon xe riêng cùng lưới (gió mặt/chân, sấy kính trước/sau, ắc quy 12V, vô lăng, chia đôi màn hình) nét 2dp bo tròn. Icon vẽ màu trắng và **nhận màu tại nơi dùng** (`android:tint` / `setColorFilter`): `text_primary` cho nút điều hướng, `text_secondary` cho icon phụ, trắng trên nền xanh/cam, `accent` cho tiêu đề mục Cài đặt, đỏ cho xóa. Icon trong nút điều khiển đổi theo trạng thái (trắng khi active). Không dùng emoji làm icon. Icon thông báo `ic_notification` đơn sắc. Ảnh tạm của ứng dụng chưa có icon: `ic_app_placeholder` (màu `text_muted`, không tint để không đè màu icon thật).
 
 ---
 

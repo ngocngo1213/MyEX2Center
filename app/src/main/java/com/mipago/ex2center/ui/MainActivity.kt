@@ -692,9 +692,9 @@ class MainActivity : Activity() {
 
     private fun applyMediaInfo(info: MediaInfo) {
         tvMediaTitle.text = when {
-            info.title != null -> "🎵 ${info.title}"
-            info.isPlaying -> "🎵 Đang phát"
-            else -> "🎵 Chưa có nội dung đang phát"
+            info.title != null -> info.title
+            info.isPlaying -> "Đang phát"
+            else -> "Chưa có nội dung đang phát"
         }
         btnMediaPlayPause.setImageResource(if (info.isPlaying) R.drawable.ic_pause else R.drawable.ic_play)
     }
@@ -752,6 +752,7 @@ class MainActivity : Activity() {
 
         val muted = s.avas?.let { it == 0 }
         btnAvasToggle.setBackgroundResource(if (muted == true) R.drawable.bg_btn_active else R.drawable.bg_btn_inactive)
+        tintIcons(btnAvasToggle, if (muted == true) Color.WHITE else getColor(R.color.text_secondary))
         btnAvasToggle.alpha = if (muted == null) 0.6f else 1f
         tvAvasLabel.setTextColor(if (muted == true) Color.WHITE else getColor(R.color.text_secondary))
         tvAvasLabel.text = when (muted) {
@@ -838,24 +839,30 @@ class MainActivity : Activity() {
 
         if (isGuardHalted) {
             layoutAutomationPill.setBackgroundResource(R.drawable.bg_btn_active_amber)
-            tvAutomationStatus.text = "⚠️ Crash Guard: Đã ngắt (Bấm để reset)"
+            tvAutomationStatus.text = "Crash Guard: Đã ngắt (Bấm để đặt lại)"
+            ivAutomationIcon.setImageResource(R.drawable.ic_warning)
             tvAutomationStatus.setTextColor(Color.WHITE)
             ivAutomationIcon.setColorFilter(Color.WHITE)
             btnValetMode.setBackgroundResource(R.drawable.bg_btn_inactive)
+            tintIcons(btnValetMode, getColor(R.color.text_secondary))
             tvValetLabel.setTextColor(getColor(R.color.text_secondary))
         } else if (isValet) {
             layoutAutomationPill.setBackgroundResource(R.drawable.bg_pill_valet)
             tvAutomationStatus.text = "Chế độ Bảo dưỡng: Đang bật"
+            ivAutomationIcon.setImageResource(R.drawable.ic_wrench)
             tvAutomationStatus.setTextColor(getColor(R.color.text_amber))
             ivAutomationIcon.setColorFilter(getColor(R.color.text_amber))
             btnValetMode.setBackgroundResource(R.drawable.bg_btn_active_amber)
+            tintIcons(btnValetMode, Color.WHITE)
             tvValetLabel.setTextColor(Color.WHITE)
         } else {
             layoutAutomationPill.setBackgroundResource(R.drawable.bg_pill_automation)
             tvAutomationStatus.text = "Tự động hóa: Đang bật"
+            ivAutomationIcon.setImageResource(R.drawable.ic_lightning)
             tvAutomationStatus.setTextColor(getColor(R.color.text_emerald))
             ivAutomationIcon.setColorFilter(getColor(R.color.text_emerald))
             btnValetMode.setBackgroundResource(R.drawable.bg_btn_inactive)
+            tintIcons(btnValetMode, getColor(R.color.text_secondary))
             tvValetLabel.setTextColor(getColor(R.color.text_secondary))
         }
     }
@@ -985,7 +992,7 @@ class MainActivity : Activity() {
         }
 
         btnQuickCool.setOnClickListener {
-            Toast.makeText(this, "⚡ Đang kích hoạt Làm mát nhanh (A/C, 17°C, Gió 7)...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Đang kích hoạt Làm mát nhanh (A/C, 17°C, Gió 7)...", Toast.LENGTH_SHORT).show()
             pending.mark(K_AC, true)
             pending.mark(K_TEMP, TEMP_MIN)
             pending.mark(K_FAN, 7)
@@ -1155,6 +1162,11 @@ class MainActivity : Activity() {
 
     private fun selectVent(mask: Int) {
         commandControl(K_VENT, mask, "Hướng gió") { carHelper.setAirflowDirection(mask) }
+    }
+
+    /** Icons inside a button follow its state: white on accent backgrounds, themed grey otherwise. */
+    private fun tintIcons(group: android.view.ViewGroup, color: Int) {
+        for (i in 0 until group.childCount) (group.getChildAt(i) as? ImageView)?.setColorFilter(color)
     }
 
     private fun updateCompoundButtonStyle(button: LinearLayout, isActive: Boolean) {

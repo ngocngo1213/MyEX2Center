@@ -84,12 +84,13 @@
                 android:paddingEnd="14dp"
                 android:layout_marginEnd="10dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="⛅"
-                    android:textSize="16sp"
-                    android:layout_marginEnd="6dp" />
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_thermometer"
+                    android:tint="@color/text_secondary"
+                    android:layout_marginEnd="6dp"
+                    android:contentDescription="Nhiệt độ ngoài trời" />
 
                 <TextView
                     android:id="@+id/tvOutsideTemp"
@@ -112,9 +113,10 @@
                 android:paddingEnd="14dp">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/ic_battery_12v"
+                    android:tint="@color/text_secondary"
                     android:layout_marginEnd="6dp" />
 
                 <TextView
@@ -144,8 +146,8 @@
 
             <ImageView
                 android:id="@+id/ivAutomationIcon"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:src="@drawable/ic_lightning"
                 android:layout_marginEnd="8dp" />
 
@@ -178,9 +180,10 @@
                 android:layout_marginEnd="10dp">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/ic_wifi"
+                    android:tint="@color/text_secondary"
                     android:layout_marginEnd="8dp" />
 
                 <LinearLayout
@@ -215,8 +218,9 @@
                 android:layout_width="52dp"
                 android:layout_height="52dp"
                 android:src="@drawable/ic_store"
+                android:tint="@color/text_primary"
                 android:background="@drawable/bg_btn_inactive"
-                android:padding="9dp"
+                android:padding="14dp"
                 android:layout_marginEnd="8dp"
                 android:contentDescription="Kho ứng dụng" />
 
@@ -225,9 +229,10 @@
                 android:id="@+id/btnNightBlackout"
                 android:layout_width="52dp"
                 android:layout_height="52dp"
-                android:src="@drawable/ic_screen_off"
+                android:src="@drawable/ic_night"
+                android:tint="@color/text_primary"
                 android:background="@drawable/bg_btn_inactive"
-                android:padding="9dp"
+                android:padding="14dp"
                 android:layout_marginEnd="8dp"
                 android:contentDescription="Tắt màn hình" />
 
@@ -237,8 +242,9 @@
                 android:layout_width="52dp"
                 android:layout_height="52dp"
                 android:src="@drawable/ic_settings"
+                android:tint="@color/text_primary"
                 android:background="@drawable/bg_btn_inactive"
-                android:padding="9dp"
+                android:padding="14dp"
                 android:contentDescription="Cài đặt" />
         </LinearLayout>
     </LinearLayout>
@@ -631,9 +637,10 @@
                         android:focusable="true">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
                             android:src="@drawable/ic_avas"
+                            android:tint="@color/text_secondary"
                             android:layout_marginEnd="8dp" />
 
                         <TextView
@@ -761,9 +768,10 @@
                         android:focusable="true">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
                             android:src="@drawable/ic_camera_360"
+                            android:tint="@color/text_primary"
                             android:layout_marginEnd="8dp" />
 
                         <TextView
@@ -787,9 +795,10 @@
                         android:focusable="true">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:src="@drawable/ic_car_settings"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:src="@drawable/ic_wrench"
+                            android:tint="@color/text_secondary"
                             android:layout_marginEnd="8dp" />
 
                         <TextView
@@ -842,6 +851,7 @@
                         android:layout_width="26dp"
                         android:layout_height="26dp"
                         android:src="@drawable/ic_splitscreen"
+                        android:tint="#FFFFFF"
                         android:layout_marginEnd="12dp" />
 
                     <LinearLayout
@@ -869,7 +879,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="MỞ ▶"
+                        android:text="MỞ  ›"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -893,7 +903,11 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="🎵 Chưa có nội dung đang phát"
+                        android:text="Chưa có nội dung đang phát"
+                        android:drawableStart="@drawable/ic_music"
+                        android:drawableTint="@color/accent_emerald"
+                        android:drawablePadding="8dp"
+                        android:gravity="center_vertical"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold"
@@ -905,8 +919,9 @@
                         android:layout_width="56dp"
                         android:layout_height="56dp"
                         android:src="@drawable/ic_prev"
+                        android:tint="@color/text_primary"
                         android:background="@drawable/bg_btn_inactive"
-                        android:padding="9dp"
+                        android:padding="15dp"
                         android:layout_marginEnd="6dp"
                         android:contentDescription="Bài trước" />
 
@@ -915,8 +930,9 @@
                         android:layout_width="56dp"
                         android:layout_height="56dp"
                         android:src="@drawable/ic_play"
+                        android:tint="#FFFFFF"
                         android:background="@drawable/bg_btn_active"
-                        android:padding="9dp"
+                        android:padding="13dp"
                         android:layout_marginEnd="6dp"
                         android:contentDescription="Phát/Tạm dừng" />
 
@@ -925,8 +941,9 @@
                         android:layout_width="56dp"
                         android:layout_height="56dp"
                         android:src="@drawable/ic_next"
+                        android:tint="@color/text_primary"
                         android:background="@drawable/bg_btn_inactive"
-                        android:padding="9dp"
+                        android:padding="15dp"
                         android:contentDescription="Bài tiếp" />
                 </LinearLayout>
 
@@ -938,9 +955,10 @@
                     android:gravity="center_vertical">
 
                     <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
                         android:src="@drawable/ic_volume_down"
+                        android:tint="@color/text_secondary"
                         android:layout_marginEnd="8dp" />
 
                     <SeekBar
@@ -952,9 +970,10 @@
                         android:thumbTint="@color/accent_emerald" />
 
                     <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
                         android:src="@drawable/ic_volume_up"
+                        android:tint="@color/text_secondary"
                         android:layout_marginStart="8dp"
                         android:layout_marginEnd="8dp" />
 
@@ -1051,7 +1070,11 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="⚡ Làm mát nhanh"
+                            android:text="Làm mát nhanh"
+                            android:drawableStart="@drawable/ic_lightning"
+                            android:drawableTint="#FFFFFF"
+                            android:drawablePadding="6dp"
+                            android:gravity="center_vertical"
                             android:textColor="#FFFFFF"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -1236,9 +1259,10 @@
                         android:focusable="true">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
                             android:src="@drawable/ic_vent_face"
+                            android:tint="@color/text_secondary"
                             android:layout_marginEnd="6dp" />
 
                         <TextView
@@ -1263,9 +1287,10 @@
                         android:focusable="true">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
                             android:src="@drawable/ic_vent_floor"
+                            android:tint="@color/text_secondary"
                             android:layout_marginEnd="6dp" />
 
                         <TextView
@@ -1290,9 +1315,10 @@
                         android:focusable="true">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
                             android:src="@drawable/ic_defrost_front"
+                            android:tint="@color/text_secondary"
                             android:layout_marginEnd="6dp" />
 
                         <TextView
@@ -1316,9 +1342,10 @@
                         android:focusable="true">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
                             android:src="@drawable/ic_defrost_rear"
+                            android:tint="@color/text_secondary"
                             android:layout_marginEnd="6dp" />
 
                         <TextView

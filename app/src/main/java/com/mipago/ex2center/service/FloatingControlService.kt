@@ -118,7 +118,7 @@ class FloatingControlService : Service() {
         val notification = notificationBuilder
             .setContentTitle(getString(R.string.notif_overlay_title))
             .setContentText(getString(R.string.desc_floating_bubble))
-            .setSmallIcon(R.drawable.ic_launcher)
+            .setSmallIcon(R.drawable.ic_notification) // monochrome: status bar icons must be single-colour
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .build()

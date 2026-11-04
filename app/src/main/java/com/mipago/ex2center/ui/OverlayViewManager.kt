@@ -338,11 +338,13 @@ class OverlayViewManager(private val context: Context) {
             setTypeface(null, android.graphics.Typeface.BOLD)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
-        val btnClose = TextView(context).apply {
-            text = "✕"
-            setTextColor(context.getColor(R.color.text_secondary))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
-            setPadding(dpToPx(8), dpToPx(4), dpToPx(8), dpToPx(4))
+        val btnClose = ImageView(context).apply {
+            setImageResource(R.drawable.ic_close)
+            setColorFilter(context.getColor(R.color.text_secondary))
+            contentDescription = "Đóng"
+            val pad = dpToPx(12)
+            setPadding(pad, pad, pad, pad)
+            layoutParams = LinearLayout.LayoutParams(dpToPx(48), dpToPx(48))
             setOnClickListener { hidePanel() }
         }
         header.addView(title)
@@ -528,7 +530,7 @@ class OverlayViewManager(private val context: Context) {
             text = context.getString(R.string.overlay_reboot)
             setTextColor(Color.WHITE)
             background = GradientDrawable().apply {
-                setColor(Color.parseColor("#D32F2F"))
+                setColor(context.getColor(R.color.accent_danger))
                 cornerRadius = dpToPx(8).toFloat()
             }
             layoutParams = LinearLayout.LayoutParams(0, dpToPx(56), 1f)
@@ -688,18 +690,15 @@ class OverlayViewManager(private val context: Context) {
             elevation = dpToPx(10).toFloat()
         }
 
-        fun createPillButton(text: String, colorHex: String, onClick: () -> Unit): TextView {
-            return TextView(context).apply {
-                this.text = text
-                setTextColor(Color.parseColor(colorHex))
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
-                typeface = android.graphics.Typeface.DEFAULT_BOLD
-                gravity = Gravity.CENTER
-                val btnSize = dpToPx(38)
-                val lp = LinearLayout.LayoutParams(btnSize, btnSize).apply {
-                    bottomMargin = dpToPx(8)
-                }
-                layoutParams = lp
+        fun createPillButton(iconRes: Int, colorRes: Int, label: String, onClick: () -> Unit): ImageView {
+            return ImageView(context).apply {
+                setImageResource(iconRes)
+                setColorFilter(context.getColor(colorRes))
+                contentDescription = label
+                val pad = dpToPx(11)
+                setPadding(pad, pad, pad, pad)
+                val btnSize = dpToPx(48)
+                layoutParams = LinearLayout.LayoutParams(btnSize, btnSize).apply { bottomMargin = dpToPx(8) }
                 background = GradientDrawable().apply {
                     shape = GradientDrawable.OVAL
                     setColor(context.getColor(R.color.btn_inactive))
@@ -709,13 +708,13 @@ class OverlayViewManager(private val context: Context) {
             }
         }
 
-        // 1. Swap Apps (⇄)
-        val btnSwap = createPillButton("⇄", "#10B981") {
+        // 1. Swap Apps
+        val btnSwap = createPillButton(R.drawable.ic_swap, R.color.accent_primary, "Đổi vị trí 2 ứng dụng") {
             com.mipago.ex2center.launcher.SplitScreenLauncher.swapSplitApps(context)
         }
 
-        // 2. Quick Climate Adjust (❄)
-        val btnClimate = createPillButton("❄", "#38BDF8") {
+        // 2. Quick Climate Adjust
+        val btnClimate = createPillButton(R.drawable.ic_ac, R.color.text_primary, "Bật/tắt A/C") {
             // Quick toggle AC compressor or trigger Quick Cool
             runIo {
                 val curAc = carHelper.isAcCompressorOn()
@@ -733,13 +732,13 @@ class OverlayViewManager(private val context: Context) {
             }
         }
 
-        // 3. Blackout Night Mode (☾)
-        val btnNight = createPillButton("☾", "#F59E0B") {
+        // 3. Blackout Night Mode
+        val btnNight = createPillButton(R.drawable.ic_night, R.color.accent_secondary, "Màn hình đêm") {
             activateBlackoutMode()
         }
 
-        // 4. Close Split & Return to Dashboard (✕)
-        val btnClose = createPillButton("✕", "#EF4444") {
+        // 4. Close Split & Return to Dashboard
+        val btnClose = createPillButton(R.drawable.ic_close, R.color.accent_danger, "Đóng chia đôi màn hình") {
             hideSplitControlBar()
             val dashIntent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP

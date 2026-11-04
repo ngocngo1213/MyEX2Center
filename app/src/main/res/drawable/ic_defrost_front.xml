@@ -1,9 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MyEX2Center icon set: 24x24 grid, Material-style rounded glyphs (Material Icons, Apache-2.0)
+     plus custom vehicle glyphs on the same grid (2dp round strokes). Drawn white: the colour
+     comes from the usage site (android:tint / setColorFilter) so it follows light/dark mode. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-  <path
-      android:fillColor="@color/text_primary"
-      android:pathData="M2,18h20v-2c0,-4.42 -4.03,-8 -9,-8H11c-4.97,0 -9,3.58 -9,8v2zm2,-2c0,-3.31 3.13,-6 7,-6h2c3.87,0 7,2.69 7,6H4zm6,-8V3h2v5h-2zm-4,1l-2,-4 1.73,-1 2,4 -1.73,1zm10,0l-1.73,-1 2,-4 1.73,1 -2,4z"/>
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M3.5,18L5.8,6.2Q12,4.2 18.2,6.2L20.5,18Q12,20.2 3.5,18Z" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M9,9.2q-1,1.4 0,2.8q1,1.4 0,2.8 M12,8.6q-1,1.4 0,2.8q1,1.4 0,2.8 M15,9.2q-1,1.4 0,2.8q1,1.4 0,2.8" />
 </vector>

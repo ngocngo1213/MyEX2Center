@@ -183,8 +183,8 @@ class SettingsActivity : Activity() {
         }
         header.addView(ImageView(this).apply {
             setImageResource(iconRes)
-            setColorFilter(color(R.color.text_secondary))
-            layoutParams = LinearLayout.LayoutParams(dp(26), dp(26)).apply { marginEnd = dp(12) }
+            setColorFilter(color(R.color.accent_primary)) // section headers carry the accent
+            layoutParams = LinearLayout.LayoutParams(dp(28), dp(28)).apply { marginEnd = dp(12) }
         })
         header.addView(text(title, 22f, R.color.text_primary, bold = true))
         card.addView(header)
@@ -257,7 +257,7 @@ class SettingsActivity : Activity() {
     // ---------------------------------------------------------------------------------------
 
     private fun profileSection(): View {
-        val card = section("Hồ sơ xe", R.drawable.ic_car_settings)
+        val card = section("Hồ sơ xe", R.drawable.ic_car)
 
         val head = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -288,7 +288,7 @@ class SettingsActivity : Activity() {
     }
 
     private fun appearanceSection(): View {
-        val card = section("Giao diện", R.drawable.ic_screen_off)
+        val card = section("Giao diện", R.drawable.ic_brightness)
         card.addView(text("Chế độ hiển thị", 16f, R.color.text_secondary).apply { setPadding(0, dp(6), 0, dp(10)) })
         val seg = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -324,7 +324,7 @@ class SettingsActivity : Activity() {
     }
 
     private fun drivingSection(): View {
-        val card = section("Lái xe & Tự động hóa", R.drawable.ic_car_comfort)
+        val card = section("Lái xe & Tự động hóa", R.drawable.ic_steering)
         toggleRow(
             card, "Ghi nhớ chế độ lái", "Khôi phục Tiết kiệm / Thoải mái / Thể thao sau khi tắt và mở xe",
             prefs.getBoolean(CarAutomationService.KEY_AUTO_DRIVE_MODE, true)
@@ -453,7 +453,7 @@ class SettingsActivity : Activity() {
 
     private fun refreshGuard() {
         val halted = prefs.getBoolean(CarAutomationService.KEY_GUARD_HALTED, false)
-        guardSubtitle.text = if (halted) "⚠️ Đã ngắt do lỗi liên tiếp — chạm để đặt lại" else "Đang bảo vệ, không có lỗi"
+        guardSubtitle.text = if (halted) "Đã ngắt do lỗi liên tiếp — chạm để đặt lại" else "Đang bảo vệ, không có lỗi"
         guardSubtitle.setTextColor(color(if (halted) R.color.text_amber else R.color.text_secondary))
     }
 

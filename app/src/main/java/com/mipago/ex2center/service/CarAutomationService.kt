@@ -211,7 +211,7 @@ class CarAutomationService : Service() {
         val notification = notificationBuilder
             .setContentTitle(getString(R.string.notif_service_title))
             .setContentText(getString(R.string.notif_service_desc))
-            .setSmallIcon(R.drawable.ic_launcher)
+            .setSmallIcon(R.drawable.ic_notification) // monochrome: status bar icons must be single-colour
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .build()
