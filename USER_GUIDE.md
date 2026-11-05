@@ -96,21 +96,21 @@ Máy tính và xe đều phải kết nối vào **cùng** hotspot này.
 
 ### 2.1. Tải gói mở khóa
 
-> [!WARNING]
-> **Link Google Drive gốc đã ngừng hoạt động** (kiểm tra ngày 05/11/2026: trả về lỗi 404). Tài liệu drive_assist cũng vẫn trỏ vào đúng link này. Video hướng dẫn gốc vẫn xem được, nhưng phần mô tả **không có link tải mới**. Hiện dự án này **chưa có nguồn thay thế đã kiểm chứng**, nên không đăng lại gói mở khóa.
->
-> Cách lấy gói:
-> - Hỏi trong các nhóm cộng đồng Geely EX2 (Facebook / Zalo). Nhiều người đã mở khóa vẫn còn giữ file.
-> - Hoặc liên hệ tác giả qua email ghi trong mô tả video: `contato.jeannaestrada@gmail.com`.
->
-> Chỉ dùng gói có **đúng tên thư mục** như bên dưới, và **đúng phiên bản xe** (1111 / 1114). Không dùng gói `update.zip` lạ không rõ nguồn: gói này chạy trên xe với quyền cao nhất.
-> Có link mới đã kiểm chứng, hãy báo tại https://github.com/ngocngo1213/MyEX2Center/issues để cập nhật tài liệu.
+Link tải theo bài hướng dẫn của cộng đồng Việt Nam trên **XeThongMinh.net**: https://xethongminh.net/threads/huong-dan-mo-khoa-va-cai-dat-phan-mem-cho-man-hinh-xe-geely-ex2.5527/ (đã kiểm tra còn hoạt động ngày 05/11/2026). Link Google Drive cũ của Jean na Estrada đã ngừng hoạt động.
 
-1. Lấy gói mở khóa (thư mục gốc từng có tên **Geely Ex2 – Jean na Estrada**, link cũ: `https://drive.google.com/drive/folders/1RPzQlNtSc0YC_rpFQf_IIgdB6WvejiLl`).
-2. Gói được chia theo phiên bản (tên thư mục gốc):
-   - `Desbloqueio versao 1111` cho phiên bản **1111**
-   - `Desbloqueio 1114` cho phiên bản **1114**
-3. Trong đó chỉ có **một file .zip**. Tải về rồi **giải nén một lần**. Bạn sẽ được một thư mục có tên dài, ví dụ:
+1. Tải **đúng một file** theo phiên bản xe của bạn (mục 1.2):
+
+   | Phiên bản xe | File | Link |
+   |---|---|---|
+   | **1111** | `3C6025_SW0E22H0128H111100000_user_995.zip` | https://drive.google.com/file/d/1rvTfF4WoTgXcZ98_y73fKRayZVBgxaOZ/view |
+   | **1114** | `3C6025_SW0E22H0306H111400000_user_995.zip` | https://drive.google.com/file/d/1RF5ut5r_zVGCxfe2O3LKc3SrecRVp3td/view |
+
+2. Trên trang Google Drive, bấm nút **Tải xuống** (mũi tên ↓ góc trên bên phải).
+
+> [!WARNING]
+> Gói do **cộng đồng** chia sẻ, không phải của Geely, và chạy trên xe với quyền cao nhất. Chỉ dùng gói có **đúng tên file** như bảng trên, **đúng phiên bản xe**. Không dùng `update.zip` lạ không rõ nguồn. Nếu link lại hỏng, hãy báo tại https://github.com/ngocngo1213/MyEX2Center/issues.
+
+3. File .zip chứa **một thư mục**. **Giải nén một lần**. Bạn sẽ được một thư mục có tên dài, ví dụ:
    - 1111: `3C6025_SW0E22H0128H111100000_user_995`
    - 1114: `3C6025_SW0E22H0306H111400000_user_995`
 4. **Dừng ở đây.** Bên trong có `OS/update.zip`. **Không giải nén `update.zip`** và **không đổi tên** thư mục. Tên thư mục chính là thứ xe dùng để tìm gói.
@@ -181,6 +181,7 @@ Hai dãy mã SHA-256 in ra phải **giống hệt nhau**.
 4. Menu ẩn hiện ra (chữ Trung Quốc). Chạm vào ô **`U盘升级`** (*cập nhật từ USB*), thường ở **hàng thứ 4, cột phải**. Hãy tìm đúng chữ, đừng dựa vào vị trí.
 5. Xe tự khởi động lại vào màn hình *Android Recovery* và nạp gói.
 6. Chọn **`Reboot system now`** (dòng đầu tiên, đã được tô sáng sẵn).
+   Nếu màn hình không phản hồi, **bấm giữ nút lùi bài (⏮) trên vô lăng** cho đến khi xe khởi động lại.
 
 **Thành công nếu bạn thấy các dòng:**
 ```
@@ -188,6 +189,20 @@ PT  ativado
 Done = ADB enabled - intentional stop, nothing wiped
 ```
 Dòng báo lỗi `E:Error in /update/update.zip (status 7)` / `Installation aborted` ở cuối là **bình thường**: gói cố ý dừng sau khi bật ADB và **không xóa gì**.
+
+### 2.5. Bật chế độ ADB
+
+Theo bài của XeThongMinh.net, sau khi nạp gói còn phải bật ADB thêm một lần:
+1. Mở **bàn phím gọi điện** trên xe, nhập **mã quay số** (khác mã ở mục 2.4):
+
+   **`#*` + (tháng + 5) + ngày + giờ (dạng 12 giờ)**, mỗi phần 2 chữ số.
+
+   | Thời gian trên xe | Mã menu ẩn (mục 2.4: tháng + 10) | Mã quay số (tháng + 5) |
+   |---|---|---|
+   | 20/07, 19 giờ | `#*172007` | `#*122007` |
+   | 15/11, 10 giờ sáng | `#*211510` | `#*161510` |
+
+2. Trong màn hình hiện ra, chạm nút **ADB** **một lần** để bật chế độ ADB.
 
 Rút USB ra. Phần 2 xong.
 
@@ -296,7 +311,7 @@ Kết quả đúng:
 192.168.1.50:5555   device product:IHU629G model:IHU629G device:IHU629G
 ```
 
-- `failed to connect` / `timed out`: xe và máy tính không cùng mạng, sai IP, hoặc ADB chưa được mở khóa (làm lại Phần 2).
+- `failed to connect` / `timed out`: xe và máy tính không cùng mạng, sai IP, hoặc ADB chưa bật: làm lại mục 2.5 (mã quay số → nút **ADB**). Nếu vẫn không được, làm lại Phần 2.
 - `offline` / `unauthorized`: chạy `adb disconnect` rồi `adb connect …` lại.
 
 > Từ bước này đến khi cài xong, **đừng tắt xe** và **đừng đổi mạng** trên máy tính. Nếu mất kết nối, chạy lại lệnh `adb connect`.
@@ -554,7 +569,7 @@ Gửi file `ex2center-log.txt` kèm mô tả lỗi tại **https://github.com/ng
 ## 14. Câu hỏi thường gặp
 
 **Có cần mở khóa lại mỗi lần cài không?**
-Không. Chỉ làm một lần. Nếu xe được cập nhật phần mềm chính hãng, có thể phải mở khóa lại.
+Không. Chỉ làm một lần. Nếu xe được cập nhật phần mềm chính hãng, có thể phải mở khóa lại. **Khôi phục cài đặt gốc** (Cài đặt xe → Xe của tôi → Khôi phục) cũng xóa mở khóa ADB và mọi app đã cài.
 
 **Sau lần đầu còn cần máy tính không?**
 Không. Máy tính chỉ dùng một lần để cài EX2 Store. MyEX2Center, các app khác và mọi bản cập nhật đều cài trong EX2 Store, qua Wi-Fi hoặc USB.
