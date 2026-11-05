@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/bg_primary"
-    android:paddingStart="@dimen/space_16"
-    android:paddingEnd="@dimen/space_16"
+    android:paddingStart="@dimen/screen_gutter"
+    android:paddingEnd="@dimen/screen_gutter"
     android:paddingTop="@dimen/space_8"
-    android:paddingBottom="@dimen/space_12">
+    android:paddingBottom="@dimen/screen_gutter">
 
     <!-- ======================================================== -->
     <!-- 1. TOP STATUS PILL BAR                                    -->
     <!-- ======================================================== -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="@dimen/header_height"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="@dimen/space_8">
+        android:layout_marginBottom="@dimen/card_gap">
 
         <!-- Left: Digital Clock, Outside Temp, 12V Battery -->
         <LinearLayout
@@ -67,7 +68,7 @@
                 android:id="@+id/tvDigitalClock"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="21:41"
+                android:text="--:--"
                 android:textColor="@color/text_primary"
                 android:textSize="26sp"
                 android:textStyle="bold"
@@ -273,7 +274,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="1.0"
                 android:background="@drawable/bg_card"
-                android:padding="@dimen/space_16"
+                android:padding="@dimen/card_padding"
                 android:orientation="vertical">
 
                 <!-- Gear Indicators & Large Speed -->
@@ -293,42 +294,42 @@
 
                         <TextView
                             android:id="@+id/tvGearP"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
                             android:text="P"
-                            android:textColor="@color/text_primary"
-                            android:textSize="16sp"
+                            android:textColor="@color/text_on_accent"
+                            android:textSize="20sp"
                             android:textStyle="bold"
                             android:gravity="center"
                             android:background="@drawable/bg_gear_active" />
 
                         <TextView
                             android:id="@+id/tvGearR"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
                             android:text="R"
                             android:textColor="@color/text_secondary"
-                            android:textSize="16sp"
+                            android:textSize="20sp"
                             android:textStyle="bold"
                             android:gravity="center" />
 
                         <TextView
                             android:id="@+id/tvGearN"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
                             android:text="N"
                             android:textColor="@color/text_secondary"
-                            android:textSize="16sp"
+                            android:textSize="20sp"
                             android:textStyle="bold"
                             android:gravity="center" />
 
                         <TextView
                             android:id="@+id/tvGearD"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
                             android:text="D"
                             android:textColor="@color/text_secondary"
-                            android:textSize="16sp"
+                            android:textSize="20sp"
                             android:textStyle="bold"
                             android:gravity="center" />
                     </LinearLayout>
@@ -366,7 +367,7 @@
                         android:id="@+id/tvSpeedValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="0"
+                        android:text="--"
                         android:textColor="@color/text_primary"
                         android:textSize="72sp"
                         android:textStyle="bold" />
@@ -441,9 +442,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1.1"
-                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginTop="@dimen/card_gap"
                 android:background="@drawable/bg_card"
-                android:padding="@dimen/space_12"
+                android:padding="@dimen/card_padding"
                 android:orientation="vertical">
 
                 <!-- Drive Mode Row -->
@@ -501,7 +502,7 @@
                         android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:text="Thoải mái"
-                        android:textColor="@color/text_primary"
+                        android:textColor="@color/text_on_accent"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:gravity="center"
@@ -527,7 +528,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginTop="@dimen/space_8"
+                    android:layout_marginTop="@dimen/space_16"
                     android:layout_marginBottom="@dimen/space_8">
 
                     <TextView
@@ -577,7 +578,7 @@
                         android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:text="Vừa"
-                        android:textColor="@color/text_primary"
+                        android:textColor="@color/text_on_accent"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:gravity="center"
@@ -598,14 +599,14 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Card 1.3: Core 6 Shortcuts (Grid 2x3, Minimum 48dp Buttons) -->
+            <!-- Card 1.3: Core shortcuts (2x2 grid: AVAS, Đèn viền, Camera 360, Bảo dưỡng) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1.3"
-                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginTop="@dimen/card_gap"
                 android:background="@drawable/bg_card"
-                android:padding="@dimen/space_12"
+                android:padding="@dimen/card_padding"
                 android:orientation="vertical">
 
                 <TextView
@@ -617,7 +618,7 @@
                     android:textStyle="bold"
                     android:layout_marginBottom="@dimen/space_8" />
 
-                <!-- Row 1: AVAS (Auto Hold hidden: no verified VHAL property on IHU629G) -->
+                <!-- Row 1: AVAS + Đèn viền (Auto Hold removed: no verified VHAL property on IHU629G) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
@@ -630,6 +631,7 @@
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
+                        android:layout_marginEnd="@dimen/space_12"
                         android:orientation="horizontal"
                         android:gravity="center"
                         android:background="@drawable/bg_btn_active"
@@ -648,34 +650,36 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Tắt âm AVAS"
-                            android:textColor="@color/text_primary"
+                            android:textColor="@color/text_on_accent"
                             android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
+                    <!-- Cabin ambient light master switch (PROP_AMBIENT_LIGHT_ON, verified). -->
                     <LinearLayout
-                        android:id="@+id/btnAutoHold"
-                        android:visibility="gone"
+                        android:id="@+id/btnAmbientLight"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:orientation="horizontal"
                         android:gravity="center"
                         android:background="@drawable/bg_btn_inactive"
+                        android:alpha="0.6"
                         android:clickable="true"
                         android:focusable="true">
 
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_autohold"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_ambient_light"
+                            android:tint="@color/text_secondary"
                             android:layout_marginEnd="@dimen/space_8" />
 
                         <TextView
-                            android:id="@+id/tvAutoHoldLabel"
+                            android:id="@+id/tvAmbientLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Auto Hold"
+                            android:text="Đèn viền: --"
                             android:textColor="@color/text_secondary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -822,8 +826,8 @@
             android:layout_height="match_parent"
             android:layout_weight="38"
             android:orientation="vertical"
-            android:layout_marginStart="@dimen/space_8"
-            android:layout_marginEnd="@dimen/space_8">
+            android:layout_marginStart="@dimen/card_gap"
+            android:layout_marginEnd="@dimen/card_gap">
 
             <!-- Card 2.1: Split-Screen Launcher Hero & Media Controls -->
             <LinearLayout
@@ -831,7 +835,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="1.15"
                 android:background="@drawable/bg_card"
-                android:padding="@dimen/space_16"
+                android:padding="@dimen/card_padding"
                 android:orientation="vertical">
 
                 <!-- Split-Screen Hero Button (Height 54dp) -->
@@ -864,7 +868,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Chạy Đôi: Vietmap + YouTube"
-                            android:textColor="@color/text_primary"
+                            android:textColor="@color/text_on_accent"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
@@ -880,7 +884,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="MỞ  ›"
-                        android:textColor="@color/text_primary"
+                        android:textColor="@color/text_on_accent"
                         android:textSize="16sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -984,7 +988,7 @@
                         android:id="@+id/tvVolumeValue"
                         android:layout_width="28dp"
                         android:layout_height="wrap_content"
-                        android:text="15"
+                        android:text="--"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold"
@@ -992,14 +996,14 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Card 2.2: Smart Climate Station (No Empty Gaps, 48dp Touch Targets) -->
+            <!-- Card 2.2: Smart Climate Station (sections spaced evenly, 64dp touch targets) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="2.0"
-                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginTop="@dimen/card_gap"
                 android:background="@drawable/bg_card"
-                android:padding="@dimen/space_16"
+                android:padding="@dimen/card_padding"
                 android:orientation="vertical">
 
                 <TextView
@@ -1009,27 +1013,44 @@
                     android:textColor="@color/text_secondary"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="@dimen/space_8" />
+                    android:layout_marginBottom="@dimen/space_16" />
 
                 <!-- Row 1: A/C, Recirc, Quick Cool (64dp: most-used while driving) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/touch_primary"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="@dimen/space_8">
+                    android:orientation="horizontal">
 
-                    <TextView
+                    <!-- A/C compressor (snowflake) -->
+                    <LinearLayout
                         android:id="@+id/btnAcCompressor"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:text="A/C"
-                        android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
+                        android:orientation="horizontal"
                         android:gravity="center"
-                        android:background="@drawable/bg_btn_active"
-                        android:layout_marginEnd="@dimen/space_12" />
+                        android:background="@drawable/bg_btn_inactive"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginEnd="@dimen/space_12">
+
+                        <ImageView
+                            android:id="@+id/ivAcIcon"
+                            android:layout_width="@dimen/icon_md"
+                            android:layout_height="@dimen/icon_md"
+                            android:src="@drawable/ic_ac"
+                            android:tint="@color/text_secondary"
+                            android:layout_marginEnd="@dimen/space_8" />
+
+                        <TextView
+                            android:id="@+id/tvAcLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="A/C"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/btnAutoClimate"
@@ -1045,18 +1066,36 @@
                         android:background="@drawable/bg_btn_inactive"
                         android:layout_marginEnd="@dimen/space_12" />
 
-                    <TextView
+                    <!-- Air intake: one tap toggles Gió trong (recirculation) <-> Gió ngoài (fresh air) -->
+                    <LinearLayout
                         android:id="@+id/btnRecirc"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
-                        android:layout_weight="1.1"
-                        android:text="Gió trong"
-                        android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
+                        android:layout_weight="1.2"
+                        android:orientation="horizontal"
                         android:gravity="center"
-                        android:background="@drawable/bg_btn_active"
-                        android:layout_marginEnd="@dimen/space_12" />
+                        android:background="@drawable/bg_btn_inactive"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginEnd="@dimen/space_12">
+
+                        <ImageView
+                            android:id="@+id/ivRecircIcon"
+                            android:layout_width="@dimen/icon_md"
+                            android:layout_height="@dimen/icon_md"
+                            android:src="@drawable/ic_air_recirc"
+                            android:tint="@color/text_secondary"
+                            android:layout_marginEnd="@dimen/space_8" />
+
+                        <TextView
+                            android:id="@+id/tvRecircLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Gió: --"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
 
                     <!-- QUICK COOL MACRO BUTTON -->
                     <LinearLayout
@@ -1084,26 +1123,32 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Row 2: Temperature (top) and Fan speed (bottom), each on its own full-width row -->
+                <!-- Flexible gap (min 16dp): the card's spare height is shared evenly between sections. -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/space_16"
+                    android:layout_weight="1" />
+
+                <!-- Row 2: Temperature (top) and Fan speed (bottom), each on its own full-width row.
+                     Weighted like the gaps above/below so all three gaps grow equally. -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="@dimen/space_12">
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
                     <!-- Temperature Controls -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginBottom="@dimen/space_8">
+                        android:orientation="vertical">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
-                            android:layout_marginBottom="@dimen/space_4">
+                            android:layout_marginBottom="@dimen/space_8">
 
                             <TextView
                                 android:layout_width="0dp"
@@ -1117,7 +1162,7 @@
                                 android:id="@+id/tvClimateTargetTemp"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="25°C"
+                                android:text="--°C"
                                 android:textColor="@color/text_primary"
                                 android:textSize="22sp"
                                 android:textStyle="bold" />
@@ -1125,7 +1170,7 @@
 
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="@dimen/touch_primary"
+                            android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical">
 
@@ -1142,14 +1187,16 @@
                                 android:minHeight="0dp"
                                 android:padding="0dp" />
 
-                            <SeekBar
+                            <com.mipago.ex2center.ui.StepSeekBar
                                 android:thumb="@drawable/bg_seek_thumb"
                                 android:splitTrack="false"
                                 android:minHeight="8dp"
                                 android:maxHeight="8dp"
                                 android:id="@+id/sbTempGradient"
                                 android:layout_width="0dp"
-                                android:layout_height="@dimen/slider_touch_height"
+                                android:layout_height="@dimen/slider_scale_height"
+                                android:paddingTop="@dimen/space_24"
+                                android:paddingBottom="@dimen/space_24"
                                 android:layout_weight="1"
                                 android:max="15"
                                 android:progress="8"
@@ -1170,6 +1217,11 @@
                         </LinearLayout>
                     </LinearLayout>
 
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/space_16"
+                        android:layout_weight="1" />
+
                     <!-- Fan Speed Controls -->
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -1181,7 +1233,7 @@
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
-                            android:layout_marginBottom="@dimen/space_4">
+                            android:layout_marginBottom="@dimen/space_8">
 
                             <TextView
                                 android:layout_width="0dp"
@@ -1195,7 +1247,7 @@
                                 android:id="@+id/tvClimateFanSpeed"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Mức 2"
+                                android:text="Mức --"
                                 android:textColor="@color/text_primary"
                                 android:textSize="22sp"
                                 android:textStyle="bold" />
@@ -1203,7 +1255,7 @@
 
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="@dimen/touch_primary"
+                            android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical">
 
@@ -1220,17 +1272,20 @@
                                 android:minHeight="0dp"
                                 android:padding="0dp" />
 
-                            <SeekBar
+                            <com.mipago.ex2center.ui.StepSeekBar
                                 android:thumb="@drawable/bg_seek_thumb"
                                 android:splitTrack="false"
                                 android:minHeight="8dp"
                                 android:maxHeight="8dp"
                                 android:id="@+id/sbFanSpeed"
                                 android:layout_width="0dp"
-                                android:layout_height="@dimen/slider_touch_height"
+                                android:layout_height="@dimen/slider_scale_height"
+                                android:paddingTop="@dimen/space_24"
+                                android:paddingBottom="@dimen/space_24"
                                 android:layout_weight="1"
+                                android:min="1"
                                 android:max="8"
-                                android:progress="2"
+                                android:progress="1"
                                 android:progressTint="@color/accent_emerald" />
 
                             <Button
@@ -1248,6 +1303,12 @@
                         </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
+
+                <!-- Flexible gap (min 16dp): the card's spare height is shared evenly between sections. -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/space_16"
+                    android:layout_weight="1" />
 
                 <!-- Row 3: Vents & Defrost (64dp) -->
                 <LinearLayout
@@ -1278,7 +1339,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Gió mặt"
-                            android:textColor="@color/text_primary"
+                            android:textColor="@color/text_on_accent"
                             android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -1378,13 +1439,15 @@
             android:layout_weight="30"
             android:orientation="vertical">
 
-            <!-- Card 3.1: All-in-One Vehicle Status (Enlarged Vehicle Graphic) -->
+            <!-- Card 3.1 (top 70%): tire pressure beside each wheel, window position beside each door.
+                 The car is sized as a fraction of the stage (2:1 like its 130x260 vector) and every
+                 marker is positioned relative to the car, so the layout scales with the card. -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="2.0"
+                android:layout_weight="7"
                 android:background="@drawable/bg_card"
-                android:padding="@dimen/space_16"
+                android:padding="@dimen/card_padding"
                 android:orientation="vertical">
 
                 <LinearLayout
@@ -1407,73 +1470,89 @@
                         android:id="@+id/tvTpmsUpdated"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Cập nhật 21:41"
+                        android:text="Chưa có dữ liệu"
                         android:textColor="@color/text_muted"
                         android:textSize="14sp" />
                 </LinearLayout>
 
-                <!-- Top-down Geely EX2: tire pressure beside each wheel, window position beside
-                     each door. The car vector is 130x260dp (1 viewport unit = 1dp) so the wheel
-                     indicators line up with the drawing. -->
-                <RelativeLayout
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1">
 
                     <ImageView
                         android:id="@+id/ivCarTopDown"
-                        android:layout_width="128dp"
-                        android:layout_height="256dp"
-                        android:layout_centerInParent="true"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        app:layout_constraintHeight_percent="0.86"
+                        app:layout_constraintDimensionRatio="1:2"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
                         android:scaleType="fitXY"
                         android:src="@drawable/img_ex2_top_down"
                         android:contentDescription="Mô hình xe Geely EX2 nhìn từ trên xuống" />
 
+                    <!-- Car = 86% of the stage height. Wheels are 48/256 of the car (0.86 x 0.1875 = 0.16125 of
+                         the stage), at y=40 / y=168 on the 128x256 drawing → bias 40/208, 168/208. -->
                     <View
                         android:id="@+id/vWheelFl"
-                        android:layout_width="16dp"
-                        android:layout_height="48dp"
-                        android:layout_alignTop="@id/ivCarTopDown"
-                        android:layout_marginTop="40dp"
-                        android:layout_alignStart="@id/ivCarTopDown"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        app:layout_constraintHeight_percent="0.16125"
+                        app:layout_constraintDimensionRatio="1:3"
+                        app:layout_constraintStart_toStartOf="@id/ivCarTopDown"
+                        app:layout_constraintTop_toTopOf="@id/ivCarTopDown"
+                        app:layout_constraintBottom_toBottomOf="@id/ivCarTopDown"
+                        app:layout_constraintVertical_bias="0.1923"
                         android:background="@drawable/bg_wheel_indicator" />
 
                     <View
                         android:id="@+id/vWheelFr"
-                        android:layout_width="16dp"
-                        android:layout_height="48dp"
-                        android:layout_alignTop="@id/ivCarTopDown"
-                        android:layout_marginTop="40dp"
-                        android:layout_alignEnd="@id/ivCarTopDown"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        app:layout_constraintHeight_percent="0.16125"
+                        app:layout_constraintDimensionRatio="1:3"
+                        app:layout_constraintEnd_toEndOf="@id/ivCarTopDown"
+                        app:layout_constraintTop_toTopOf="@id/ivCarTopDown"
+                        app:layout_constraintBottom_toBottomOf="@id/ivCarTopDown"
+                        app:layout_constraintVertical_bias="0.1923"
                         android:background="@drawable/bg_wheel_indicator" />
 
                     <View
                         android:id="@+id/vWheelRl"
-                        android:layout_width="16dp"
-                        android:layout_height="48dp"
-                        android:layout_alignTop="@id/ivCarTopDown"
-                        android:layout_marginTop="168dp"
-                        android:layout_alignStart="@id/ivCarTopDown"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        app:layout_constraintHeight_percent="0.16125"
+                        app:layout_constraintDimensionRatio="1:3"
+                        app:layout_constraintStart_toStartOf="@id/ivCarTopDown"
+                        app:layout_constraintTop_toTopOf="@id/ivCarTopDown"
+                        app:layout_constraintBottom_toBottomOf="@id/ivCarTopDown"
+                        app:layout_constraintVertical_bias="0.8077"
                         android:background="@drawable/bg_wheel_indicator" />
 
                     <View
                         android:id="@+id/vWheelRr"
-                        android:layout_width="16dp"
-                        android:layout_height="48dp"
-                        android:layout_alignTop="@id/ivCarTopDown"
-                        android:layout_marginTop="168dp"
-                        android:layout_alignEnd="@id/ivCarTopDown"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        app:layout_constraintHeight_percent="0.16125"
+                        app:layout_constraintDimensionRatio="1:3"
+                        app:layout_constraintEnd_toEndOf="@id/ivCarTopDown"
+                        app:layout_constraintTop_toTopOf="@id/ivCarTopDown"
+                        app:layout_constraintBottom_toBottomOf="@id/ivCarTopDown"
+                        app:layout_constraintVertical_bias="0.8077"
                         android:background="@drawable/bg_wheel_indicator" />
 
-                    <!-- Tire FL -->
+                    <!-- Tire readings, centred on their wheel -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignTop="@id/ivCarTopDown"
-                        android:layout_marginTop="@dimen/space_32"
-                        android:layout_toStartOf="@id/ivCarTopDown"
+                        app:layout_constraintEnd_toStartOf="@id/ivCarTopDown"
                         android:layout_marginEnd="@dimen/space_24"
                         android:gravity="end"
+                        app:layout_constraintTop_toTopOf="@id/vWheelFl"
+                        app:layout_constraintBottom_toBottomOf="@id/vWheelFl"
                         android:orientation="vertical">
 
                         <TextView
@@ -1494,15 +1573,14 @@
                             android:textSize="14sp" />
                     </LinearLayout>
 
-                    <!-- Tire FR -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignTop="@id/ivCarTopDown"
-                        android:layout_marginTop="@dimen/space_32"
-                        android:layout_toEndOf="@id/ivCarTopDown"
+                        app:layout_constraintStart_toEndOf="@id/ivCarTopDown"
                         android:layout_marginStart="@dimen/space_24"
                         android:gravity="start"
+                        app:layout_constraintTop_toTopOf="@id/vWheelFr"
+                        app:layout_constraintBottom_toBottomOf="@id/vWheelFr"
                         android:orientation="vertical">
 
                         <TextView
@@ -1523,15 +1601,14 @@
                             android:textSize="14sp" />
                     </LinearLayout>
 
-                    <!-- Tire RL -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignTop="@id/ivCarTopDown"
-                        android:layout_marginTop="168dp"
-                        android:layout_toStartOf="@id/ivCarTopDown"
+                        app:layout_constraintEnd_toStartOf="@id/ivCarTopDown"
                         android:layout_marginEnd="@dimen/space_24"
                         android:gravity="end"
+                        app:layout_constraintTop_toTopOf="@id/vWheelRl"
+                        app:layout_constraintBottom_toBottomOf="@id/vWheelRl"
                         android:orientation="vertical">
 
                         <TextView
@@ -1552,15 +1629,14 @@
                             android:textSize="14sp" />
                     </LinearLayout>
 
-                    <!-- Tire RR -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignTop="@id/ivCarTopDown"
-                        android:layout_marginTop="168dp"
-                        android:layout_toEndOf="@id/ivCarTopDown"
+                        app:layout_constraintStart_toEndOf="@id/ivCarTopDown"
                         android:layout_marginStart="@dimen/space_24"
                         android:gravity="start"
+                        app:layout_constraintTop_toTopOf="@id/vWheelRr"
+                        app:layout_constraintBottom_toBottomOf="@id/vWheelRr"
                         android:orientation="vertical">
 
                         <TextView
@@ -1581,14 +1657,16 @@
                             android:textSize="14sp" />
                     </LinearLayout>
 
+                    <!-- Window positions beside the front / rear doors -->
                     <TextView
                         android:id="@+id/tvWindowFl"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignTop="@id/ivCarTopDown"
-                        android:layout_marginTop="104dp"
-                        android:layout_toStartOf="@id/ivCarTopDown"
+                        app:layout_constraintEnd_toStartOf="@id/ivCarTopDown"
                         android:layout_marginEnd="@dimen/space_24"
+                        app:layout_constraintTop_toTopOf="@id/ivCarTopDown"
+                        app:layout_constraintBottom_toBottomOf="@id/ivCarTopDown"
+                        app:layout_constraintVertical_bias="0.42"
                         android:paddingStart="@dimen/space_12"
                         android:paddingEnd="@dimen/space_12"
                         android:paddingTop="@dimen/space_4"
@@ -1602,10 +1680,11 @@
                         android:id="@+id/tvWindowFr"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignTop="@id/ivCarTopDown"
-                        android:layout_marginTop="104dp"
-                        android:layout_toEndOf="@id/ivCarTopDown"
+                        app:layout_constraintStart_toEndOf="@id/ivCarTopDown"
                         android:layout_marginStart="@dimen/space_24"
+                        app:layout_constraintTop_toTopOf="@id/ivCarTopDown"
+                        app:layout_constraintBottom_toBottomOf="@id/ivCarTopDown"
+                        app:layout_constraintVertical_bias="0.42"
                         android:paddingStart="@dimen/space_12"
                         android:paddingEnd="@dimen/space_12"
                         android:paddingTop="@dimen/space_4"
@@ -1619,10 +1698,11 @@
                         android:id="@+id/tvWindowRl"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignTop="@id/ivCarTopDown"
-                        android:layout_marginTop="136dp"
-                        android:layout_toStartOf="@id/ivCarTopDown"
+                        app:layout_constraintEnd_toStartOf="@id/ivCarTopDown"
                         android:layout_marginEnd="@dimen/space_24"
+                        app:layout_constraintTop_toTopOf="@id/ivCarTopDown"
+                        app:layout_constraintBottom_toBottomOf="@id/ivCarTopDown"
+                        app:layout_constraintVertical_bias="0.58"
                         android:paddingStart="@dimen/space_12"
                         android:paddingEnd="@dimen/space_12"
                         android:paddingTop="@dimen/space_4"
@@ -1636,10 +1716,11 @@
                         android:id="@+id/tvWindowRr"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignTop="@id/ivCarTopDown"
-                        android:layout_marginTop="136dp"
-                        android:layout_toEndOf="@id/ivCarTopDown"
+                        app:layout_constraintStart_toEndOf="@id/ivCarTopDown"
                         android:layout_marginStart="@dimen/space_24"
+                        app:layout_constraintTop_toTopOf="@id/ivCarTopDown"
+                        app:layout_constraintBottom_toBottomOf="@id/ivCarTopDown"
+                        app:layout_constraintVertical_bias="0.58"
                         android:paddingStart="@dimen/space_12"
                         android:paddingEnd="@dimen/space_12"
                         android:paddingTop="@dimen/space_4"
@@ -1648,74 +1729,156 @@
                         android:text="Kính: --"
                         android:textColor="@color/text_muted"
                         android:textSize="14sp" />
-                </RelativeLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
             </LinearLayout>
 
-            <!-- Card 3.2: Quick Window & Trunk Actions (Height 48dp Buttons) -->
+            <!-- Card 3.2 (bottom 30%): window presets as a 2x2 grid of large targets. -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1.15"
-                android:layout_marginTop="@dimen/space_8"
+                android:layout_weight="3"
+                android:layout_marginTop="@dimen/card_gap"
                 android:background="@drawable/bg_card"
-                android:padding="@dimen/space_12"
+                android:padding="@dimen/card_padding"
                 android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Điều khiển Kính"
+                    android:text="Điều khiển Kính (cả 4 cửa)"
                     android:textColor="@color/text_secondary"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="@dimen/space_8" />
+                    android:layout_marginBottom="@dimen/space_16" />
 
-                <!-- 3 Window Actions Row (48dp height) -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="64dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="@dimen/space_8">
+                    android:layout_marginBottom="@dimen/touch_gap">
 
-                    <TextView
+                    <LinearLayout
                         android:id="@+id/btnWindowsClose"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:text="Đóng kín (0%)"
-                        android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
+                        android:orientation="vertical"
                         android:gravity="center"
                         android:background="@drawable/bg_btn_inactive"
-                        android:layout_marginEnd="@dimen/space_12" />
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginEnd="@dimen/touch_gap">
 
-                    <TextView
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0%"
+                            android:textColor="@color/text_primary"
+                            android:textSize="28sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_4"
+                            android:text="Đóng kín"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
                         android:id="@+id/btnWindowsVent"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:text="Hé thoáng (15%)"
-                        android:textColor="@color/accent_emerald"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
+                        android:orientation="vertical"
                         android:gravity="center"
                         android:background="@drawable/bg_btn_inactive"
-                        android:layout_marginEnd="@dimen/space_12" />
+                        android:clickable="true"
+                        android:focusable="true">
 
-                    <TextView
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="10%"
+                            android:textColor="@color/accent_emerald"
+                            android:textSize="28sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_4"
+                            android:text="Hé thoáng"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:id="@+id/btnWindowsHalf"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/bg_btn_inactive"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginEnd="@dimen/touch_gap">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="50%"
+                            android:textColor="@color/text_primary"
+                            android:textSize="28sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_4"
+                            android:text="Mở một nửa"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
                         android:id="@+id/btnWindowsOpen"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:text="Hạ hết (100%)"
-                        android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
+                        android:orientation="vertical"
                         android:gravity="center"
-                        android:background="@drawable/bg_btn_inactive" />
-                </LinearLayout>
+                        android:background="@drawable/bg_btn_inactive"
+                        android:clickable="true"
+                        android:focusable="true">
 
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="100%"
+                            android:textColor="@color/text_primary"
+                            android:textSize="28sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_4"
+                            android:text="Hạ hết"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

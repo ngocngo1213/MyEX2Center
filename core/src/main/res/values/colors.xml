@@ -56,8 +56,13 @@
 
     <!-- Typography -->
     <color name="text_primary">#0F172A</color>
+    <!-- Text/icons on emerald or other accent fills: white in both themes. -->
+    <color name="text_on_accent">#FFFFFF</color>
     <color name="text_secondary">#475569</color>
     <color name="text_muted">#64748B</color>
     <color name="text_emerald">#047857</color>
     <color name="text_amber">#B45309</color>
+    <!-- Button press ripples -->
+    <color name="ripple_on_accent">#40FFFFFF</color>
+    <color name="ripple_neutral">#1F0F172A</color>
 </resources>

@@ -51,19 +51,19 @@
 
 ### Module 2: Floating Overlay — `FloatingControlService.kt`, `OverlayViewManager.kt`
 - Cần `SYSTEM_ALERT_WINDOW`. Nút nổi bật/tắt qua Cài đặt (`key_floating_bubble_enabled`).
-- Điều hòa nhanh (A/C, nhiệt độ, quạt), **Màn hình đêm (Blackout)** (chạm để thoát). Blackout do `FloatingControlService` sở hữu duy nhất (Dashboard gửi `ACTION_TRIGGER_BLACKOUT`), **tự tắt khi vào số R hoặc mất kết nối VHAL** (kiểm tra mỗi 500ms) để không che camera lùi. Nút nổi chỉ hiện khi `key_floating_bubble_enabled` bật.
+- Điều hòa nhanh (A/C, nhiệt độ, quạt), **Màn hình đêm (Blackout)** (chạm để thoát). Blackout do `FloatingControlService` sở hữu duy nhất (Dashboard gửi `ACTION_TRIGGER_BLACKOUT`), **tự tắt khi vào số R hoặc mất kết nối VHAL** (kiểm tra mỗi 500ms) để không che camera lùi. Nút nổi chỉ hiện khi `key_floating_bubble_enabled` bật; khi nút nổi tắt, service chỉ chạy trong lúc có Blackout / thanh Chạy đôi và **tự `stopSelf()`** khi cả hai đóng (`OverlayViewManager.onOverlayClosed`, `hasVisibleOverlay`).
 - **Khởi động lại:** chỉ cho phép ở số P và xe đứng yên (`ParkGate`, kiểm tra cả trước và sau hộp thoại). `confirmAndReboot()` hiện hộp thoại xác nhận overlay (`TYPE_APPLICATION_OVERLAY`) với chuỗi `confirm_reboot_title`/`confirm_reboot_msg`; chỉ reboot khi xác nhận (`executeReboot()`).
 
 ### Module 3: Wi-Fi App Catalog & Installer — EX2 Store `StoreActivity.kt` (module `:store`), `AppRepository.kt`, `PackageInstallerHelper.kt` (`:core`)
 
-Từ 1.3.0 (giai đoạn 3) màn hình Kho chỉ còn trong EX2 Store; MyEX2Center không còn Kho tích hợp.
+Màn hình Kho chỉ có trong EX2 Store; MyEX2Center không có Kho tích hợp.
 - Lưới 2 cột, 4 mục:
   1. **MyEX2Center** (`com.mipago.ex2center`, `self: true`) — tự cập nhật qua GitHub Releases; không có nút gỡ; app tự khởi động lại, `BootReceiver` (`MY_PACKAGE_REPLACED`) xác nhận.
   2. **VIETMAP LIVE** (`vn.vietmap.live`, `.xapk`, chỉ có split `armeabi-v7a`) — chưa phát hành qua mạng (`apkUrl` rỗng, không tự host bản APKPure) → nút "Cài từ USB / Máy".
   3. **SmartTube** (`org.smarttube.stable` 32.68, bản arm64 chính thức từ `yuliskov/SmartTube`, MIT).
   4. **Trình duyệt Web** (`com.aaex.carbrowser` 2.3).
   - Đã gỡ tạm thời: Google Maps, VTV Go, YouTube ReVanced / YT Music.
-- **Catalog:** `apps.json` từ repo của dự án (`raw.githubusercontent.com/<owner>/MyEX2Center/main/apps.json`), fallback `assets/apps.json`. Không còn dùng repo bên thứ ba. **Catalog có chữ ký (giai đoạn 2):** catalog từ xa chỉ được dùng khi `apps.json.sig` (ECDSA P-256 / SHA-256, base64 DER) khớp khóa công khai nhúng trong `CatalogVerifier`; bản đã xác minh được lưu ở `filesDir/catalog_verified.json`. Thứ tự: catalog từ xa đã ký → bản đã lưu → bản đóng gói. Catalog không chữ ký / bị sửa bị bỏ qua. Trường: `name, packageName, versionCode (long), versionName, sizeMb, type (apk|xapk), abis, minSdk, requiresPark, self, apkUrl, browserUrl, iconResName, description, sha256`.
+- **Catalog:** `apps.json` từ repo của dự án (`raw.githubusercontent.com/<owner>/MyEX2Center/main/apps.json`), fallback `assets/apps.json`. Không còn dùng repo bên thứ ba. **Catalog có chữ ký:** catalog từ xa chỉ được dùng khi `apps.json.sig` (ECDSA P-256 / SHA-256, base64 DER) khớp khóa công khai nhúng trong `CatalogVerifier`; bản đã xác minh được lưu ở `filesDir/catalog_verified.json`. Thứ tự: catalog từ xa đã ký → bản đã lưu → bản đóng gói. Catalog không chữ ký / bị sửa bị bỏ qua. Trường: `name, packageName, versionCode (long), versionName, sizeMb, type (apk|xapk), abis, minSdk, requiresPark, self, apkUrl, browserUrl, iconResName, description, sha256`.
 - **Bảo mật tải:** chỉ HTTPS (kể cả sau redirect); **bắt buộc `sha256`** hợp lệ cho mọi mục tải qua mạng; catalog không được trỏ tới đường dẫn file trên máy.
 - **Tải file lớn (Bước 7):** lưu vào `filesDir/downloads/<sha16>.<ext>.part`, **tải tiếp bằng HTTP Range** khi bị hủy/mất mạng (partial gắn với đúng mã SHA nên không bao giờ ghép nhầm file). Redirect xử lý thủ công, từng bước phải là HTTPS. Kiểm tra bộ nhớ trống trước khi tải (phần còn lại + bản sao của trình cài + 50 MB). Timeout kết nối 15s / đọc 30s. Tiến độ gửi tối đa 4 lần/giây. Nút cài khi đang tải thành **"Hủy tải (x%)"**; rời màn hình Kho → tự hủy, giữ partial. Xong → kiểm SHA-256 → đổi tên thành file hoàn chỉnh → cài → xóa file. `cleanupDownloads()` dọn partial không còn trong catalog và file cũ trong cache. Catalog từ xa lỗi/rỗng → dùng bản đóng gói.
 - **Hiệu năng Kho (Bước 8):** tiến độ chỉ cập nhật đúng thẻ đang tải (`notifyItemChanged` + payload), không vẽ lại cả lưới; mỗi lần bind gỡ listener cũ. Icon: icon app đã cài được cache theo package, icon từ URL qua `LruCache` 4 MB + 2 luồng, gắn `tag` để ViewHolder tái sử dụng không hiện nhầm icon, không tải trùng. Quét USB/Download (đọc manifest APK/XAPK) luôn chạy ở luồng nền; chỉ khớp **đúng package name**, không còn khớp theo tên file. Callback bất đồng bộ bỏ qua khi màn hình đã đóng.
@@ -80,11 +80,11 @@ Bố cục 3 cột (32% / 38% / 30%) + thanh Header.
 
 **Header:** hồ sơ xe (ảnh tròn + tên, chạm → Cài đặt), giờ `HH:mm`, nhiệt độ ngoài, điện áp 12V (đỏ nếu < 12.0V), Pill Tự động hóa (xanh = bật; cam = Valet; cam cảnh báo = Crash Guard đã ngắt, bấm để reset), Wi-Fi SSID + IP, nút Kho ứng dụng / Blackout / Cài đặt.
 
-**Cột 1 (lái):** HUD (P R N D, **biển giới hạn tốc độ ngay cạnh tốc độ**, % pin, km ước tính + progress); chế độ lái (Tiết kiệm/Thoải mái/Thể thao) và Regen (Thấp/Vừa/Cao), mỗi nhóm có công tắc **"Ghi nhớ"**; phím tắt: Tắt âm AVAS, Camera 360, Bảo dưỡng (Valet). Auto Hold / HDC / ESC **đã ẩn** (mã VHAL chưa được kiểm chứng, nằm trong khối ADAS thật).
+**Cột 1 (lái):** HUD (P R N D, **biển giới hạn tốc độ ngay cạnh tốc độ**, % pin, km ước tính + progress); chế độ lái (Tiết kiệm/Thoải mái/Thể thao) và Regen (Thấp/Vừa/Cao), mỗi nhóm có công tắc **"Ghi nhớ"**; phím tắt (lưới 2×2): Tắt âm AVAS, **Đèn viền** (`PROP_AMBIENT_LIGHT_ON`, đọc/ghi qua `ControlSnapshot` như các nút khác), Camera 360, Bảo dưỡng (Valet). Auto Hold / HDC / ESC **đã ẩn** (mã VHAL chưa được kiểm chứng, nằm trong khối ADAS thật).
 
-**Cột 2:** nút "Chạy Đôi: Vietmap + YouTube", media (prev/play/next, volume); điều hòa (A/C, Gió trong (nút AUTO đã bỏ vì `HVAC_AUTO_ON` là NOOP trên xe), ⚡Làm mát nhanh; nhiệt độ 17–32°C và quạt 1–8 **trên 2 dòng riêng**; gió mặt/chân; sấy trước/sau).
+**Cột 2:** nút "Chạy Đôi: Vietmap + YouTube", media (prev/play/next, volume); điều hòa (A/C có icon bông tuyết, nút **lấy gió** một chạm đổi Gió trong ⇄ Gió ngoài — nhãn + icon `ic_air_recirc` / `ic_air_fresh` luôn hiện chế độ hiện tại, xanh = Gió trong (nút AUTO đã bỏ vì `HVAC_AUTO_ON` là NOOP trên xe), ⚡Làm mát nhanh; nhiệt độ 17–32°C và quạt 1–8 **trên 2 dòng riêng**, mỗi thanh trượt (`StepSeekBar`) có vạch và số cho từng nấc (chạm vào số để nhảy tới nấc đó; nấc hiện tại tô xanh, chưa có dữ liệu thì không tô); gió mặt/chân; sấy trước/sau).
 
-**Cột 3:** ảnh vector EX2 nhìn từ trên xuống (`img_ex2_top_down`, tự vẽ, 130×260dp), chỉ báo màu ở từng bánh (xanh 200–300 kPa, vàng ngoài khoảng, đỏ <170 / >330, xám chưa có dữ liệu), áp suất + nhiệt độ cạnh mỗi bánh, 4 chỉ báo kính cạnh mỗi cửa (đọc thật từ VHAL, không đọc được → `Kính: --`); Đóng/Hé (15%)/Hạ hết kính (Hạ hết chỉ khi < 30 km/h), biển tốc độ (mở Vietmap). Nút mở cốp **đã ẩn** (`DOOR_POS` chỉ đọc, chưa có mã cốp).
+**Cột 3:** ảnh vector EX2 nhìn từ trên xuống (`img_ex2_top_down`, tự vẽ, 130×260dp), chỉ báo màu ở từng bánh (xanh 200–300 kPa, vàng ngoài khoảng, đỏ <170 / >330, xám chưa có dữ liệu), áp suất + nhiệt độ cạnh mỗi bánh, 4 chỉ báo kính cạnh mỗi cửa (đọc thật từ VHAL, không đọc được → `Kính: --`); cột chia 70/30: card lốp 70% trên (ảnh xe = 86% chiều cao vùng vẽ, ConstraintLayout, bánh/nhãn đặt theo tỉ lệ ảnh xe), card Kính 30% dưới, lưới 2×2: 0% Đóng kín / 10% Hé thoáng / 50% Mở một nửa / 100% Hạ hết (50% và 100% chỉ khi < 30 km/h, không đọc được tốc độ → chặn), biển tốc độ (mở Vietmap). Nút mở cốp **đã ẩn** (`DOOR_POS` chỉ đọc, chưa có mã cốp).
 
 **"Ghi nhớ" chế độ lái / phanh tái sinh** (`KEY_AUTO_DRIVE_MODE`, `KEY_AUTO_REGEN_MODE`): trong 20s sau khi service khởi động hoặc head unit thức dậy, chế độ đã lưu được ghi lại vào xe (đọc lại xác nhận, tối đa 3 lần); sau đó chỉ theo dõi — lựa chọn của người lái (trên Dashboard hoặc màn hình gốc của xe) ổn định qua 2 tick sẽ được lưu. Không còn ép chế độ khi đang lái.
 
@@ -102,7 +102,7 @@ Bố cục 3 cột (32% / 38% / 30%) + thanh Header.
 - **`ParkGate`** (`utils/ParkGate.kt`): cổng an toàn dùng chung, đọc VHAL ở luồng nền. `checkParked()` = số P + tốc độ ≤ 1 km/h; `checkSlowerThan(km/h)`. Trên đầu xe thật, không đọc được số/tốc độ → **chặn**. Chỉ thiết bị không có `android.car.Car` (emulator) được cho qua. Áp dụng cho: Reboot, cài/cập nhật/gỡ ứng dụng (kiểm lại ngay trước khi cài, sau khi tải xong), Hạ hết kính.
 
 **Đồng bộ trạng thái điều khiển (Bước 4):**
-- Mỗi lần poll đọc `ControlSnapshot` từ VHAL: A/C, Gió trong, sấy trước/sau, nhiệt độ (làm tròn 1°C), quạt, hướng gió (bitmask 1/2/3/4/6), Drive, Regen, AVAS. Không có giá trị khởi tạo giả định; chưa đọc được → `--` và nút mờ (alpha 0.6).
+- Mỗi lần poll đọc `ControlSnapshot` từ VHAL: A/C, Gió trong, sấy trước/sau, nhiệt độ (làm tròn 1°C), quạt, hướng gió (bitmask 1/2/3/4/6), Drive, Regen, AVAS, Đèn viền. Không có giá trị khởi tạo giả định; chưa đọc được → `--` và nút mờ (alpha 0.6).
 - `PendingWrites` (`utils/PendingWrites.kt`) chống nhấp nháy: khi bấm, giá trị mong muốn hiển thị ngay và được giữ trong tối đa 4.5s; xe báo đúng giá trị → xác nhận; hết hạn mà xe vẫn khác → hiện giá trị thật của xe + toast "Xe không nhận lệnh: …". Lệnh bị từ chối ngay (ghi lỗi) → trả về trạng thái thật ngay.
 - Thanh trượt: khi đang kéo không bị poll ghi đè; ghi debounce 250ms và ghi lần cuối khi thả tay. Nút +/- dựa trên giá trị thật; chưa đọc được → toast, không ghi giá trị đoán.
 - Sự kiện VHAL: `CarApiHelper.watch()` đăng ký `SENSOR_RATE_ONCHANGE` cho số, HVAC, Drive/Regen, kính → refresh sau 200ms; poll 3s giữ làm dự phòng. Sau mỗi lệnh ghi refresh thêm sau 1.2s.
@@ -160,7 +160,6 @@ MyEX2Center/
 
 - Cả hai app ký cùng khóa platform, bản release có `sharedUserId=android.uid.system`.
 - Nút **Kho ứng dụng** (Dashboard, Cài đặt) gọi `StoreLauncher.open()` (module `:app`): mở EX2 Store nếu đã cài. Nếu chưa có, hiện hộp thoại **Cài EX2 Store**: *Tải và cài* (chỉ từ catalog đã xác minh chữ ký — từ mạng hoặc bản đã lưu, kiểm SHA-256, cài ngầm, chỉ khi ở số P) hoặc *Cài từ USB* (tìm `EX2Store-*.apk` trên USB/Download theo đúng package). Cài xong tự mở Store. MyEX2Center chỉ giữ `INSTALL_PACKAGES` cho việc này (đã bỏ `DELETE_PACKAGES`).
-- **Chuyển đổi cho xe đang dùng 1.2.0:** Kho tích hợp của 1.2.0 đọc `apps.json` gốc (không kiểm chữ ký). Khi phát hành, `update-catalog.py` tự thêm mục EX2 Store vào ngay sau MyEX2Center, nên người dùng 1.2.0 có thể (a) cài EX2 Store trực tiếp từ Kho cũ, hoặc (b) cập nhật MyEX2Center lên 1.3.0 rồi bấm Kho ứng dụng → hộp thoại Cài EX2 Store.
 - Trong Store, MyEX2Center là một app thường (cập nhật không làm tắt Store); chỉ EX2 Store tự cập nhật chính nó (`StoreUpdateReceiver` xác nhận qua `MY_PACKAGE_REPLACED`).
 - Khóa ký **không** có trong repo hay CI; ký bằng `scripts/build-release.sh` trên máy có `signing/platform.p12`. Khóa ký catalog `signing/catalog-signing-key.pem` cũng chỉ nằm trên máy phát hành — mất khóa này phải phát hành Store mới với khóa mới.
 - **Tự kiểm tra cập nhật (EX2 Store):** `UpdateScheduler` đặt job định kỳ 3 giờ (khi có mạng, giữ qua khởi động lại) + 1 lần chạy 2 phút sau khi xe khởi động / Store được cập nhật. `UpdateCheckJobService` chỉ tin catalog từ xa đã xác minh chữ ký; có bản mới thì hiện **một** thông báo, chỉ khi xe ở số P (chưa ở P → thử lại sau 10 phút); cùng một nhóm bản cập nhật chỉ báo lại sau 24 giờ. Chạm thông báo → mở Store.
@@ -175,8 +174,14 @@ MyEX2Center/
 - TPMS dùng mã AOSP `TIRE_PRESSURE` `392168201` (area 1/2/4/8, kPa) — chưa xác nhận trên EX2; nhiệt độ lốp chưa có mã.
 - Một số mục `apps.json` (Vietmap, Google Maps, VTV Go) trỏ link release-friendly nhưng chưa có `sha256` đã kiểm chứng; chưa có sha256 thì cần bổ sung trước khi phát hành.
 - Kính dùng mã đã kiểm chứng `WINDOW_POS` `322964416`, area `16/64/256/1024` (field-catalog §8).
-- Biển tốc độ hiển thị `--` (chưa có nguồn dữ liệu giới hạn tốc độ đã kiểm chứng). Điện áp 12V vẫn đọc từ `BatteryManager` của head unit, chưa phải ắc quy xe.
+- Biển tốc độ đọc (chỉ đọc) 3 mã ứng viên theo thứ tự: biển do camera ADAS nhận diện `0x2140B029`, giới hạn của bản đồ gốc `0x2140303A`, tốc độ dẫn đường `0x2140A405` (lấy từ `reference/drive_assist/.../DashRecorder.java`, **chưa có trong field-catalog — chưa kiểm chứng**). Chỉ nhận giá trị 5–200 km/h, còn lại hiện `--`. Nguồn đang dùng được ghi log `Speed limit source:` mỗi khi đổi, để test trên xe. Điện áp 12V vẫn đọc từ `BatteryManager` của head unit, chưa phải ắc quy xe.
 - Camera 360 phụ thuộc package `com.flyme.auto.camera`; chưa xác nhận trên xe.
 - Wi-Fi IP fallback `172.20.10.12` vẫn là giá trị mặc định khi không đọc được; cân nhắc đổi sang `--`.
 </Content>
 </invoke>
+
+### Giao diện chung
+- Chữ/icon trên nền xanh hoặc màu nhấn dùng `@color/text_on_accent` (#FFFFFF ở cả Sáng và Tối).
+- Mọi nền nút `bg_btn_*` / `bg_pill_*` là `<ripple>` bọc shape cũ (`ripple_on_accent` / `ripple_neutral`) để có phản hồi khi chạm.
+- Ô số P/R/N/D 48dp, chữ 20sp. Chữ khởi tạo trong XML là `--` (không hiện số giả ở khung hình đầu).
+- `assets/apps.json` (catalog dự phòng) chứa các bản đã phát hành của MyEX2Center / EX2 Store kèm SHA-256 thật, đồng bộ với `apps.json` gốc.

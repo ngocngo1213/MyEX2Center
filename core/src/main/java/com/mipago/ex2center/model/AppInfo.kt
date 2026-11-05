@@ -29,6 +29,7 @@ data class AppInfo(
     companion object {
         const val TYPE_APK = "apk"
         const val TYPE_XAPK = "xapk"
+        const val TYPE_APKS = "apks"
     }
 
     enum class InstallStatus {

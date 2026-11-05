@@ -16,8 +16,8 @@ import java.io.File
  * "Kho ứng dụng" in MyEX2Center = EX2 Store (com.mipago.ex2store), a separate app that installs
  * and updates MyEX2Center and the other catalog apps.
  *
- * When EX2 Store is not installed yet (e.g. a car updated from MyEX2Center 1.2.0, whose built-in
- * catalog is gone since 1.3.0) this offers to install it:
+ * When EX2 Store is not installed yet (e.g. MyEX2Center was installed directly by adb / USB)
+ * this offers to install it:
  *  - download: only from the signature-verified catalog (remote or its verified cache), SHA-256
  *    checked, installed silently, Park only;
  *  - USB: an EX2Store-*.apk on a USB stick / Download folder, matched by package name.
@@ -36,8 +36,8 @@ object StoreLauncher {
         AlertDialog.Builder(activity)
             .setTitle("Cài EX2 Store")
             .setMessage(
-                "Từ MyEX2Center 1.3.0, việc cài và cập nhật ứng dụng (kể cả MyEX2Center) " +
-                    "được chuyển sang ứng dụng riêng EX2 Store. Xe chưa có EX2 Store.\n\n" +
+                "Việc cài và cập nhật ứng dụng (kể cả MyEX2Center) do ứng dụng riêng " +
+                    "EX2 Store đảm nhận. Xe chưa có EX2 Store.\n\n" +
                     "• Tải và cài: cần Wi-Fi, xe ở số P.\n" +
                     "• Cài từ USB: chép file EX2Store-<phiên bản>.apk vào USB rồi cắm vào xe."
             )

@@ -2,15 +2,15 @@
   {
     "name": "MyEX2Center",
     "packageName": "com.mipago.ex2center",
-    "versionCode": 3,
-    "versionName": "1.2.0",
-    "sizeMb": 8.0,
+    "versionCode": 1,
+    "versionName": "1.0.0",
+    "sizeMb": 6.2,
     "type": "apk",
     "abis": [],
     "minSdk": 28,
     "requiresPark": true,
     "self": true,
-    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/v1.2.0/MyEX2Center-1.2.0.apk",
+    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/v1.0.0/MyEX2Center-1.0.0.apk",
     "browserUrl": "https://github.com/ngocngo1213/MyEX2Center/releases",
     "iconResName": "img_my_ex2",
     "description": "Cập nhật hệ thống điều khiển trung tâm EX2 Center. Ứng dụng sẽ tự khởi động lại sau khi cập nhật.",
@@ -21,7 +21,7 @@
     "packageName": "com.mipago.ex2store",
     "versionCode": 1,
     "versionName": "1.0.0",
-    "sizeMb": 5.0,
+    "sizeMb": 4.5,
     "type": "apk",
     "abis": [],
     "minSdk": 28,
@@ -37,18 +37,18 @@
     "packageName": "vn.vietmap.live",
     "versionCode": 179327630,
     "versionName": "3.4.4",
-    "sizeMb": 166.0,
-    "type": "xapk",
+    "sizeMb": 163.8,
+    "type": "apks",
     "abis": [
-      "armeabi-v7a"
+      "arm64-v8a"
     ],
     "minSdk": 26,
     "requiresPark": true,
     "apkUrl": "",
-    "browserUrl": "https://apkpure.com/vietmap-live-mimi-ai/vn.vietmap.live",
+    "browserUrl": "https://apkcube.com/vietmap-live-mimi-ai/vn.vietmap.live",
     "iconResName": "ic_app_vietmap",
-    "description": "Bản đồ dẫn đường cho ô tô, cảnh báo tốc độ và camera phạt nguội. Gói .xapk (split APK) — cài từ USB / máy.",
-    "sha256": "e18bda84a5562cdaec5156dfd6b11e3e3f52824619ba23e029d58e2eb2533c4c"
+    "description": "Bản đồ dẫn đường cho ô tô, cảnh báo tốc độ và camera phạt nguội. Gói .apks 64-bit (split APK) — cài từ USB / máy.",
+    "sha256": "3fb48ddba9e9eab5b8bb6bc0fc3e07ba03c67f2fe216bf9933d787e6e5e1f564"
   },
   {
     "name": "SmartTube",

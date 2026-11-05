@@ -17,6 +17,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
+import android.util.TypedValue
 import android.view.KeyEvent
 import android.view.View
 import android.widget.Button
@@ -83,6 +84,7 @@ class MainActivity : Activity() {
         private const val K_DRIVE = "drive"
         private const val K_REGEN = "regen"
         private const val K_AVAS = "avas"
+        private const val K_AMBIENT = "ambient"
 
         private val WATCH_PROPS = intArrayOf(
             CarApiHelper.PROP_GEAR,
@@ -96,7 +98,8 @@ class MainActivity : Activity() {
             CarApiHelper.PROP_HVAC_DEFROST_REAR,
             CarApiHelper.PROP_DRIVE,
             CarApiHelper.PROP_REGEN,
-            CarApiHelper.PROP_WINDOW_POS
+            CarApiHelper.PROP_WINDOW_POS,
+            CarApiHelper.PROP_AMBIENT_LIGHT_ON
         )
     }
 
@@ -111,7 +114,8 @@ class MainActivity : Activity() {
         val vent: Int? = null,
         val drive: Int? = null,
         val regen: Int? = null,
-        val avas: Int? = null
+        val avas: Int? = null,
+        val ambient: Boolean? = null
     )
 
     private data class MediaInfo(val title: String?, val isPlaying: Boolean)
@@ -168,6 +172,8 @@ class MainActivity : Activity() {
     private lateinit var btnRegenHigh: TextView
 
     private lateinit var btnAvasToggle: LinearLayout
+    private lateinit var btnAmbientLight: LinearLayout
+    private lateinit var tvAmbientLabel: TextView
     private lateinit var tvAvasLabel: TextView
     private lateinit var btnCamera360: LinearLayout
     private lateinit var btnValetMode: LinearLayout
@@ -182,18 +188,20 @@ class MainActivity : Activity() {
     private lateinit var sbVolume: SeekBar
     private lateinit var tvVolumeValue: TextView
 
-    private lateinit var btnAcCompressor: TextView
-    private lateinit var btnRecirc: TextView
+    private lateinit var btnAcCompressor: LinearLayout
+    private lateinit var btnRecirc: LinearLayout
+    private lateinit var ivRecircIcon: ImageView
+    private lateinit var tvRecircLabel: TextView
     private lateinit var btnQuickCool: LinearLayout
 
     private lateinit var tvClimateTargetTemp: TextView
     private lateinit var btnTempMinus: Button
-    private lateinit var sbTempGradient: SeekBar
+    private lateinit var sbTempGradient: StepSeekBar
     private lateinit var btnTempPlus: Button
 
     private lateinit var tvClimateFanSpeed: TextView
     private lateinit var btnFanMinus: Button
-    private lateinit var sbFanSpeed: SeekBar
+    private lateinit var sbFanSpeed: StepSeekBar
     private lateinit var btnFanPlus: Button
 
     private lateinit var btnVentFace: LinearLayout
@@ -217,9 +225,10 @@ class MainActivity : Activity() {
     private lateinit var tvWindowRl: TextView
     private lateinit var tvWindowRr: TextView
 
-    private lateinit var btnWindowsClose: TextView
-    private lateinit var btnWindowsVent: TextView
-    private lateinit var btnWindowsOpen: TextView
+    private lateinit var btnWindowsClose: View
+    private lateinit var btnWindowsVent: View
+    private lateinit var btnWindowsHalf: View
+    private lateinit var btnWindowsOpen: View
     private lateinit var btnSpeedLimitSign: LinearLayout
     private lateinit var tvSpeedLimitValue: TextView
 
@@ -365,6 +374,8 @@ class MainActivity : Activity() {
         btnRegenHigh = findViewById(R.id.btnRegenHigh)
 
         btnAvasToggle = findViewById(R.id.btnAvasToggle)
+        btnAmbientLight = findViewById(R.id.btnAmbientLight)
+        tvAmbientLabel = findViewById(R.id.tvAmbientLabel)
         tvAvasLabel = findViewById(R.id.tvAvasLabel)
         btnCamera360 = findViewById(R.id.btnCamera360)
         btnValetMode = findViewById(R.id.btnValetMode)
@@ -381,16 +392,21 @@ class MainActivity : Activity() {
 
         btnAcCompressor = findViewById(R.id.btnAcCompressor)
         btnRecirc = findViewById(R.id.btnRecirc)
+        ivRecircIcon = findViewById(R.id.ivRecircIcon)
+        tvRecircLabel = findViewById(R.id.tvRecircLabel)
         btnQuickCool = findViewById(R.id.btnQuickCool)
 
         tvClimateTargetTemp = findViewById(R.id.tvClimateTargetTemp)
         btnTempMinus = findViewById(R.id.btnTempMinus)
         sbTempGradient = findViewById(R.id.sbTempGradient)
+        sbTempGradient.labelFor = { (TEMP_MIN + it).toString() } // progress 0..15 = 17..32°C
+        sbTempGradient.hasValue = false
         btnTempPlus = findViewById(R.id.btnTempPlus)
 
         tvClimateFanSpeed = findViewById(R.id.tvClimateFanSpeed)
         btnFanMinus = findViewById(R.id.btnFanMinus)
         sbFanSpeed = findViewById(R.id.sbFanSpeed)
+        sbFanSpeed.hasValue = false // progress = fan level 1..8 (android:min=1)
         btnFanPlus = findViewById(R.id.btnFanPlus)
 
         btnVentFace = findViewById(R.id.btnVentFace)
@@ -416,6 +432,7 @@ class MainActivity : Activity() {
 
         btnWindowsClose = findViewById(R.id.btnWindowsClose)
         btnWindowsVent = findViewById(R.id.btnWindowsVent)
+        btnWindowsHalf = findViewById(R.id.btnWindowsHalf)
         btnWindowsOpen = findViewById(R.id.btnWindowsOpen)
         btnSpeedLimitSign = findViewById(R.id.btnSpeedLimitSign)
         tvSpeedLimitValue = findViewById(R.id.tvSpeedLimitValue)
@@ -477,6 +494,7 @@ class MainActivity : Activity() {
 
         try {
             val speed = carHelper.readSpeed()
+            val speedLimit = carHelper.readSpeedLimit()
             val gear = carHelper.readGear()
             val soc = carHelper.readBatterySoc()
             val range = carHelper.readEstimatedRange()
@@ -490,6 +508,7 @@ class MainActivity : Activity() {
                 lastControls = controls
                 renderControls()
                 applyMediaInfo(media)
+                applySpeedLimit(speedLimit)
                 applyTelemetryData(
                     speed = speed,
                     gear = gear,
@@ -574,7 +593,23 @@ class MainActivity : Activity() {
         updateWindowPositionUI(winPos)
     }
 
+    private var lastSpeedLimitSource: String? = null
+
+    /** Speed limit sign: real value from the car or "--" (never a guessed number). */
+    private fun applySpeedLimit(limit: CarApiHelper.SpeedLimit?) {
+        tvSpeedLimitValue.text = limit?.kmh?.toString() ?: "--"
+        tvSpeedLimitValue.setTextSize(TypedValue.COMPLEX_UNIT_SP, if ((limit?.kmh ?: 0) >= 100) 20f else 22f)
+        btnSpeedLimitSign.contentDescription =
+            limit?.let { "Giới hạn tốc độ ${it.kmh} km/h" } ?: "Giới hạn tốc độ: chưa có dữ liệu"
+        if (limit?.source != lastSpeedLimitSource) {
+            // Logged on change so a car test shows which (unverified) property actually reports.
+            Log.i(TAG, "Speed limit source: ${limit?.source ?: "none"} (${limit?.kmh ?: "-"} km/h)")
+            lastSpeedLimitSource = limit?.source
+        }
+    }
+
     private fun applyFallbackTelemetry() {
+        applySpeedLimit(null)
         tvSpeedValue.text = "--"
         updateGearUI(-1)
         tvBatterySoc.text = "--%"
@@ -650,7 +685,8 @@ class MainActivity : Activity() {
         vent = carHelper.readAirflowDirection(),
         drive = carHelper.readDriveMode(),
         regen = carHelper.readRegenMode(),
-        avas = carHelper.getAvasMode()
+        avas = carHelper.getAvasMode(),
+        ambient = carHelper.readAmbientLight()
     )
 
     /** Runs on [telemetryExecutor]. Registers VHAL push events once per connection. */
@@ -710,7 +746,7 @@ class MainActivity : Activity() {
         val c = lastControls
         shown = ControlSnapshot(
             acOn = pending.resolve(K_AC, c.acOn, rejectToast("A/C")),
-            recircOn = pending.resolve(K_RECIRC, c.recircOn, rejectToast("Gió trong")),
+            recircOn = pending.resolve(K_RECIRC, c.recircOn, rejectToast("Lấy gió trong / ngoài")),
             defrostFront = pending.resolve(K_DEFROST_FRONT, c.defrostFront, rejectToast("Sấy kính trước")),
             defrostRear = pending.resolve(K_DEFROST_REAR, c.defrostRear, rejectToast("Sấy kính sau")),
             tempC = pending.resolve(K_TEMP, c.tempC, rejectToast("Nhiệt độ")),
@@ -718,25 +754,29 @@ class MainActivity : Activity() {
             vent = pending.resolve(K_VENT, c.vent, rejectToast("Hướng gió")),
             drive = pending.resolve(K_DRIVE, c.drive, rejectToast("Chế độ lái")),
             regen = pending.resolve(K_REGEN, c.regen, rejectToast("Phanh tái sinh")),
-            avas = pending.resolve(K_AVAS, c.avas, rejectToast("AVAS"))
+            avas = pending.resolve(K_AVAS, c.avas, rejectToast("AVAS")),
+            ambient = pending.resolve(K_AMBIENT, c.ambient, rejectToast("Đèn viền"))
         )
         val s = shown
 
-        renderToggle(btnAcCompressor, s.acOn)
-        renderToggle(btnRecirc, s.recircOn)
+        renderCompound(btnAcCompressor, s.acOn)
+        renderAirIntake(s.recircOn)
         renderCompound(btnDefrostFront, s.defrostFront)
         renderCompound(btnDefrostRear, s.defrostRear)
 
-        tvClimateTargetTemp.text = s.tempC?.let { "$it°C" } ?: "--°C"
+        // While a slider is being dragged its readout shows the dragged value, not the last poll.
+        if (!isTrackingTempSlider) tvClimateTargetTemp.text = s.tempC?.let { "$it°C" } ?: "--°C"
         if (!isTrackingTempSlider && s.tempC != null) {
             sbTempGradient.progress = (s.tempC - TEMP_MIN).coerceIn(0, TEMP_MAX - TEMP_MIN)
         }
-        tvClimateFanSpeed.text = when (val f = s.fan) {
+        sbTempGradient.hasValue = s.tempC != null || isTrackingTempSlider
+        if (!isTrackingFanSlider) tvClimateFanSpeed.text = when (val f = s.fan) {
             null -> "Mức --"
             0 -> "Tắt"
             else -> "Mức $f"
         }
-        if (!isTrackingFanSlider && s.fan != null) sbFanSpeed.progress = s.fan.coerceIn(0, FAN_MAX)
+        if (!isTrackingFanSlider && s.fan != null) sbFanSpeed.progress = s.fan.coerceIn(FAN_MIN, FAN_MAX)
+        sbFanSpeed.hasValue = (s.fan ?: 0) in FAN_MIN..FAN_MAX || isTrackingFanSlider
 
         // Airflow bitmask: 1=FACE, 2=FLOOR, 3=FACE|FLOOR, 4=DEFROST, 6=DEFROST|FLOOR
         val vent = s.vent
@@ -761,6 +801,13 @@ class MainActivity : Activity() {
             false -> "AVAS: Đang bật"
         }
 
+        renderCompound(btnAmbientLight, s.ambient)
+        tvAmbientLabel.text = when (s.ambient) {
+            null -> "Đèn viền: --"
+            true -> "Đèn viền: Bật"
+            false -> "Đèn viền: Tắt"
+        }
+
         // "Sending" state: a control whose command is still awaiting the car's confirmation
         // is shown slightly dimmed, so the driver can tell requested from confirmed.
         fun sending(view: View, key: String) {
@@ -773,6 +820,7 @@ class MainActivity : Activity() {
         sending(btnVentFace, K_VENT)
         sending(btnVentFloor, K_VENT)
         sending(btnAvasToggle, K_AVAS)
+        sending(btnAmbientLight, K_AMBIENT)
         listOf(btnDriveEco, btnDriveComfort, btnDriveSport).forEach { sending(it, K_DRIVE) }
         listOf(btnRegenLow, btnRegenMid, btnRegenHigh).forEach { sending(it, K_REGEN) }
         tvClimateTargetTemp.alpha = if (pending.isPending(K_TEMP)) 0.7f else 1f
@@ -784,6 +832,17 @@ class MainActivity : Activity() {
         view.setBackgroundResource(if (active == true) R.drawable.bg_btn_active else R.drawable.bg_btn_inactive)
         view.setTextColor(if (active == true) Color.WHITE else getColor(R.color.text_secondary))
         view.alpha = if (active == null) 0.6f else 1f
+    }
+
+    /** Air intake is a mode, not on/off: the button always names the current one. */
+    private fun renderAirIntake(recirc: Boolean?) {
+        tvRecircLabel.text = when (recirc) {
+            true -> "Gió trong"
+            false -> "Gió ngoài"
+            null -> "Gió: --"
+        }
+        ivRecircIcon.setImageResource(if (recirc == false) R.drawable.ic_air_fresh else R.drawable.ic_air_recirc)
+        renderCompound(btnRecirc, recirc) // emerald = recirculating (cabin closed off)
     }
 
     private fun renderCompound(view: LinearLayout, active: Boolean?) {
@@ -945,6 +1004,11 @@ class MainActivity : Activity() {
             commandControl(K_AVAS, if (mute) 0 else 1, "AVAS") { carHelper.setAvasMode(if (mute) 0 else 1) }
         }
 
+        btnAmbientLight.setOnClickListener {
+            val target = shown.ambient != true
+            commandControl(K_AMBIENT, target, "Đèn viền") { carHelper.setAmbientLight(target) }
+        }
+
         btnCamera360.setOnClickListener {
             val pkg360 = "com.flyme.auto.camera"
             val launchIntent = packageManager.getLaunchIntentForPackage(pkg360)
@@ -987,8 +1051,9 @@ class MainActivity : Activity() {
         }
 
         btnRecirc.setOnClickListener {
+            // One tap switches mode: Gió trong <-> Gió ngoài (unknown state -> Gió trong).
             val target = shown.recircOn != true
-            commandControl(K_RECIRC, target, "Gió trong") { carHelper.setRecirculation(target) }
+            commandControl(K_RECIRC, target, if (target) "Gió trong" else "Gió ngoài") { carHelper.setRecirculation(target) }
         }
 
         btnQuickCool.setOnClickListener {
@@ -1010,6 +1075,7 @@ class MainActivity : Activity() {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (!fromUser) return
                 val target = TEMP_MIN + progress
+                sbTempGradient.hasValue = true
                 tvClimateTargetTemp.text = "$target°C"
                 tempDebounceRunnable?.let { mainHandler.removeCallbacks(it) }
                 val runnable = Runnable { setTemperature(target) }
@@ -1030,6 +1096,7 @@ class MainActivity : Activity() {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (!fromUser) return
                 val target = progress.coerceIn(FAN_MIN, FAN_MAX)
+                sbFanSpeed.hasValue = true
                 tvClimateFanSpeed.text = "Mức $target"
                 fanDebounceRunnable?.let { mainHandler.removeCallbacks(it) }
                 val runnable = Runnable { setFan(target) }
@@ -1066,10 +1133,17 @@ class MainActivity : Activity() {
         }
 
         btnWindowsVent.setOnClickListener {
-            sendWindowCommand(15, "Đã gửi lệnh hé 4 kính (15%) để thoát nhiệt")
+            sendWindowCommand(10, "Đã gửi lệnh hé 4 kính (10%) để thoát nhiệt")
         }
 
-        // Lowering every pane fully is only allowed at low speed (mis-tap on the highway).
+        // Opening every pane half or fully is only allowed at low speed (mis-tap on the highway);
+        // the speed must be readable, otherwise the command is blocked (fail-closed).
+        btnWindowsHalf.setOnClickListener {
+            ParkGate.runIfAllowed(this, check = { ctx -> ParkGate.checkSlowerThan(ctx, WINDOW_OPEN_MAX_KMH) }) {
+                sendWindowCommand(50, "Đã gửi lệnh mở 4 kính một nửa (50%)")
+            }
+        }
+
         btnWindowsOpen.setOnClickListener {
             ParkGate.runIfAllowed(this, check = { ctx -> ParkGate.checkSlowerThan(ctx, WINDOW_OPEN_MAX_KMH) }) {
                 sendWindowCommand(100, "Đã gửi lệnh hạ hết 4 kính")

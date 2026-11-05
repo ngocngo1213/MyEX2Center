@@ -59,4 +59,7 @@
     <color name="text_muted">#64748B</color>
     <color name="text_emerald">#34D399</color>
     <color name="text_amber">#FBBF24</color>
+    <!-- Button press ripples -->
+    <color name="ripple_on_accent">#40FFFFFF</color>
+    <color name="ripple_neutral">#33FFFFFF</color>
 </resources>

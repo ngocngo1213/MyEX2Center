@@ -2,26 +2,26 @@
   {
     "name": "MyEX2Center",
     "packageName": "com.mipago.ex2center",
-    "versionCode": 4,
-    "versionName": "1.3.0",
+    "versionCode": 1,
+    "versionName": "1.0.0",
     "sizeMb": 6.2,
     "type": "apk",
     "abis": [],
     "minSdk": 28,
     "requiresPark": true,
     "self": true,
-    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/v1.3.0/MyEX2Center-1.3.0.apk",
+    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/v1.0.0/MyEX2Center-1.0.0.apk",
     "browserUrl": "https://github.com/ngocngo1213/MyEX2Center/releases",
     "iconResName": "img_my_ex2",
     "description": "Cập nhật hệ thống điều khiển trung tâm EX2 Center. Ứng dụng sẽ tự khởi động lại sau khi cập nhật.",
-    "sha256": "55a907e591ffe30b8242ed00502ab1a3414324e0ed4afedf93fa600f69d2967c"
+    "sha256": "ad56d29766e329df3992ac4ea937b946fb57d3537e28059b7b147fafa4df95ec"
   },
   {
     "name": "EX2 Store",
     "packageName": "com.mipago.ex2store",
     "versionCode": 1,
     "versionName": "1.0.0",
-    "sizeMb": 4.5,
+    "sizeMb": 3.6,
     "type": "apk",
     "abis": [],
     "minSdk": 28,
@@ -30,25 +30,25 @@
     "browserUrl": "https://github.com/ngocngo1213/MyEX2Center/releases",
     "iconResName": "ic_app_ex2store",
     "description": "Kho ứng dụng cho EX2: cài và cập nhật MyEX2Center cùng các ứng dụng khác. Tự báo khi có bản mới (chỉ khi xe ở số P).",
-    "sha256": "5ff7f54a069a5df69403ef610c415cfa5922bbb0c6a80b0b3a2a5c33d05ef5a4"
+    "sha256": "5a5201fef0fa316a45538eed4c1dc2a048452d59da5f4ddfa920f3ddd6b4f8fa"
   },
   {
     "name": "VIETMAP LIVE",
     "packageName": "vn.vietmap.live",
     "versionCode": 179327630,
     "versionName": "3.4.4",
-    "sizeMb": 166.0,
-    "type": "xapk",
+    "sizeMb": 163.8,
+    "type": "apks",
     "abis": [
-      "armeabi-v7a"
+      "arm64-v8a"
     ],
     "minSdk": 26,
     "requiresPark": true,
     "apkUrl": "",
-    "browserUrl": "https://apkpure.com/vietmap-live-mimi-ai/vn.vietmap.live",
+    "browserUrl": "https://apkcube.com/vietmap-live-mimi-ai/vn.vietmap.live",
     "iconResName": "ic_app_vietmap",
-    "description": "Bản đồ dẫn đường cho ô tô, cảnh báo tốc độ và camera phạt nguội. Gói .xapk (split APK) — cài từ USB / máy.",
-    "sha256": "e18bda84a5562cdaec5156dfd6b11e3e3f52824619ba23e029d58e2eb2533c4c"
+    "description": "Bản đồ dẫn đường cho ô tô, cảnh báo tốc độ và camera phạt nguội. Gói .apks 64-bit (split APK) — cài từ USB / máy.",
+    "sha256": "3fb48ddba9e9eab5b8bb6bc0fc3e07ba03c67f2fe216bf9933d787e6e5e1f564"
   },
   {
     "name": "SmartTube",

@@ -653,8 +653,19 @@ class OverlayViewManager(private val context: Context) {
         }
     }
 
+    /**
+     * Called after the Blackout layer or the split bar is closed, so the owning service can stop
+     * itself when nothing is left on screen (e.g. the bubble is disabled in Settings).
+     */
+    var onOverlayClosed: (() -> Unit)? = null
+
+    /** True while any overlay window (bubble, panel, Blackout, split bar) is attached. */
+    val hasVisibleOverlay: Boolean
+        get() = bubbleView != null || panelView != null || blackoutView != null || splitControlView != null
+
     /** Removes every overlay window and stops background work. Call from the owner's onDestroy. */
     fun release() {
+        onOverlayClosed = null
         hideBubble()
         hidePanel()
         hideSplitControlBar()
@@ -665,6 +676,7 @@ class OverlayViewManager(private val context: Context) {
     }
 
     fun deactivateBlackoutMode() {
+        val wasShown = blackoutView != null
         blackoutView?.let {
             try {
                 windowManager.removeView(it)
@@ -674,6 +686,7 @@ class OverlayViewManager(private val context: Context) {
         isBlackoutActive = false
         mainHandler.removeCallbacks(blackoutGearWatch)
         Log.i(TAG, "Blackout mode deactivated.")
+        if (wasShown) onOverlayClosed?.invoke()
     }
 
     // -------------------------------------------------------------
@@ -811,12 +824,14 @@ class OverlayViewManager(private val context: Context) {
     }
 
     fun hideSplitControlBar() {
+        val wasShown = splitControlView != null
         splitControlView?.let {
             try {
                 windowManager.removeView(it)
             } catch (ignored: Throwable) {}
         }
         splitControlView = null
+        if (wasShown) onOverlayClosed?.invoke()
     }
 
     /**

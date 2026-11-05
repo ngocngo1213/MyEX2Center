@@ -210,8 +210,14 @@ class AppRepository(private val context: Context) {
     private val downloadDir: File
         get() = File(context.filesDir, "downloads").apply { mkdirs() }
 
+    private fun extFor(app: AppInfo): String = when (app.type) {
+        AppInfo.TYPE_XAPK -> "xapk"
+        AppInfo.TYPE_APKS -> "apks"
+        else -> "apk"
+    }
+
     private fun partFileFor(app: AppInfo): File {
-        val ext = if (app.type == AppInfo.TYPE_XAPK) "xapk" else "apk"
+        val ext = extFor(app)
         // Keyed by the expected hash: a partial is only ever resumed into the same exact file.
         return File(downloadDir, "${app.sha256.lowercase().take(16)}.$ext.part")
     }
@@ -231,7 +237,7 @@ class AppRepository(private val context: Context) {
             }
             // Legacy location used by older builds.
             context.cacheDir.listFiles()?.filter {
-                it.name.endsWith(".apk") || it.name.endsWith(".xapk") || it.name.startsWith("picked_")
+                it.name.endsWith(".apk") || it.name.endsWith(".xapk") || it.name.endsWith(".apks") || it.name.startsWith("picked_")
             }?.forEach { if (now - it.lastModified() > 10 * 60_000L) it.delete() }
         }.start()
     }
@@ -355,7 +361,7 @@ class AppRepository(private val context: Context) {
             part.delete()
             return null to "Lỗi bảo mật: Mã SHA-256 không khớp, tệp đã bị xóa. Hãy thử tải lại."
         }
-        val ext = if (app.type == AppInfo.TYPE_XAPK) "xapk" else "apk"
+        val ext = extFor(app)
         val finalFile = File(downloadDir, "${app.packageName}-${app.sha256.lowercase().take(8)}.$ext")
         if (finalFile.exists()) finalFile.delete()
         if (!part.renameTo(finalFile)) return null to "Không thể hoàn tất tệp tải về."

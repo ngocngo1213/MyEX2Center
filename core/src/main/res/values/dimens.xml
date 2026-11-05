@@ -35,4 +35,6 @@
     <dimen name="card_gap">16dp</dimen>
     <dimen name="header_height">64dp</dimen>
     <dimen name="slider_touch_height">56dp</dimen>
+    <!-- Climate sliders with a step scale: 24 top + 40 track/thumb + 24 label strip -->
+    <dimen name="slider_scale_height">88dp</dimen>
 </resources>

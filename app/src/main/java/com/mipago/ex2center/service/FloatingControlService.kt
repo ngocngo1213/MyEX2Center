@@ -48,8 +48,20 @@ class FloatingControlService : Service() {
         startForegroundNotification()
         // The overlay reads/writes HVAC and watches the gear for Blackout: hold the shared link.
         CarApiHelper.getInstance().acquire(this, VHAL_HOLDER)
-        overlayViewManager = OverlayViewManager(com.mipago.ex2center.utils.ThemeManager.wrap(this))
+        overlayViewManager = OverlayViewManager(com.mipago.ex2center.utils.ThemeManager.wrap(this)).also {
+            it.onOverlayClosed = { stopIfIdle() }
+        }
         if (isBubbleEnabled()) overlayViewManager?.showBubble()
+    }
+
+    /**
+     * With the bubble disabled the service only exists for Blackout / the split bar: once both
+     * are closed, stop so it does not keep a foreground notification and the VHAL link alive.
+     */
+    private fun stopIfIdle() {
+        if (isBubbleEnabled()) return
+        if (overlayViewManager?.hasVisibleOverlay == true) return
+        stopSelf()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -63,15 +75,18 @@ class FloatingControlService : Service() {
             }
             ACTION_TRIGGER_BLACKOUT -> {
                 overlayViewManager?.activateBlackoutMode()
+                stopIfIdle() // stops only if the window could not be added
             }
             ACTION_SHOW_SPLIT_CONTROL -> {
                 overlayViewManager?.showSplitControlBar()
+                stopIfIdle() // stops only if the window could not be added
             }
             ACTION_HIDE_SPLIT_CONTROL -> {
                 overlayViewManager?.hideSplitControlBar()
+                stopIfIdle()
             }
             else -> {
-                if (isBubbleEnabled()) overlayViewManager?.showBubble()
+                if (isBubbleEnabled()) overlayViewManager?.showBubble() else stopIfIdle()
             }
         }
         return START_STICKY

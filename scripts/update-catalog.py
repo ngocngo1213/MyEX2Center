@@ -85,7 +85,7 @@ def main():
             entry = next((e for e in catalog if e.get("packageName") == pkg), None)
             if entry is None:
                 # First release of EX2 Store: copy the template from the bundled catalog. Placed
-                # right after MyEX2Center so 1.2.0 users see it at the top of their built-in Kho.
+                # right after MyEX2Center so it is listed at the top of the catalog.
                 bundled = json.load(open(BUNDLED, encoding="utf-8"))
                 entry = next((dict(e) for e in bundled if e.get("packageName") == pkg), None)
                 if entry is None:

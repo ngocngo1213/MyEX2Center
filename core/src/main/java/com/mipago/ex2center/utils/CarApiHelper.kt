@@ -34,6 +34,15 @@ class CarApiHelper private constructor() {
         const val PROP_SOC = 557885165 // High-voltage battery SoC (%)
         const val PROP_ESTIMATED_RANGE = 289407752 // Estimated remaining range (km)
 
+        // Speed limit candidates, READ-ONLY, in fallback order (taken from the dashcam overlay in
+        // reference/drive_assist/modehelper/.../DashRecorder.java). NOT in field-catalog.md yet:
+        // unverified, so only plausible values are shown and the sign falls back to "--".
+        const val PROP_SPEED_LIMIT_CAMERA = 0x2140B029 // 557887529 — ADAS camera sign recognition
+        const val PROP_SPEED_LIMIT_NAVI = 0x2140303A   // 557854778 — built-in navigation limit
+        const val PROP_SPEED_LIMIT_NAVSPEED = 0x2140A405 // 557884421 — navigation speed value
+        private const val SPEED_LIMIT_MIN = 5
+        private const val SPEED_LIMIT_MAX = 200
+
         const val PROP_DRIVE = 570491136
         val DRIVE_AREAS = intArrayOf(0, 1, 16777216)
         const val DRIVE_ECO = 570491137
@@ -299,6 +308,27 @@ class CarApiHelper private constructor() {
             try {
                 return mgr.getFloatProperty(PROP_SPEED, area)
             } catch (ignored: Throwable) {}
+        }
+        return null
+    }
+
+    data class SpeedLimit(val kmh: Int, val source: String)
+
+    /**
+     * Current speed limit: camera sign first, then navigation limit, then navigation speed.
+     * A real limit is a small round number; anything outside 5..200 km/h is treated as an enum,
+     * sentinel or noise and skipped. Returns null when no source has a plausible value.
+     */
+    fun readSpeedLimit(): SpeedLimit? {
+        val mgr = cpm ?: return null
+        val sources = arrayOf(
+            PROP_SPEED_LIMIT_CAMERA to "camera",
+            PROP_SPEED_LIMIT_NAVI to "navi",
+            PROP_SPEED_LIMIT_NAVSPEED to "navspeed"
+        )
+        for ((prop, name) in sources) {
+            val v = try { mgr.getIntProperty(prop, 0) } catch (_: Throwable) { null } ?: continue
+            if (v in SPEED_LIMIT_MIN..SPEED_LIMIT_MAX) return SpeedLimit(v, name)
         }
         return null
     }
@@ -747,7 +777,7 @@ class CarApiHelper private constructor() {
     }
 
     // -------------------------------------------------------------
-    // 4 WINDOW POSITIONS (0% = ĐÓNG KÍN, 15% = HÉ, 100% = HẠ HẾT)
+    // 4 WINDOW POSITIONS (Dashboard presets: 0% ĐÓNG KÍN, 10% HÉ, 50% MỞ NỬA, 100% HẠ HẾT)
     // -------------------------------------------------------------
     /**
      * Reads the real glass position of each pane (FL, FR, RL, RR).
@@ -782,7 +812,7 @@ class CarApiHelper private constructor() {
     }
 
     fun closeAllWindows(): Boolean = setAllWindowsPosition(0)
-    fun ventAllWindows(): Boolean = setAllWindowsPosition(15)
+    fun ventAllWindows(): Boolean = setAllWindowsPosition(10)
     fun openAllWindows(): Boolean = setAllWindowsPosition(100)
 
     // -------------------------------------------------------------

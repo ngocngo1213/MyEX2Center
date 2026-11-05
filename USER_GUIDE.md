@@ -28,12 +28,11 @@ Bạn chỉ cần dùng máy tính **một lần duy nhất** để cài EX2 Sto
 7. [Sau khi cài: an toàn và dọn dẹp](#7-sau-khi-cài-an-toàn-và-dọn-dẹp)
 8. [Cập nhật về sau: tự động báo trong xe](#8-cập-nhật-về-sau-tự-động-báo-trong-xe)
 9. [Cài thêm ứng dụng bằng EX2 Store](#9-cài-thêm-ứng-dụng-bằng-ex2-store)
-10. [Đang dùng MyEX2Center 1.2.0?](#10-đang-dùng-myex2center-120)
-11. [Sử dụng MyEX2Center](#11-sử-dụng-myex2center)
-12. [Gỡ cài đặt](#12-gỡ-cài-đặt)
-13. [Xử lý sự cố](#13-xử-lý-sự-cố)
-14. [Câu hỏi thường gặp](#14-câu-hỏi-thường-gặp)
-15. [Dành cho nhà phát triển](#15-dành-cho-nhà-phát-triển)
+10. [Sử dụng MyEX2Center](#10-sử-dụng-myex2center)
+11. [Gỡ cài đặt](#11-gỡ-cài-đặt)
+12. [Xử lý sự cố](#12-xử-lý-sự-cố)
+13. [Câu hỏi thường gặp](#13-câu-hỏi-thường-gặp)
+14. [Dành cho nhà phát triển](#14-dành-cho-nhà-phát-triển)
 
 ---
 
@@ -92,7 +91,6 @@ Máy tính và xe đều phải kết nối vào **cùng** hotspot này.
 > - Gói mở khóa do cộng đồng tạo (tác giả kênh **Jean na Estrada**, video gốc: https://youtu.be/T-77g9hn5LU). Hướng dẫn chi tiết bằng tiếng Bồ Đào Nha: dự án **drive_assist** (https://github.com/SuspiciousRepair/drive_assist), file `docs/GUIA-ADB-IHU629G.md`.
 > - **Chỉ dùng gói đúng với phiên bản của xe bạn** (1111 hoặc 1114). Gói sai phiên bản sẽ không chạy.
 > - Đã mở khóa thì bỏ qua Phần 2, sang thẳng Phần 3.
-> - Nếu xe của bạn **đã có MyEX2Center 1.2.0**, ADB đã được mở khóa từ trước: xem thẳng [Phần 10](#10-đang-dùng-myex2center-120).
 
 ### 2.1. Tải gói mở khóa
 
@@ -218,19 +216,19 @@ Dùng lại USB của Phần 2 (định dạng FAT32). Gói mở khóa trên USB
    | File | Ở bản phát hành | Dùng để |
    |---|---|---|
    | **`EX2Store-<phiên bản>.apk`** | tag `store-v…` (ví dụ `store-v1.0.0`) | Cài kho ứng dụng (Phần 4) |
-   | **`MyEX2Center-<phiên bản>.apk`** | tag `v…` (ví dụ `v1.3.0`) | Cài từ USB khi xe chưa có Wi-Fi (Phần 5, cách B) |
+   | **`MyEX2Center-<phiên bản>.apk`** | tag `v…` (ví dụ `v1.0.0`) | Cài từ USB khi xe chưa có Wi-Fi (Phần 5, cách B) |
 
-   Các ví dụ dưới đây dùng **EX2 Store 1.0.0** và **MyEX2Center 1.3.0**. Nếu có bản mới hơn, hãy thay số phiên bản trong các lệnh.
+   Các ví dụ dưới đây dùng **EX2 Store 1.0.0** và **MyEX2Center 1.0.0**. Nếu có bản mới hơn, hãy thay số phiên bản trong các lệnh.
 3. **Kiểm tra file không bị lỗi hay bị sửa** bằng mã SHA-256 ghi trong phần mô tả của từng bản phát hành.
 
    **macOS** (Terminal, đứng ở thư mục chứa file, thường là `~/Downloads`):
    ```bash
-   shasum -a 256 EX2Store-1.0.0.apk MyEX2Center-1.3.0.apk
+   shasum -a 256 EX2Store-1.0.0.apk MyEX2Center-1.0.0.apk
    ```
    **Windows** (PowerShell):
    ```powershell
    certutil -hashfile EX2Store-1.0.0.apk SHA256
-   certutil -hashfile MyEX2Center-1.3.0.apk SHA256
+   certutil -hashfile MyEX2Center-1.0.0.apk SHA256
    ```
    Kết quả phải **trùng khớp** với mã trên trang Release. Không trùng → **không cài**, tải lại.
 4. Chép cả hai file vào **thư mục gốc** của USB, rồi tháo USB an toàn. Trên macOS, chạy thêm lệnh sau để xóa file ẩn của Mac trước khi tháo:
@@ -239,7 +237,7 @@ Dùng lại USB của Phần 2 (định dạng FAT32). Gói mở khóa trên USB
    ```
 
 > [!NOTE]
-> Hai app là app hệ thống (`android.uid.system`), được ký bằng khóa *platform* (test-key AOSP) mà đầu xe IHU629G sử dụng. Nếu firmware của bạn dùng khóa khác, bước cài sẽ báo lỗi `SHARED_USER` (xem Phần 13). Bạn chỉ cần tải APK trên trang Release, không cần khóa nào.
+> Hai app là app hệ thống (`android.uid.system`), được ký bằng khóa *platform* (test-key AOSP) mà đầu xe IHU629G sử dụng. Nếu firmware của bạn dùng khóa khác, bước cài sẽ báo lỗi `SHARED_USER` (xem Phần 12). Bạn chỉ cần tải APK trên trang Release, không cần khóa nào.
 
 ---
 
@@ -347,7 +345,7 @@ Xong bước này, bạn có thể ngắt máy tính (`adb disconnect`). Từ đ
 
    **A. Qua Wi-Fi (khuyên dùng):** xe đã vào Wi-Fi (mục 4.2). Trên thẻ **MyEX2Center**, bấm **Cài đặt**. Store tự tải bản chính thức, kiểm tra SHA-256 rồi cài. Khi đang tải, nút đổi thành **"Hủy tải (x%)"**. Nếu bị gián đoạn, lần sau Store **tải tiếp** phần còn lại.
 
-   **B. Từ USB (không cần mạng):** cắm USB có file `MyEX2Center-1.3.0.apk` (Phần 3). Bấm **Cài từ USB / Máy** ở thanh trên của Store, rồi chọn đúng file MyEX2Center.
+   **B. Từ USB (không cần mạng):** cắm USB có file `MyEX2Center-1.0.0.apk` (Phần 3). Bấm **Cài từ USB / Máy** ở thanh trên của Store, rồi chọn đúng file MyEX2Center.
 
 3. Cài xong, thẻ MyEX2Center hiện **Đã cài**, kèm nút **Mở**.
 
@@ -356,7 +354,7 @@ Xong bước này, bạn có thể ngắt máy tính (`adb disconnect`). Từ đ
 ```bash
 adb shell dumpsys package com.mipago.ex2center | grep -E "userId=|versionName"
 ```
-Kết quả đúng có **`userId=1000`** và `versionName=1.3.0`.
+Kết quả đúng có **`userId=1000`** và `versionName=1.0.0`.
 
 ---
 
@@ -373,13 +371,13 @@ Kết quả đúng có **`userId=1000`** và `versionName=1.3.0`.
    | Bạn thấy | Ý nghĩa |
    |---|---|
    | Số P/R/N/D sáng, tốc độ, % pin, km còn lại, nhiệt độ điều hòa là **số thật** | ✅ App đã kết nối với xe |
-   | Toàn **`--`** và dòng "Chưa kết nối xe" | ❌ Chưa đọc được dữ liệu, xem Phần 13 |
+   | Toàn **`--`** và dòng "Chưa kết nối xe" | ❌ Chưa đọc được dữ liệu, xem Phần 12 |
    | Một vài ô vẫn `--` (ví dụ áp suất lốp) | Xe không cung cấp dữ liệu đó. App **không hiện số giả**. |
 
 5. **Thử từng chức năng khi xe đỗ ở P**, mỗi lần một chức năng, và đối chiếu với xe thật:
    - Đổi **Chế độ lái** (Tiết kiệm / Thoải mái / Thể thao), rồi **Phanh tái sinh**.
    - Chỉnh **nhiệt độ** hoặc **quạt gió**, so với màn hình điều hòa gốc.
-   - Bấm **Hé thoáng (15%)** rồi **Đóng kín (0%)**, quan sát kính.
+   - Bấm **10% Hé thoáng** rồi **0% Đóng kín**, quan sát kính.
    - Nút đang chờ xe xác nhận sẽ **mờ nhẹ**. Nếu xe không nhận lệnh, app báo **"Xe không nhận lệnh: …"** và trả về trạng thái thật.
 
 ---
@@ -438,24 +436,10 @@ adb shell getprop ro.product.cpu.abilist
 
 ---
 
-## 10. Đang dùng MyEX2Center 1.2.0?
-
-Từ bản **1.3.0**, Kho ứng dụng tích hợp trong MyEX2Center được thay bằng app riêng **EX2 Store**. Xe đã cài 1.2.0 thì ADB đã được mở khóa, nên **không cần máy tính**. Chọn một trong hai cách (xe ở **P**, có Wi-Fi):
-
-**Cách 1:** mở MyEX2Center 1.2.0 → **Kho ứng dụng** → thẻ **EX2 Store** → **Cài đặt**. Sau đó mở EX2 Store và cập nhật MyEX2Center lên 1.3.0.
-
-**Cách 2:** trong Kho của 1.2.0, cập nhật **MyEX2Center** lên 1.3.0 trước (**Cập nhật hệ thống**). Sau đó bấm **Kho ứng dụng**. App báo xe chưa có EX2 Store và hiện hộp thoại **Cài EX2 Store**:
-- **Tải và cài:** tự tải EX2 Store chính thức (đã kiểm tra chữ ký và SHA-256) rồi cài, cài xong tự mở Store.
-- **Cài từ USB:** dùng file `EX2Store-<phiên bản>.apk` chép vào USB (Phần 3).
-
-Cài đặt cũ của MyEX2Center (tên xe, ảnh, giao diện, ghi nhớ…) **được giữ nguyên**.
-
----
-
-## 11. Sử dụng MyEX2Center
+## 10. Sử dụng MyEX2Center
 
 > [!NOTE]
-> Phần này mô tả giao diện **từ bản 1.3.0**. Nút **Kho ứng dụng** (hình cửa hàng) giờ mở app **EX2 Store**; nếu xe chưa có Store, app sẽ đề nghị cài (Phần 10).
+> Nút **Kho ứng dụng** (hình cửa hàng) mở app **EX2 Store**. Nếu xe chưa có Store (ví dụ MyEX2Center được cài thẳng bằng adb), app hiện hộp thoại **Cài EX2 Store**: **Tải và cài** (tự tải bản chính thức, đã kiểm tra chữ ký và SHA-256) hoặc **Cài từ USB** (file `EX2Store-<phiên bản>.apk`, Phần 3).
 
 ### Thanh trên cùng
 - **Hồ sơ xe** (ảnh + tên): chạm vào để mở Cài đặt.
@@ -478,7 +462,7 @@ Cài đặt cũ của MyEX2Center (tên xe, ảnh, giao diện, ghi nhớ…) **
 
 ### Cột phải
 - Hình xe nhìn từ trên xuống: **áp suất và nhiệt độ từng lốp** (vạch bánh xe xanh là bình thường, vàng là lệch khoảng, đỏ là nguy hiểm, xám là chưa có dữ liệu) và **độ mở từng kính**.
-- **Đóng kín / Hé thoáng / Hạ hết kính**. *Hạ hết* chỉ dùng được khi xe chạy dưới 30 km/h.
+- **Kính (cả 4 cửa): 0% Đóng kín / 10% Hé thoáng / 50% Mở một nửa / 100% Hạ hết**. *50%* và *100%* chỉ dùng được khi xe chạy dưới 30 km/h.
 
 ### Nút nổi (hình tròn xanh)
 Kéo để di chuyển (app nhớ vị trí). Chạm để mở bảng nhanh gồm: A/C, nhiệt độ, quạt, **Màn hình đêm**, **Khởi động lại** màn hình (chỉ khi xe ở P, có hỏi xác nhận).
@@ -503,7 +487,7 @@ Kéo để di chuyển (app nhớ vị trí). Chạm để mở bảng nhanh g�
 
 ---
 
-## 12. Gỡ cài đặt
+## 11. Gỡ cài đặt
 
 Bằng máy tính (đã `adb connect` như mục 4.4):
 ```bash
@@ -516,7 +500,7 @@ adb uninstall com.mipago.ex2store
 
 ---
 
-## 13. Xử lý sự cố
+## 12. Xử lý sự cố
 
 ### Mở khóa ADB (Phần 2)
 | Triệu chứng | Cách xử lý |
@@ -566,7 +550,7 @@ Gửi file `ex2center-log.txt` kèm mô tả lỗi tại **https://github.com/ng
 
 ---
 
-## 14. Câu hỏi thường gặp
+## 13. Câu hỏi thường gặp
 
 **Có cần mở khóa lại mỗi lần cài không?**
 Không. Chỉ làm một lần. Nếu xe được cập nhật phần mềm chính hãng, có thể phải mở khóa lại. **Khôi phục cài đặt gốc** (Cài đặt xe → Xe của tôi → Khôi phục) cũng xóa mở khóa ADB và mọi app đã cài.
@@ -594,7 +578,7 @@ Chưa. Các chức năng này chưa có mã điều khiển đã được kiểm
 
 ---
 
-## 15. Dành cho nhà phát triển
+## 14. Dành cho nhà phát triển
 
 Mã nguồn: https://github.com/ngocngo1213/MyEX2Center. Đặc tả kỹ thuật: [SPEC.md](SPEC.md).
 

@@ -12,12 +12,15 @@ import android.os.StatFs
 import android.util.Log
 import org.json.JSONObject
 import java.io.File
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
 
 /**
  * Module 3: Silent Package Installer Helper
@@ -40,17 +43,24 @@ object PackageInstallerHelper {
     const val PREFS_NAME = "ex2_installer"
     const val KEY_PENDING_SELF_UPDATE = "pending_self_update_version"
 
-    private val ABI_SPLIT = Regex("""^config\.(arm64_v8a|armeabi_v7a|armeabi|x86_64|x86|mips64|mips)\.apk$""")
+    private val ABI_SPLIT = Regex(
+        """^(?:split_)?config\.(arm64_v8a|armeabi_v7a|armeabi|x86_64|x86|mips64|mips)\.apk$""",
+        RegexOption.IGNORE_CASE
+    )
     private val io = Executors.newSingleThreadExecutor()
+
+    private fun abiOfSplit(entryName: String): String? =
+        ABI_SPLIT.matchEntire(entryName)?.groupValues?.get(1)?.lowercase()
 
     data class Result(val ok: Boolean, val message: String? = null, val packageName: String? = null)
 
-    /** What a local .apk / .xapk file contains (read without installing). */
+    /** What a local .apk / .xapk / .apks file contains (read without installing). */
     data class PackageMeta(
         val packageName: String,
         val versionCode: Long,
         val versionName: String?,
-        val isBundle: Boolean
+        val isBundle: Boolean,
+        val minSdk: Int = 0
     )
 
     fun getInstalledPackageInfo(context: Context, packageName: String): PackageInfo? {
@@ -80,13 +90,19 @@ object PackageInstallerHelper {
         false
     }
 
-    /** Reads package name/version of an .apk or .xapk. Blocking — call off the main thread. */
+    /** Reads package name/version of an .apk, .xapk or .apks. Blocking — call off the main thread. */
     fun inspect(context: Context, file: File): PackageMeta? {
         if (!file.isFile || file.length() <= 0) return null
         return try {
-            if (isSplitBundle(file)) inspectBundle(file)
+            if (isSplitBundle(file)) ZipFile(file).use { inspectBundle(it) }
             else context.packageManager.getPackageArchiveInfo(file.absolutePath, 0)?.let {
-                PackageMeta(it.packageName, installedVersionCode(it), it.versionName, false)
+                PackageMeta(
+                    packageName = it.packageName,
+                    versionCode = installedVersionCode(it),
+                    versionName = it.versionName,
+                    isBundle = false,
+                    minSdk = it.applicationInfo?.minSdkVersion ?: 0
+                )
             }
         } catch (t: Throwable) {
             Log.w(TAG, "inspect ${file.name}: ${t.message}")
@@ -94,16 +110,121 @@ object PackageInstallerHelper {
         }
     }
 
-    private fun inspectBundle(file: File): PackageMeta? = ZipFile(file).use { zip ->
-        val manifest = readBundleManifest(zip) ?: return null
-        val pkg = manifest.optString("package_name").takeIf { it.isNotBlank() } ?: return null
-        PackageMeta(
-            packageName = pkg,
-            versionCode = manifest.optString("version_code").toLongOrNull()
-                ?: manifest.optLong("version_code", 0L),
-            versionName = manifest.optString("version_name").takeIf { it.isNotBlank() },
-            isBundle = true
-        )
+    private fun inspectBundle(zip: ZipFile): PackageMeta? {
+        readBundleManifest(zip)?.let { manifest ->
+            val pkg = manifest.optString("package_name").takeIf { it.isNotBlank() }
+            if (pkg != null) {
+                return PackageMeta(
+                    packageName = pkg,
+                    versionCode = manifest.optString("version_code").toLongOrNull()
+                        ?: manifest.optLong("version_code", 0L),
+                    versionName = manifest.optString("version_name").takeIf { it.isNotBlank() },
+                    isBundle = true,
+                    minSdk = manifest.optString("min_sdk_version").toIntOrNull()
+                        ?: manifest.optInt("min_sdk_version", 0)
+                )
+            }
+        }
+        // Standard .apks bundles (Bundletool / SAI / APKCube) have no manifest.json;
+        // read AndroidManifest.xml directly from base.apk inside the zip stream.
+        val apks = rootApkEntries(zip)
+        val baseEntry = apks.firstOrNull { it.name.equals("base.apk", ignoreCase = true) }
+            ?: apks.firstOrNull { abiOfSplit(it.name) == null && !it.name.startsWith("split_config.", true) && !it.name.startsWith("config.", true) }
+            ?: apks.maxByOrNull { it.size }
+            ?: return null
+        ZipInputStream(zip.getInputStream(baseEntry)).use { zis ->
+            while (true) {
+                val entry = zis.nextEntry ?: break
+                if (entry.name == "AndroidManifest.xml") {
+                    return parseBinaryManifest(zis.readBytes())
+                }
+            }
+        }
+        return null
+    }
+
+    /**
+     * Minimal binary AXML parser for `AndroidManifest.xml` inside `base.apk` of `.apks` bundles.
+     * Extracts `package`, `versionCode`, `versionName` from `<manifest>` and `minSdkVersion` from `<uses-sdk>`.
+     */
+    private fun parseBinaryManifest(data: ByteArray): PackageMeta? = try {
+        val buf = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
+        if (data.size < 36 || buf.getInt(0) != 0x00080003) null
+        else {
+            val strChunkSize = buf.getInt(12)
+            val strCount = buf.getInt(16)
+            val flags = buf.getInt(24)
+            val strStart = 8 + buf.getInt(28)
+            val isUtf8 = (flags and 0x100) != 0
+            val strings = Array(strCount) { i ->
+                var p = strStart + buf.getInt(36 + i * 4)
+                if (isUtf8) {
+                    val u16 = data[p].toInt() and 0xFF; p += if ((u16 and 0x80) != 0) 2 else 1
+                    var u8 = data[p].toInt() and 0xFF; p += 1
+                    if ((u8 and 0x80) != 0) {
+                        u8 = ((u8 and 0x7F) shl 8) or (data[p].toInt() and 0xFF); p += 1
+                    }
+                    String(data, p, u8, Charsets.UTF_8)
+                } else {
+                    var u16 = buf.getShort(p).toInt() and 0xFFFF; p += 2
+                    if ((u16 and 0x8000) != 0) {
+                        u16 = ((u16 and 0x7FFF) shl 16) or (buf.getShort(p).toInt() and 0xFFFF); p += 2
+                    }
+                    String(data, p, u16 * 2, Charsets.UTF_16LE)
+                }
+            }
+            var pkg: String? = null
+            var versionCode = 0L
+            var versionCodeMajor = 0L
+            var versionName: String? = null
+            var minSdk = 0
+            var pos = 8 + strChunkSize
+            while (pos + 8 <= data.size) {
+                val ctype = buf.getShort(pos).toInt() and 0xFFFF
+                val csize = buf.getInt(pos + 4)
+                if (csize <= 0) break
+                if (ctype == 0x0102 && pos + 28 <= data.size) { // RES_XML_START_ELEMENT_TYPE
+                    val nameIdx = buf.getInt(pos + 20)
+                    val attrStart = buf.getShort(pos + 24).toInt() and 0xFFFF
+                    val attrSize = buf.getShort(pos + 26).toInt() and 0xFFFF
+                    val attrCnt = buf.getShort(pos + 28).toInt() and 0xFFFF
+                    val tag = strings.getOrNull(nameIdx) ?: ""
+                    if ((tag == "manifest" || tag == "uses-sdk") && attrSize >= 20) {
+                        var ap = pos + 16 + attrStart
+                        repeat(attrCnt) {
+                            if (ap + 20 <= data.size) {
+                                val aName = strings.getOrNull(buf.getInt(ap + 4)) ?: ""
+                                val rawVal = buf.getInt(ap + 8)
+                                val dType = data[ap + 15].toInt() and 0xFF
+                                val dVal = buf.getInt(ap + 16)
+                                val sVal = if (dType == 3) strings.getOrNull(rawVal) else null
+                                when {
+                                    tag == "manifest" && aName == "package" -> pkg = sVal
+                                    tag == "manifest" && aName == "versionCode" -> versionCode = dVal.toLong() and 0xFFFFFFFFL
+                                    tag == "manifest" && aName == "versionCodeMajor" -> versionCodeMajor = dVal.toLong() and 0xFFFFFFFFL
+                                    tag == "manifest" && aName == "versionName" -> versionName = sVal
+                                    tag == "uses-sdk" && aName == "minSdkVersion" -> minSdk = dVal
+                                }
+                            }
+                            ap += attrSize
+                        }
+                    }
+                }
+                pos += csize
+            }
+            pkg?.takeIf { it.isNotBlank() }?.let {
+                PackageMeta(
+                    packageName = it,
+                    versionCode = (versionCodeMajor shl 32) or versionCode,
+                    versionName = versionName,
+                    isBundle = true,
+                    minSdk = minSdk
+                )
+            }
+        }
+    } catch (t: Throwable) {
+        Log.w(TAG, "parseBinaryManifest failed: ${t.message}")
+        null
     }
 
     private fun readBundleManifest(zip: ZipFile): JSONObject? = try {
@@ -192,31 +313,35 @@ object PackageInstallerHelper {
 
     private fun installBundle(context: Context, file: File, expectedPackage: String?): Result =
         ZipFile(file).use { zip ->
-            val manifest = readBundleManifest(zip)
-            val pkg = manifest?.optString("package_name")?.takeIf { it.isNotBlank() } ?: expectedPackage
-                ?: return Result(false, "Gói XAPK thiếu manifest.json (không xác định được ứng dụng).")
+            val meta = inspectBundle(zip)
+            val pkg = meta?.packageName ?: expectedPackage
+                ?: return Result(false, "Gói XAPK/APKS không hợp lệ (không xác định được ứng dụng).")
             if (expectedPackage != null && pkg != expectedPackage) {
                 return Result(false, "Sai ứng dụng: gói chứa $pkg, cần $expectedPackage.", pkg)
             }
-            val minSdk = manifest?.optString("min_sdk_version")?.toIntOrNull() ?: 0
+            val minSdk = meta?.minSdk ?: 0
             if (minSdk > Build.VERSION.SDK_INT) {
                 return Result(false, "Ứng dụng cần Android API $minSdk, đầu xe là API ${Build.VERSION.SDK_INT}.", pkg)
             }
 
             val apks = rootApkEntries(zip)
-            if (apks.isEmpty()) return Result(false, "Gói XAPK không chứa file APK nào.", pkg)
+            if (apks.isEmpty()) return Result(false, "Gói XAPK/APKS không chứa file APK nào.", pkg)
 
             // Pick the best native split for this head unit (Build.SUPPORTED_ABIS is in
-            // preference order). Density/language splits are all kept.
-            val deviceAbis = Build.SUPPORTED_ABIS.map { it.replace('-', '_') }
-            val abiSplits = apks.filter { ABI_SPLIT.matches(it.name) }
-            val chosenAbi = deviceAbis.firstOrNull { abi -> abiSplits.any { it.name == "config.$abi.apk" } }
+            // preference order). Supports both config.<abi>.apk (.xapk) and split_config.<abi>.apk (.apks).
+            // Density/language splits are all kept.
+            val deviceAbis = Build.SUPPORTED_ABIS.map { it.lowercase().replace('-', '_') }
+            val abiSplits = apks.mapNotNull { entry -> abiOfSplit(entry.name)?.let { abi -> abi to entry } }
+            val chosenAbi = deviceAbis.firstOrNull { devAbi -> abiSplits.any { it.first == devAbi } }
             if (abiSplits.isNotEmpty() && chosenAbi == null) {
-                val offered = abiSplits.map { it.name.removePrefix("config.").removeSuffix(".apk").replace('_', '-') }
-                return Result(false, abiMessage(offered.toSet()), pkg)
+                val offered = abiSplits.map { it.first.replace('_', '-') }.toSet()
+                return Result(false, abiMessage(offered), pkg)
             }
-            val selected = apks.filter { !ABI_SPLIT.matches(it.name) || it.name == "config.$chosenAbi.apk" }
-            if (selected.any { it.size < 0 }) return Result(false, "Gói XAPK bị hỏng (không đọc được kích thước).", pkg)
+            val selected = apks.filter { entry ->
+                val splitAbi = abiOfSplit(entry.name)
+                splitAbi == null || splitAbi == chosenAbi
+            }
+            if (selected.any { it.size < 0 }) return Result(false, "Gói XAPK/APKS bị hỏng (không đọc được kích thước).", pkg)
             val total = selected.sumOf { it.size }
             checkFreeSpace(total)?.let { return Result(false, it, pkg) }
 

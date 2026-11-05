@@ -237,9 +237,9 @@ class StoreActivity : Activity() {
                         installLocalApkFile(local, app.packageName, app)
                     }
                     !app.isPublished -> {
-                        // Not published for network download (e.g. Vietmap .xapk).
+                        // Not published for network download (e.g. Vietmap .apks / .xapk).
                         setStatus(app, restingStatus(app))
-                        toast("${app.name} chưa có bản tải qua mạng. Hãy chọn file .apk/.xapk từ USB hoặc máy.", long = true)
+                        toast("${app.name} chưa có bản tải qua mạng. Hãy chọn file .apk/.apks/.xapk từ USB hoặc máy.", long = true)
                         showStorageInstallOptions()
                     }
                     else -> startDownload(app)
@@ -324,7 +324,7 @@ class StoreActivity : Activity() {
     // ---------------------------------------------------------------------------------------
 
     private fun showStorageInstallOptions() {
-        toast("Đang tìm file .apk / .xapk trên máy và USB...")
+        toast("Đang tìm file .apk / .apks / .xapk trên máy và USB...")
         scanExecutor.execute {
             val localApks = try { LocalApkFinder.scanAllApks(this) } catch (_: Throwable) { emptyList() }
             runOnUiThread {
@@ -336,9 +336,9 @@ class StoreActivity : Activity() {
                 val items = localApks.map { f ->
                     "${f.name} (%.1f MB)".format(java.util.Locale.US, f.length() / (1024.0 * 1024.0))
                 }.toMutableList()
-                items.add("Chọn tệp APK / XAPK khác...")
+                items.add("Chọn tệp APK / APKS / XAPK khác...")
                 AlertDialog.Builder(this)
-                    .setTitle("Chọn file APK / XAPK trên USB / Thiết bị")
+                    .setTitle("Chọn file APK / APKS / XAPK trên USB / Thiết bị")
                     .setItems(items.toTypedArray()) { _, which ->
                         if (which < localApks.size) installLocalApkFile(localApks[which], null, null)
                         else openFilePicker()
