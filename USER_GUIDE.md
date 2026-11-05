@@ -96,8 +96,18 @@ Máy tính và xe đều phải kết nối vào **cùng** hotspot này.
 
 ### 2.1. Tải gói mở khóa
 
-1. Mở thư mục Google Drive **Geely Ex2 – Jean na Estrada**: https://drive.google.com/drive/folders/1RPzQlNtSc0YC_rpFQf_IIgdB6WvejiLl
-2. Vào thư mục đúng phiên bản của bạn:
+> [!WARNING]
+> **Link Google Drive gốc đã ngừng hoạt động** (kiểm tra ngày 05/11/2026: trả về lỗi 404). Tài liệu drive_assist cũng vẫn trỏ vào đúng link này. Video hướng dẫn gốc vẫn xem được, nhưng phần mô tả **không có link tải mới**. Hiện dự án này **chưa có nguồn thay thế đã kiểm chứng**, nên không đăng lại gói mở khóa.
+>
+> Cách lấy gói:
+> - Hỏi trong các nhóm cộng đồng Geely EX2 (Facebook / Zalo). Nhiều người đã mở khóa vẫn còn giữ file.
+> - Hoặc liên hệ tác giả qua email ghi trong mô tả video: `contato.jeannaestrada@gmail.com`.
+>
+> Chỉ dùng gói có **đúng tên thư mục** như bên dưới, và **đúng phiên bản xe** (1111 / 1114). Không dùng gói `update.zip` lạ không rõ nguồn: gói này chạy trên xe với quyền cao nhất.
+> Có link mới đã kiểm chứng, hãy báo tại https://github.com/ngocngo1213/MyEX2Center/issues để cập nhật tài liệu.
+
+1. Lấy gói mở khóa (thư mục gốc từng có tên **Geely Ex2 – Jean na Estrada**, link cũ: `https://drive.google.com/drive/folders/1RPzQlNtSc0YC_rpFQf_IIgdB6WvejiLl`).
+2. Gói được chia theo phiên bản (tên thư mục gốc):
    - `Desbloqueio versao 1111` cho phiên bản **1111**
    - `Desbloqueio 1114` cho phiên bản **1114**
 3. Trong đó chỉ có **một file .zip**. Tải về rồi **giải nén một lần**. Bạn sẽ được một thư mục có tên dài, ví dụ:
