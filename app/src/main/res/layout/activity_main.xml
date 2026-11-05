@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -686,73 +687,7 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Row 2: HDC & ESC — hidden: guessed property IDs inside the real ADAS block
-                     were unsafe to write. Re-enable only after probing the car. -->
-                <LinearLayout
-                    android:visibility="gone"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="@dimen/space_8">
-
-                    <LinearLayout
-                        android:id="@+id/btnHdc"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:orientation="horizontal"
-                        android:gravity="center"
-                        android:background="@drawable/bg_btn_inactive"
-                        android:layout_marginEnd="@dimen/space_12"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_hdc"
-                            android:layout_marginEnd="@dimen/space_8" />
-
-                        <TextView
-                            android:id="@+id/tvHdcLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Đổ đèo HDC"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/btnEsc"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:orientation="horizontal"
-                        android:gravity="center"
-                        android:background="@drawable/bg_btn_inactive"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_esc"
-                            android:layout_marginEnd="@dimen/space_8" />
-
-                        <TextView
-                            android:id="@+id/tvEscLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="ESC OFF"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <!-- Row 3: Camera 360 & Valet Mode -->
+                <!-- Row 2: Camera 360 & Valet Mode -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
@@ -1052,20 +987,6 @@
                             android:textStyle="bold" />
                     </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/btnAutoClimate"
-                        android:visibility="gone"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:text="AUTO"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:gravity="center"
-                        android:background="@drawable/bg_btn_inactive"
-                        android:layout_marginEnd="@dimen/space_12" />
-
                     <!-- Air intake: one tap toggles Gió trong (recirculation) <-> Gió ngoài (fresh air) -->
                     <LinearLayout
                         android:id="@+id/btnRecirc"
@@ -1127,7 +1048,8 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/space_16"
-                    android:layout_weight="1" />
+                    android:layout_weight="1"
+                    tools:ignore="InefficientWeight" />
 
                 <!-- Row 2: Temperature (top) and Fan speed (bottom), each on its own full-width row.
                      Weighted like the gaps above/below so all three gaps grow equally. -->
@@ -1220,7 +1142,8 @@
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/space_16"
-                        android:layout_weight="1" />
+                        android:layout_weight="1"
+                        tools:ignore="InefficientWeight" />
 
                     <!-- Fan Speed Controls -->
                     <LinearLayout
@@ -1308,7 +1231,8 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/space_16"
-                    android:layout_weight="1" />
+                    android:layout_weight="1"
+                    tools:ignore="InefficientWeight" />
 
                 <!-- Row 3: Vents & Defrost (64dp) -->
                 <LinearLayout

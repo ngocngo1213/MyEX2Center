@@ -21,7 +21,7 @@
     "packageName": "com.mipago.ex2store",
     "versionCode": 1,
     "versionName": "1.0.0",
-    "sizeMb": 4.5,
+    "sizeMb": 3.6,
     "type": "apk",
     "abis": [],
     "minSdk": 28,
@@ -65,8 +65,86 @@
     "apkUrl": "https://github.com/yuliskov/SmartTube/releases/download/32.68s/SmartTube_stable_32.68_arm64-v8a.apk",
     "browserUrl": "https://github.com/yuliskov/SmartTube/releases",
     "iconResName": "ic_app_smarttube",
-    "description": "Xem YouTube không quảng cáo, tối ưu cho màn hình ngang ô tô, phát nền và không cần MicroG.",
+    "description": "Xem YouTube 4K không quảng cáo, thiết kế cho màn hình ngang ô tô/TV, tự qua đoạn giới thiệu (SponsorBlock), đăng nhập QR không cần MicroG.",
     "sha256": "0a3d3f024eae66b8468f75fe85ab421169177f5ea1223a5d097d1dc9e1c84cf3"
+  },
+  {
+    "name": "NewPipe",
+    "packageName": "org.schabi.newpipe",
+    "versionCode": 1015,
+    "versionName": "0.29.1",
+    "sizeMb": 11.0,
+    "type": "apk",
+    "abis": [
+      "arm64-v8a",
+      "armeabi-v7a",
+      "x86",
+      "x86_64"
+    ],
+    "minSdk": 23,
+    "requiresPark": true,
+    "apkUrl": "https://github.com/TeamNewPipe/NewPipe/releases/download/v0.29.1/NewPipe_v0.29.1.apk",
+    "browserUrl": "https://github.com/TeamNewPipe/NewPipe/releases",
+    "iconResName": "ic_app_newpipe",
+    "description": "Xem YouTube giao diện máy tính bảng siêu nhẹ, hỗ trợ phát nền và cửa sổ nổi (Popup Player) khi đang mở toàn màn hình Vietmap Live.",
+    "sha256": "18447bfb1e06d113edc88df93f471827280de06f6f3d4dc42f56f28b9c1bab79"
+  },
+  {
+    "name": "PipePipe",
+    "packageName": "InfinityLoop1309.NewPipeEnhanced",
+    "versionCode": 111004,
+    "versionName": "5.5.0",
+    "sizeMb": 31.1,
+    "type": "apk",
+    "abis": [
+      "arm64-v8a"
+    ],
+    "minSdk": 23,
+    "requiresPark": true,
+    "apkUrl": "https://github.com/InfinityLoop1308/PipePipe/releases/download/v5.5.0/PipePipe_5.5.0-arm64-v8a-release.apk",
+    "browserUrl": "https://github.com/InfinityLoop1308/PipePipe/releases",
+    "iconResName": "ic_app_pipepipe",
+    "description": "Bản nâng cấp của NewPipe (64-bit arm64-v8a): tích hợp sẵn SponsorBlock tự bỏ qua đoạn tài trợ, phát nhạc nền và cửa sổ nổi.",
+    "sha256": "dfac608d4802b461252550a0485f779a12fd198f18dce77afa90cd441568f06f"
+  },
+  {
+    "name": "OuterTune",
+    "packageName": "com.dd3boh.outertune",
+    "versionCode": 71,
+    "versionName": "0.10.1",
+    "sizeMb": 9.6,
+    "type": "apk",
+    "abis": [
+      "arm64-v8a",
+      "armeabi-v7a",
+      "x86",
+      "x86_64"
+    ],
+    "minSdk": 24,
+    "requiresPark": true,
+    "apkUrl": "https://github.com/OuterTune/OuterTune/releases/download/v0.10.1/OuterTune-0.10.1-core-release-71.apk",
+    "browserUrl": "https://github.com/OuterTune/OuterTune/releases/tag/v0.10.1",
+    "iconResName": "ic_app_outertune",
+    "description": "Nghe nhạc YouTube Music không quảng cáo (bản v0.10.1 Core 9.6 MB), đồng bộ Playlist Google, hiện lời bài hát và điều khiển qua thẻ Đang phát.",
+    "sha256": "115a5df8e5f9aecbb4c7e65b8b8ea5053fb64e5111b3116e01bae803426d138c"
+  },
+  {
+    "name": "Kreate (RiMusic)",
+    "packageName": "me.knighthat.kreate",
+    "versionCode": 1422,
+    "versionName": "2.2.4",
+    "sizeMb": 14.8,
+    "type": "apk",
+    "abis": [
+      "arm64-v8a"
+    ],
+    "minSdk": 23,
+    "requiresPark": true,
+    "apkUrl": "https://github.com/knighthat/Kreate/releases/download/v2.2.4/Kreate-arm64-v8a.apk",
+    "browserUrl": "https://github.com/knighthat/Kreate/releases",
+    "iconResName": "ic_app_kreate",
+    "description": "Ứng dụng nghe nhạc YouTube Music kế nhiệm RiMusic: giao diện tối (Dark Mode) nút bấm lớn hợp màn hình xe, không quảng cáo, không cần MicroG.",
+    "sha256": "10a983175b34c25f9c03a04feb2bb43b27e6f79a29ba1f31c7b873ca94ed48f7"
   },
   {
     "name": "Trình duyệt Web",

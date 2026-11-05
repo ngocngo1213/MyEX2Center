@@ -19,7 +19,7 @@
 | `bg_primary` | `#090D14` | Nền chính |
 | `card_surface` | `#121824` (viền `#1F293D` 1dp, bo 20dp) | Thẻ |
 | `accent_primary` | `#10B981` | Nút Active, gear đang chọn |
-| `accent_secondary` | `#F59E0B` | Cảnh báo, Valet, ESC OFF, "Làm mát nhanh" |
+| `accent_secondary` | `#F59E0B` | Cảnh báo, Valet, "Làm mát nhanh" |
 | `accent_danger` | `#EF4444` | Nguy hiểm/xóa, 12V < 12.0V |
 
 **Quy tắc Driver-Centric** (màn 1920×1080, 1dp = 1px, nhìn từ ~75 cm):
@@ -31,7 +31,7 @@
 - Ô TPMS bị ẩn khi xe không cung cấp dữ liệu lốp (không hiện `-- kPa` cố định).
 - Nút nổi mặc định ở mép phải, phần dưới màn hình (không đè cần số/HUD); vị trí kéo được ghi nhớ.
 - Màn hình đêm hiện gợi ý "Chạm bất kỳ đâu để thoát" 3 giây rồi mờ dần.
-- Kho ứng dụng: lưới **2 cột** thẻ lớn, chữ 14–20sp, nút 56dp.
+- Kho ứng dụng: lưới **3 cột** (~620dp/thẻ), chữ 14–20sp, mô tả cố định 3 dòng, nút 56dp.
 - **Bộ icon thống nhất:** mọi icon là vector 24×24, glyph Material bo tròn (Material Icons, Apache-2.0) + icon xe riêng cùng lưới (gió mặt/chân, sấy kính trước/sau, ắc quy 12V, vô lăng, chia đôi màn hình) nét 2dp bo tròn. Icon vẽ màu trắng và **nhận màu tại nơi dùng** (`android:tint` / `setColorFilter`): `text_primary` cho nút điều hướng, `text_secondary` cho icon phụ, trắng trên nền xanh/cam, `accent` cho tiêu đề mục Cài đặt, đỏ cho xóa. Icon trong nút điều khiển đổi theo trạng thái (trắng khi active). Không dùng emoji làm icon. Icon thông báo `ic_notification` đơn sắc. Ảnh tạm của ứng dụng chưa có icon: `ic_app_placeholder` (màu `text_muted`, không tint để không đè màu icon thật).
 
 ---
@@ -57,17 +57,18 @@
 ### Module 3: Wi-Fi App Catalog & Installer — EX2 Store `StoreActivity.kt` (module `:store`), `AppRepository.kt`, `PackageInstallerHelper.kt` (`:core`)
 
 Màn hình Kho chỉ có trong EX2 Store; MyEX2Center không có Kho tích hợp.
-- Lưới 2 cột, 4 mục:
-  1. **MyEX2Center** (`com.mipago.ex2center`, `self: true`) — tự cập nhật qua GitHub Releases; không có nút gỡ; app tự khởi động lại, `BootReceiver` (`MY_PACKAGE_REPLACED`) xác nhận.
-  2. **VIETMAP LIVE** (`vn.vietmap.live`, `.xapk`, chỉ có split `armeabi-v7a`) — chưa phát hành qua mạng (`apkUrl` rỗng, không tự host bản APKPure) → nút "Cài từ USB / Máy".
-  3. **SmartTube** (`org.smarttube.stable` 32.68, bản arm64 chính thức từ `yuliskov/SmartTube`, MIT).
-  4. **Trình duyệt Web** (`com.aaex.carbrowser` 2.3).
-  - Đã gỡ tạm thời: Google Maps, VTV Go, YouTube ReVanced / YT Music.
-- **Catalog:** `apps.json` từ repo của dự án (`raw.githubusercontent.com/<owner>/MyEX2Center/main/apps.json`), fallback `assets/apps.json`. Không còn dùng repo bên thứ ba. **Catalog có chữ ký:** catalog từ xa chỉ được dùng khi `apps.json.sig` (ECDSA P-256 / SHA-256, base64 DER) khớp khóa công khai nhúng trong `CatalogVerifier`; bản đã xác minh được lưu ở `filesDir/catalog_verified.json`. Thứ tự: catalog từ xa đã ký → bản đã lưu → bản đóng gói. Catalog không chữ ký / bị sửa bị bỏ qua. Trường: `name, packageName, versionCode (long), versionName, sizeMb, type (apk|xapk), abis, minSdk, requiresPark, self, apkUrl, browserUrl, iconResName, description, sha256`.
+- Lưới 3 cột, 9 mục:
+  1. **MyEX2Center** (`com.mipago.ex2center`, `self: true`) — tự cập nhật qua GitHub Releases (tag `v<phiên bản>`); không có nút gỡ; app tự khởi động lại, `BootReceiver` (`MY_PACKAGE_REPLACED`) xác nhận.
+  2. **EX2 Store** (`com.mipago.ex2store`) — tự cập nhật (tag `store-v<phiên bản>`).
+  3. **VIETMAP LIVE** (`vn.vietmap.live` 3.4.4, gói `.apks` APKCube có split `arm64_v8a`; `base.apk` trùng từng byte với bản APKPure) — không tự host (`apkUrl` rỗng) → "Cài từ USB / Máy".
+  4. **SmartTube** (`org.smarttube.stable` 32.68, arm64, `yuliskov/SmartTube`).
+  5. **NewPipe** 0.29.1, 6. **PipePipe** 5.5.0 (arm64), 7. **OuterTune** 0.10.1, 8. **Kreate** 2.2.4 (arm64) — đều từ GitHub Releases chính thức của từng dự án, không cần Google Play Services.
+  9. **Trình duyệt Web** (`com.aaex.carbrowser` 2.3).
+- **Catalog:** `apps.json` từ repo của dự án (`raw.githubusercontent.com/<owner>/MyEX2Center/main/apps.json`), fallback `assets/apps.json`. Không còn dùng repo bên thứ ba. **Catalog có chữ ký:** catalog từ xa chỉ được dùng khi `apps.json.sig` (ECDSA P-256 / SHA-256, base64 DER) khớp khóa công khai nhúng trong `CatalogVerifier`; bản đã xác minh được lưu ở `filesDir/catalog_verified.json`. Thứ tự: catalog từ xa đã ký → bản đã lưu → bản đóng gói. Catalog không chữ ký / bị sửa bị bỏ qua. Catalog đã ký được **gộp** với bản đóng gói (`mergeWithBundled`): mục từ xa luôn thắng, trừ khi mục đóng gói có phiên bản cao hơn **và** SHA-256 thật; app chỉ có trong bản đóng gói vẫn hiện (để thêm app mới trước khi đẩy catalog). Mục MyEX2Center / EX2 Store trong bản đóng gói luôn để SHA giả (`__SELF_SHA256__` / `__STORE_SHA256__`) vì APK không thể chứa hash của chính nó. Trường: `name, packageName, versionCode (long), versionName, sizeMb, type (apk|xapk|apks), abis, minSdk, requiresPark, self, apkUrl, browserUrl, iconResName, description, sha256`.
 - **Bảo mật tải:** chỉ HTTPS (kể cả sau redirect); **bắt buộc `sha256`** hợp lệ cho mọi mục tải qua mạng; catalog không được trỏ tới đường dẫn file trên máy.
 - **Tải file lớn (Bước 7):** lưu vào `filesDir/downloads/<sha16>.<ext>.part`, **tải tiếp bằng HTTP Range** khi bị hủy/mất mạng (partial gắn với đúng mã SHA nên không bao giờ ghép nhầm file). Redirect xử lý thủ công, từng bước phải là HTTPS. Kiểm tra bộ nhớ trống trước khi tải (phần còn lại + bản sao của trình cài + 50 MB). Timeout kết nối 15s / đọc 30s. Tiến độ gửi tối đa 4 lần/giây. Nút cài khi đang tải thành **"Hủy tải (x%)"**; rời màn hình Kho → tự hủy, giữ partial. Xong → kiểm SHA-256 → đổi tên thành file hoàn chỉnh → cài → xóa file. `cleanupDownloads()` dọn partial không còn trong catalog và file cũ trong cache. Catalog từ xa lỗi/rỗng → dùng bản đóng gói.
 - **Hiệu năng Kho (Bước 8):** tiến độ chỉ cập nhật đúng thẻ đang tải (`notifyItemChanged` + payload), không vẽ lại cả lưới; mỗi lần bind gỡ listener cũ. Icon: icon app đã cài được cache theo package, icon từ URL qua `LruCache` 4 MB + 2 luồng, gắn `tag` để ViewHolder tái sử dụng không hiện nhầm icon, không tải trùng. Quét USB/Download (đọc manifest APK/XAPK) luôn chạy ở luồng nền; chỉ khớp **đúng package name**, không còn khớp theo tên file. Callback bất đồng bộ bỏ qua khi màn hình đã đóng.
-- **Bộ cài (`PackageInstallerHelper`):** tự nhận `.apk` hoặc gói split `.xapk`/`.apks` (zip chứa base + `config.*.apk`). Với XAPK: đọc `manifest.json`, chọn đúng 1 split ABI theo `Build.SUPPORTED_ABIS`, giữ mọi split mật độ/ngôn ngữ, stream từng entry thẳng từ zip vào **một** `PackageInstaller.Session` (không giải nén), `setSize()` = tổng kích thước. Kiểm tra trước khi commit: đúng package, `minSdk`, ABI (báo rõ "Không tương thích CPU"), bộ nhớ trống ≥ 2× dung lượng. Lỗi → `abandon()` session. Cài tuần tự trên 1 luồng nền, chờ kết quả tối đa 180s.
+- **Bộ cài (`PackageInstallerHelper`):** tự nhận `.apk` hoặc gói split `.xapk`/`.apks` (zip chứa base + `config.*.apk`). Với XAPK: đọc `manifest.json` (gói `.apks` không có file này → đọc `AndroidManifest.xml` nhị phân của `base.apk`), chọn đúng 1 split ABI theo `Build.SUPPORTED_ABIS`, giữ mọi split mật độ/ngôn ngữ, stream từng entry thẳng từ zip vào **một** `PackageInstaller.Session` (không giải nén), `setSize()` = tổng kích thước. Kiểm tra trước khi commit: đúng package, `minSdk`, ABI (báo rõ "Không tương thích CPU"), bộ nhớ trống ≥ 2× dung lượng. Lỗi → `abandon()` session. Cài tuần tự trên 1 luồng nền, chờ kết quả tối đa 180s.
 - **Receiver:** callback theo extra `request_key` (`s:<session>` / `u:<package>`) — sửa lỗi callback gỡ cài đặt không bao giờ chạy. `STATUS_PENDING_USER_ACTION` → mở hộp thoại hệ thống (fallback khi không cài ngầm được).
 - **Cài từ USB/máy:** quét `.apk/.xapk/.apks`, khớp theo package trong manifest; file chọn qua trình chọn được sao chép tạm vào cache và xóa sau khi cài (không bao giờ xóa file của người dùng trên USB). Nút cài bị khóa khi đang tải/cài.
 - **Release:** `./gradlew assembleRelease` ký bằng platform key (lint `ExpiredTargetSdkVersion` tắt vì không phát hành qua Google Play). Khóa ký, `reference/`, `catalog_apks/`, `pylib/` và mọi APK bị loại khỏi git (`.gitignore`).
@@ -120,7 +121,7 @@ Bố cục 3 cột (32% / 38% / 30%) + thanh Header.
 - `connect()` an toàn khi gọi lặp: gộp các lần gọi đồng thời, bỏ lần kết nối treo sau 10s, giải phóng `Car` cũ trước khi `createCar` mới; callback của kết nối cũ bị bỏ qua (bộ đếm `generation`). `car`/`cpm` là `@Volatile`. `reconnect()` cho binder chết.
 - `ParkGate` tự kết nối và chờ tối đa 3s nếu chưa sẵn sàng.
 - Các hàm đọc trả `null` khi không có dữ liệu (`TpmsData` nullable + `isValid`; `read12vBatteryVoltage()` → `Float?`).
-- Có API ADAS: AutoHold/HDC/ESC (`is…Supported/read…/set…`), AEB, cửa sổ, cốp, HVAC, AVAS (reflection `CarAudioManager`), Quick Cool macro (thread riêng).
+- API: chế độ lái, Regen, số, tốc độ, giới hạn tốc độ (chỉ đọc), pin, quãng đường, nhiệt độ ngoài trời, HVAC, kính, đèn viền, TPMS, AVAS (reflection `CarAudioManager`), Quick Cool macro (thread riêng). Không có API ADAS (AEB/HDC/ESC/Auto Hold) — chưa kiểm chứng, ghi vào khối ADAS là không an toàn.
 - Dùng `app/libs/car-stubs.jar` (không có `isPropertyAvailable`, chỉ `getPropertyList`/`getProperty`).
 
 ---
@@ -166,7 +167,7 @@ MyEX2Center/
 - EX2 Store có mục riêng trong catalog (tag release `store-v<phiên bản>`) để tự cập nhật; MyEX2Center dùng tag `v<phiên bản>`.
 
 ## 7. Verification Status
-- **Verified (emulator, Android API 36 tablet 1920×1080):** build thành công; Dashboard hiển thị `--` khi không có VHAL; Auto Hold/HDC/ESC hiển thị `(N/A)` và bị vô hiệu; Valet bật/tắt đổi Pill + nút; Kho ứng dụng mở, 3×2, logo riêng từng app, Google Maps hiển thị "Đã cài".
+- **Verified (emulator, Android API 36 tablet 1920×1080):** build thành công; Dashboard hiển thị `--` khi không có VHAL; Valet bật/tắt đổi Pill + nút; EX2 Store lưới 3 cột, 9 app, gộp catalog `5 remote, 9 total`; 4 app mới tải về khớp SHA-256.
 - **Chưa verify:** đọc/ghi VHAL thật (emulator không có `android.car.Car`), Crash Guard trip/reset end-to-end, hộp thoại Reboot, cài đặt APK qua Wi-Fi với hash thật, hành vi trên head unit IHU629G.
 
 ## 8. Known Limitations / TODO

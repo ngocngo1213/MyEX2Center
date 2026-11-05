@@ -7,7 +7,6 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.IBinder
 import com.mipago.ex2center.R
 import com.mipago.ex2center.ui.MainActivity
@@ -104,16 +103,14 @@ class FloatingControlService : Service() {
     private fun startForegroundNotification() {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                NOTIFICATION_CHANNEL_ID,
-                getString(R.string.notif_overlay_title),
-                NotificationManager.IMPORTANCE_MIN
-            ).apply {
-                setShowBadge(false)
-            }
-            notificationManager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            NOTIFICATION_CHANNEL_ID,
+            getString(R.string.notif_overlay_title),
+            NotificationManager.IMPORTANCE_MIN
+        ).apply {
+            setShowBadge(false)
         }
+        notificationManager.createNotificationChannel(channel)
 
         val launchIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
@@ -123,12 +120,7 @@ class FloatingControlService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val notificationBuilder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
-        } else {
-            @Suppress("DEPRECATION")
-            Notification.Builder(this)
-        }
+        val notificationBuilder = Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
 
         val notification = notificationBuilder
             .setContentTitle(getString(R.string.notif_overlay_title))

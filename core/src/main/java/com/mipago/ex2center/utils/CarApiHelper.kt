@@ -80,11 +80,9 @@ class CarApiHelper private constructor() {
         // Trunk/tailgate: no verified property yet. DOOR_POS (373295872) is READ-ONLY and only
         // covers areas 1/4/16/64, so it cannot open the trunk. Feature removed until probed.
 
-        // ADAS & Safety — only AEB is verified (field-catalog.md §6).
-        // HDC / ESC / Auto Hold IDs were guesses sitting inside the real ADAS block
-        // (between AEB 557858874 and FCW 557858878) and were removed: writing a boolean to an
-        // unknown ADAS property is unsafe. Re-add only after a directed snapshot diff on the car.
-        const val PROP_AEB = 557858874 // Autonomous Emergency Braking (boolean)
+        // ADAS (AEB / HDC / ESC / Auto Hold): intentionally not exposed. Only AEB 557858874 is
+        // verified (field-catalog.md §6); the other IDs were guesses inside the real ADAS block and
+        // writing a boolean to an unknown ADAS property is unsafe.
 
         // Cabin ambient lighting master switch — verified (field-catalog.md §7): boolean, area 0.
         const val PROP_AMBIENT_LIGHT_ON = 557885013
@@ -201,7 +199,6 @@ class CarApiHelper private constructor() {
                 previous = car
                 car = null
                 cpm = null
-                supportedPropertyIds = null
             }
         }
         if (gen == -1) {
@@ -232,7 +229,6 @@ class CarApiHelper private constructor() {
                         if (gen != generation) return
                         // Unit suspended / binder died: invalidate so isReady() stops lying.
                         cpm = null
-                        supportedPropertyIds = null
                     }
                     Log.w(TAG, "Car service disconnected.")
                     finishConnect(gen, false)
@@ -280,7 +276,6 @@ class CarApiHelper private constructor() {
             previous = car
             car = null
             cpm = null
-            supportedPropertyIds = null
             isConnecting = false
             pendingCallbacks.clear()
         }
@@ -386,40 +381,6 @@ class CarApiHelper private constructor() {
     }
 
     // -------------------------------------------------------------
-    // PROPERTY SUPPORT LOOKUP
-    // -------------------------------------------------------------
-    @Volatile
-    private var supportedPropertyIds: Set<Int>? = null
-
-    fun isPropertySupported(propId: Int): Boolean {
-        val mgr = cpm ?: return false
-        val supported = supportedPropertyIds ?: try {
-            val set = HashSet<Int>()
-            val list = mgr.propertyList
-            if (list != null) {
-                for (config in list) {
-                    set.add(config.propertyId)
-                }
-            }
-            supportedPropertyIds = set
-            set
-        } catch (_: Throwable) {
-            null
-        }
-
-        if (supported != null && supported.isNotEmpty()) {
-            return supported.contains(propId)
-        }
-
-        return try {
-            mgr.getProperty<Any>(propId, 0) != null
-        } catch (_: Throwable) {
-            false
-        }
-    }
-
-
-    // -------------------------------------------------------------
     // DRIVE MODE (ECO, COMFORT, SPORT)
     // -------------------------------------------------------------
     fun readDriveMode(): Int? {
@@ -501,10 +462,6 @@ class CarApiHelper private constructor() {
         }
     }
 
-    fun isAvasSupported(): Boolean {
-        return (invokeAudioMethod("isAVASModeSupported").value as? Boolean) ?: false
-    }
-
     /** 0 = muted, >=1 = active tune; null when unreadable. */
     fun getAvasMode(): Int? {
         return invokeAudioMethod("getAVASMode").value as? Int
@@ -523,15 +480,6 @@ class CarApiHelper private constructor() {
     // -------------------------------------------------------------
     // CLIMATE / HVAC CONTROLS
     // -------------------------------------------------------------
-    fun isHvacPowerOn(): Boolean? {
-        val mgr = cpm ?: return null
-        for (area in HVAC_AREAS) {
-            try {
-                return mgr.getBooleanProperty(PROP_HVAC_POWER, area)
-            } catch (ignored: Throwable) {}
-        }
-        return null
-    }
 
     fun setHvacPowerOn(on: Boolean): Boolean {
         val mgr = cpm ?: return false
@@ -811,10 +759,6 @@ class CarApiHelper private constructor() {
         return ok
     }
 
-    fun closeAllWindows(): Boolean = setAllWindowsPosition(0)
-    fun ventAllWindows(): Boolean = setAllWindowsPosition(10)
-    fun openAllWindows(): Boolean = setAllWindowsPosition(100)
-
     // -------------------------------------------------------------
     // CABIN AMBIENT LIGHT (ĐÈN VIỀN NỘI THẤT)
     // -------------------------------------------------------------
@@ -830,28 +774,6 @@ class CarApiHelper private constructor() {
             true
         } catch (t: Throwable) {
             Log.w(TAG, "setAmbientLight error: ${t.message}")
-            false
-        }
-    }
-
-    // -------------------------------------------------------------
-    // ADAS & SAFETY
-    // -------------------------------------------------------------
-    fun isAebEnabled(): Boolean? {
-        val mgr = cpm ?: return null
-        return try {
-            mgr.getBooleanProperty(PROP_AEB, 0)
-        } catch (ignored: Throwable) {
-            null
-        }
-    }
-
-    fun setAebEnabled(enabled: Boolean): Boolean {
-        val mgr = cpm ?: return false
-        return try {
-            mgr.setBooleanProperty(PROP_AEB, 0, enabled)
-            true
-        } catch (t: Throwable) {
             false
         }
     }

@@ -3,7 +3,6 @@ package com.mipago.ex2center.service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.util.Log
 
 class BootReceiver : BroadcastReceiver() {
@@ -37,22 +36,14 @@ class BootReceiver : BroadcastReceiver() {
         if (Intent.ACTION_BOOT_COMPLETED == action || Intent.ACTION_MY_PACKAGE_REPLACED == action) {
             // Start CarAutomationService
             val autoServiceIntent = Intent(context, CarAutomationService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(autoServiceIntent)
-            } else {
-                context.startService(autoServiceIntent)
-            }
+            context.startForegroundService(autoServiceIntent)
 
             // Check if floating overlay was enabled in preferences
             val prefs = context.getSharedPreferences(CarAutomationService.PREFS_NAME, Context.MODE_PRIVATE)
             val floatingEnabled = prefs.getBoolean("key_floating_bubble_enabled", true)
             if (floatingEnabled) {
                 val overlayServiceIntent = Intent(context, FloatingControlService::class.java)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    context.startForegroundService(overlayServiceIntent)
-                } else {
-                    context.startService(overlayServiceIntent)
-                }
+                context.startForegroundService(overlayServiceIntent)
             }
         }
     }

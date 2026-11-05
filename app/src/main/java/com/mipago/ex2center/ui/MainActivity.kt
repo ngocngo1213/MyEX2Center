@@ -11,7 +11,6 @@ import android.media.MediaMetadata
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.net.wifi.WifiManager
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -1281,10 +1280,6 @@ class MainActivity : Activity() {
 
     private fun startCoreServices() {
         val autoServiceIntent = Intent(this, CarAutomationService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(autoServiceIntent)
-        } else {
-            startService(autoServiceIntent)
-        }
+        startForegroundService(autoServiceIntent)
     }
 }

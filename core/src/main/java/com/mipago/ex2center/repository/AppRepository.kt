@@ -52,13 +52,6 @@ class AppRepository(private val context: Context) {
         return stored
     }
 
-    fun setCatalogUrl(url: String) {
-        prefs.edit().putString(KEY_CATALOG_URL, url.trim()).apply()
-    }
-
-    /**
-     * Fetches catalog list from remote URL or local assets fallback.
-     */
     /** Where a loaded catalog came from (only [REMOTE_VERIFIED] / [CACHED] are signed). */
     enum class CatalogSource { REMOTE_VERIFIED, CACHED, BUNDLED }
 
@@ -87,6 +80,12 @@ class AppRepository(private val context: Context) {
      * An unsigned or tampered remote catalog is never used.
      */
     fun loadCatalogBlocking(timeoutMs: Int = 2500): CatalogResult? {
+        val bundled = try {
+            parseCatalog(context.assets.open("apps.json").bufferedReader().use { it.readText() })
+        } catch (t: Throwable) {
+            Log.e(TAG, "Failed to load bundled apps.json: ${t.message}")
+            emptyList()
+        }
         val targetUrl = getCatalogUrl()
         if (!targetUrl.contains(UNSET_OWNER) && targetUrl.startsWith("https://")) {
             val body = httpGetBytes(targetUrl, timeoutMs)
@@ -96,8 +95,9 @@ class AppRepository(private val context: Context) {
                     val apps = parseCatalog(body.toString(Charsets.UTF_8))
                     if (apps.isNotEmpty()) {
                         try { cacheFile.writeBytes(body) } catch (_: Throwable) {}
-                        Log.i(TAG, "Remote catalog verified (${apps.size} apps).")
-                        return CatalogResult(apps, CatalogSource.REMOTE_VERIFIED)
+                        val merged = mergeWithBundled(apps, bundled)
+                        Log.i(TAG, "Remote catalog verified (${apps.size} remote, ${merged.size} total).")
+                        return CatalogResult(merged, CatalogSource.REMOTE_VERIFIED)
                     }
                 } else {
                     Log.w(TAG, "Remote catalog rejected: missing or invalid signature.")
@@ -106,15 +106,37 @@ class AppRepository(private val context: Context) {
         }
         if (cacheFile.isFile) {
             val apps = try { parseCatalog(cacheFile.readText()) } catch (_: Throwable) { emptyList() }
-            if (apps.isNotEmpty()) return CatalogResult(apps, CatalogSource.CACHED)
-        }
-        val bundled = try {
-            parseCatalog(context.assets.open("apps.json").bufferedReader().use { it.readText() })
-        } catch (t: Throwable) {
-            Log.e(TAG, "Failed to load bundled apps.json: ${t.message}")
-            emptyList()
+            if (apps.isNotEmpty()) return CatalogResult(mergeWithBundled(apps, bundled), CatalogSource.CACHED)
         }
         return if (bundled.isEmpty()) null else CatalogResult(bundled, CatalogSource.BUNDLED)
+    }
+
+    /**
+     * Combines a verified remote/cached catalog with the APK's bundled `assets/apps.json`:
+     * - Apps newly added to the bundled APK appear immediately even before `apps.json` is pushed to GitHub.
+     * - The signed remote catalog is authoritative: its entry wins unless the bundled entry is a
+     *   NEWER version with a real SHA-256 (the bundled MyEX2Center / EX2 Store entries can never
+     *   carry their own hash, so they must not hide the downloadable remote entry).
+     * - Brand-new apps published only in the remote catalog are appended.
+     */
+    private val SHA256_HEX = Regex("^[0-9a-fA-F]{64}$")
+
+    private fun mergeWithBundled(remote: List<AppInfo>, bundled: List<AppInfo>): List<AppInfo> {
+        if (bundled.isEmpty()) return remote
+        val remoteByPkg = remote.associateBy { it.packageName }
+        val result = ArrayList<AppInfo>(maxOf(remote.size, bundled.size))
+        val seen = HashSet<String>()
+        for (b in bundled) {
+            val r = remoteByPkg[b.packageName]
+            val bundledWins = r == null ||
+                (b.versionCode > r.versionCode && b.sha256.matches(SHA256_HEX))
+            result.add(if (bundledWins) b else r!!)
+            seen.add(b.packageName)
+        }
+        for (r in remote) {
+            if (seen.add(r.packageName)) result.add(r)
+        }
+        return result
     }
 
     /** Small HTTPS GET (catalog + signature); null on any error or non-200. */
@@ -282,7 +304,7 @@ class AppRepository(private val context: Context) {
             return null to "Ứng dụng này chưa được phát hành để tải qua mạng. Hãy cài từ USB / máy."
         }
         if (!app.apkUrl.startsWith("https://")) return null to "Lỗi bảo mật: Chỉ cho phép tải qua HTTPS."
-        if (!app.sha256.matches(Regex("^[0-9a-fA-F]{64}$"))) {
+        if (!app.sha256.matches(SHA256_HEX)) {
             return null to "Lỗi bảo mật: Mục này thiếu mã SHA-256 hợp lệ, không thể tải an toàn."
         }
 

@@ -69,11 +69,11 @@
     <TextView
         android:id="@+id/tvAppDesc"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="wrap_content"
         android:text="Mô tả ứng dụng..."
         android:textColor="@color/text_muted"
         android:textSize="14sp"
-        android:maxLines="2"
+        android:lines="3"
         android:ellipsize="end"
         android:layout_marginBottom="@dimen/space_12" />
 

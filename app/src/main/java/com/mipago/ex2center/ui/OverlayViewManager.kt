@@ -7,7 +7,6 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
@@ -106,14 +105,7 @@ class OverlayViewManager(private val context: Context) {
     // All VHAL reads/writes for the panel & split bar run here, never on the main thread.
     private val ioExecutor = Executors.newSingleThreadExecutor()
 
-    private fun getOverlayWindowType(): Int {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-        } else {
-            @Suppress("DEPRECATION")
-            WindowManager.LayoutParams.TYPE_PHONE
-        }
-    }
+    private fun getOverlayWindowType(): Int = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
 
     /**
      * Initializes and displays the floating draggable bubble.
@@ -377,7 +369,7 @@ class OverlayViewManager(private val context: Context) {
         val outside = outsideTemp
         val outsideText = TextView(context).apply {
             text = if (outside != null) {
-                context.getString(R.string.overlay_outside_temp, String.format("%.1f", outside))
+                context.getString(R.string.overlay_outside_temp, String.format(java.util.Locale.US, "%.1f", outside))
             } else {
                 "Ngoài trời: --°C"
             }
@@ -855,12 +847,7 @@ class OverlayViewManager(private val context: Context) {
                 .setNegativeButton(context.getString(R.string.btn_cancel), null)
 
             val dialog = builder.create()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                dialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
-            } else {
-                @Suppress("DEPRECATION")
-                dialog.window?.setType(WindowManager.LayoutParams.TYPE_PHONE)
-            }
+            dialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
             dialog.show()
         } catch (t: Throwable) {
             Log.e(TAG, "Failed to display reboot confirmation dialog: ${t.message}", t)

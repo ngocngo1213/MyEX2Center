@@ -10,7 +10,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
-import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
@@ -181,17 +180,15 @@ class CarAutomationService : Service() {
     private fun startForegroundServiceNotification() {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                NOTIFICATION_CHANNEL_ID,
-                getString(R.string.notif_service_title),
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = getString(R.string.notif_service_desc)
-                setShowBadge(false)
-            }
-            notificationManager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            NOTIFICATION_CHANNEL_ID,
+            getString(R.string.notif_service_title),
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = getString(R.string.notif_service_desc)
+            setShowBadge(false)
         }
+        notificationManager.createNotificationChannel(channel)
 
         val launchIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
@@ -201,12 +198,7 @@ class CarAutomationService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val notificationBuilder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
-        } else {
-            @Suppress("DEPRECATION")
-            Notification.Builder(this)
-        }
+        val notificationBuilder = Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
 
         val notification = notificationBuilder
             .setContentTitle(getString(R.string.notif_service_title))

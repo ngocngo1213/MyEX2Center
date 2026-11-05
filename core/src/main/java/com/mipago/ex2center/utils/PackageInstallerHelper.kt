@@ -75,9 +75,7 @@ object PackageInstallerHelper {
         return getInstalledPackageInfo(context, packageName) != null
     }
 
-    fun installedVersionCode(info: PackageInfo): Long =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode
-        else @Suppress("DEPRECATION") info.versionCode.toLong()
+    fun installedVersionCode(info: PackageInfo): Long = info.longVersionCode
 
     // ---------------------------------------------------------------------------------------
     // Inspection
@@ -264,18 +262,6 @@ object PackageInstallerHelper {
                 Result(false, "Lỗi cài đặt: ${t.message}")
             }
             onResult(result)
-        }
-    }
-
-    /** Backwards-compatible wrapper used by the catalog UI. */
-    fun installSilently(
-        context: Context,
-        apkFile: File,
-        targetPackageName: String,
-        onResult: (success: Boolean, errorMessage: String?, installedPkg: String?) -> Unit
-    ) {
-        install(context, apkFile, targetPackageName.takeIf { it.isNotBlank() }) {
-            onResult(it.ok, it.message, it.packageName)
         }
     }
 

@@ -9,7 +9,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.StatFs
@@ -92,10 +91,8 @@ class StoreActivity : Activity() {
 
         appRepo = AppRepository(this)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 100)
-            }
+        if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 100)
         }
 
         initViews()
@@ -162,7 +159,7 @@ class StoreActivity : Activity() {
 
     private fun setupRecyclerView() {
         adapter = CatalogRecyclerAdapter(appList)
-        rvAppCatalog.layoutManager = GridLayoutManager(this, 2) // 2 large cards per row: easier to read and hit in the car
+        rvAppCatalog.layoutManager = GridLayoutManager(this, 3) // 3 cards per row (~620dp each on the 1920dp-wide head unit)
         rvAppCatalog.adapter = adapter
         // Progress changes are applied in place; skip the default change cross-fade.
         (rvAppCatalog.itemAnimator as? androidx.recyclerview.widget.SimpleItemAnimator)?.supportsChangeAnimations = false
@@ -644,8 +641,13 @@ class StoreActivity : Activity() {
             }
             return when (app.packageName) {
                 "com.mipago.ex2center" -> R.drawable.img_my_ex2
+                "com.mipago.ex2store" -> R.drawable.ic_app_ex2store
                 "vn.vietmap.live" -> R.drawable.ic_app_vietmap
                 "org.smarttube.stable", "com.teamsmart.videomanager.tv", "com.liskovsoft.smartyoutubetv2.tv" -> R.drawable.ic_app_smarttube
+                "org.schabi.newpipe" -> R.drawable.ic_app_newpipe
+                "InfinityLoop1309.NewPipeEnhanced" -> R.drawable.ic_app_pipepipe
+                "com.dd3boh.outertune" -> R.drawable.ic_app_outertune
+                "me.knighthat.kreate", "it.fast4x.rimusic" -> R.drawable.ic_app_kreate
                 "com.aaex.carbrowser", "com.aaexbrowser", "mark.via.gp" -> R.drawable.ic_app_browser
                 else -> 0
             }

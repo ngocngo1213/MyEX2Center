@@ -1,5 +1,6 @@
 package com.mipago.ex2center.ui
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -19,6 +20,7 @@ import com.mipago.ex2center.R
  * Layout contract: give the view equal paddingTop / paddingBottom (the bottom one holds the
  * labels) so the track stays vertically centred and lines up with the -/+ buttons beside it.
  */
+@SuppressLint("AppCompatCustomView") // platform theme (no AppCompat), tint is not needed
 class StepSeekBar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,

@@ -28,9 +28,6 @@ object StoreLauncher {
     const val STORE_PACKAGE = "com.mipago.ex2store"
     private const val RELEASES_URL = "https://github.com/ngocngo1213/MyEX2Center/releases"
 
-    fun isStoreInstalled(activity: Activity): Boolean =
-        PackageInstallerHelper.isPackageInstalled(activity, STORE_PACKAGE)
-
     fun open(activity: Activity) {
         if (launchStore(activity)) return
         AlertDialog.Builder(activity)
