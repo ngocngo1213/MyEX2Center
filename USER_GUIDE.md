@@ -21,7 +21,7 @@ Bạn chỉ cần dùng máy tính **một lần duy nhất** để cài EX2 Sto
 0. [Tổng quan: bạn sẽ làm những gì](#0-tổng-quan-bạn-sẽ-làm-những-gì)
 1. [Chuẩn bị](#1-chuẩn-bị)
 2. [Mở khóa ADB cho xe (chỉ làm 1 lần)](#2-mở-khóa-adb-cho-xe-chỉ-làm-1-lần)
-3. [Tải EX2 Store và MyEX2Center vào USB](#3-tải-ex2-store-và-myex2center-vào-usb)
+3. [Tải EX2 Store về máy tính](#3-tải-ex2-store-về-máy-tính)
 4. [Cài EX2 Store lên xe (chỉ làm 1 lần)](#4-cài-ex2-store-lên-xe-chỉ-làm-1-lần)
 5. [Cài MyEX2Center từ EX2 Store](#5-cài-myex2center-từ-ex2-store)
 6. [Mở MyEX2Center lần đầu và kiểm tra](#6-mở-myex2center-lần-đầu-và-kiểm-tra)
@@ -49,7 +49,7 @@ Bạn chỉ cần dùng máy tính **một lần duy nhất** để cài EX2 Sto
 |---|---|---|---|
 | 1 | Chuẩn bị máy tính, USB, Wi-Fi | 10 phút | – |
 | 2 | Mở khóa ADB cho xe bằng USB | 20–30 phút | **Chỉ 1 lần** (trừ khi xe cập nhật phần mềm chính hãng) |
-| 3 | Tải EX2 Store và MyEX2Center vào USB | 5 phút | – |
+| 3 | Tải EX2 Store về máy tính | 5 phút | – |
 | 4 | Cài EX2 Store bằng máy tính | 15 phút | **Chỉ 1 lần** |
 | 5–6 | Cài MyEX2Center **ngay trên xe**, mở và kiểm tra | 5 phút | – |
 | 8 | Cập nhật | 1 phút | Khi EX2 Store báo có bản mới |
@@ -206,35 +206,31 @@ Rút USB ra. Phần 2 xong.
 
 ---
 
-## 3. Tải EX2 Store và MyEX2Center vào USB
+## 3. Tải EX2 Store về máy tính
 
-Dùng lại USB của Phần 2 (định dạng FAT32). Gói mở khóa trên USB không cần nữa, bạn có thể xóa.
+Bạn **chỉ cần tải một file: EX2 Store**. MyEX2Center và các ứng dụng khác được cài **ngay trên xe** từ EX2 Store qua Wi-Fi (Phần 5).
 
 1. Mở trang phát hành chính thức: **https://github.com/ngocngo1213/MyEX2Center/releases**
-2. Tải **hai file** ở mục **Assets** của bản mới nhất:
+2. Ở bản **EX2 Store** mới nhất (tag `store-v…`, ví dụ `store-v1.0.0`), mục **Assets**, tải file **`EX2Store-<phiên bản>.apk`** về máy tính (thường vào thư mục `Downloads`). Các ví dụ dưới đây dùng **EX2Store-1.0.0.apk**.
 
-   | File | Ở bản phát hành | Dùng để |
-   |---|---|---|
-   | **`EX2Store-<phiên bản>.apk`** | tag `store-v…` (ví dụ `store-v1.0.0`) | Cài kho ứng dụng (Phần 4) |
-   | **`MyEX2Center-<phiên bản>.apk`** | tag `v…` (ví dụ `v1.0.0`) | Cài từ USB khi xe chưa có Wi-Fi (Phần 5, cách B) |
-
-   Các ví dụ dưới đây dùng **EX2 Store 1.0.0** và **MyEX2Center 1.0.0**. Nếu có bản mới hơn, hãy thay số phiên bản trong các lệnh.
-3. **Kiểm tra file không bị lỗi hay bị sửa** bằng mã SHA-256 ghi trong phần mô tả của từng bản phát hành.
-
-   **macOS** (Terminal, đứng ở thư mục chứa file, thường là `~/Downloads`):
+   Hoặc tải bằng Terminal (macOS):
    ```bash
-   shasum -a 256 EX2Store-1.0.0.apk MyEX2Center-1.0.0.apk
+   cd ~/Downloads && curl -LO https://github.com/ngocngo1213/MyEX2Center/releases/download/store-v1.0.0/EX2Store-1.0.0.apk
+   ```
+3. **Kiểm tra file không bị lỗi hay bị sửa** bằng mã SHA-256 ghi trong phần mô tả của bản phát hành.
+
+   **macOS** (Terminal, trong thư mục chứa file):
+   ```bash
+   shasum -a 256 EX2Store-1.0.0.apk
    ```
    **Windows** (PowerShell):
    ```powershell
    certutil -hashfile EX2Store-1.0.0.apk SHA256
-   certutil -hashfile MyEX2Center-1.0.0.apk SHA256
    ```
    Kết quả phải **trùng khớp** với mã trên trang Release. Không trùng → **không cài**, tải lại.
-4. Chép cả hai file vào **thư mục gốc** của USB, rồi tháo USB an toàn. Trên macOS, chạy thêm lệnh sau để xóa file ẩn của Mac trước khi tháo:
-   ```bash
-   dot_clean -m /Volumes/ATUALIZA
-   ```
+
+> [!TIP]
+> Xe **không có Wi-Fi**? Tải thêm **`MyEX2Center-<phiên bản>.apk`** (tag `v…`), chép vào **thư mục gốc** của USB (FAT32), rồi cài bằng cách B ở Phần 5.
 
 > [!NOTE]
 > Hai app là app hệ thống (`android.uid.system`), được ký bằng khóa *platform* (test-key AOSP) mà đầu xe IHU629G sử dụng. Nếu firmware của bạn dùng khóa khác, bước cài sẽ báo lỗi `SHARED_USER` (xem Phần 12). Bạn chỉ cần tải APK trên trang Release, không cần khóa nào.
@@ -316,7 +312,7 @@ Kết quả đúng:
 
 ### 4.5. Cài EX2 Store
 
-Xe vẫn ở **P**, máy tính vẫn đang nối với xe (mục 4.4). Đứng trong thư mục chứa file `EX2Store-1.0.0.apk` (thường là `~/Downloads`; file cũng có thể nằm trên USB):
+Xe vẫn ở **P**, máy tính vẫn đang nối với xe (mục 4.4). Đứng trong thư mục chứa file `EX2Store-1.0.0.apk` đã tải ở Phần 3 (thường là `~/Downloads`):
 
 ```bash
 adb install -r EX2Store-1.0.0.apk
@@ -345,7 +341,7 @@ Xong bước này, bạn có thể ngắt máy tính (`adb disconnect`). Từ đ
 
    **A. Qua Wi-Fi (khuyên dùng):** xe đã vào Wi-Fi (mục 4.2). Trên thẻ **MyEX2Center**, bấm **Cài đặt**. Store tự tải bản chính thức, kiểm tra SHA-256 rồi cài. Khi đang tải, nút đổi thành **"Hủy tải (x%)"**. Nếu bị gián đoạn, lần sau Store **tải tiếp** phần còn lại.
 
-   **B. Từ USB (không cần mạng):** cắm USB có file `MyEX2Center-1.0.0.apk` (Phần 3). Bấm **Cài từ USB / Máy** ở thanh trên của Store, rồi chọn đúng file MyEX2Center.
+   **B. Từ USB (khi xe không có Wi-Fi):** cắm USB có file `MyEX2Center-1.0.0.apk` (mẹo cuối Phần 3). Bấm **Cài từ USB / Máy** ở thanh trên của Store, rồi chọn đúng file MyEX2Center.
 
 3. Cài xong, thẻ MyEX2Center hiện **Đã cài**, kèm nút **Mở**.
 
@@ -423,16 +419,19 @@ Cài đè **giữ nguyên** cài đặt của bạn: tên xe, ảnh xe, giao di�
    |---|---|
    | **MyEX2Center** | **Cài đặt** / **Cập nhật** |
    | **EX2 Store** | **Cập nhật hệ thống** khi có bản mới |
-   | **SmartTube** (YouTube không quảng cáo) | Bấm **Cài đặt**: tự tải từ trang chính thức, kiểm tra SHA-256 rồi cài |
-   | **Trình duyệt Web** | Bấm **Cài đặt** |
-   | **VIETMAP LIVE** | **Cài từ USB / Máy**: chép file `.xapk` vào USB, cắm vào xe, bấm nút |
+   | **SmartTube** (YouTube không quảng cáo, cho màn hình ngang) | **Cài đặt** |
+   | **NewPipe** (YouTube nhẹ, phát nền, cửa sổ nổi) | **Cài đặt** |
+   | **PipePipe** (NewPipe có SponsorBlock) | **Cài đặt** |
+   | **OuterTune** (YouTube Music) | **Cài đặt** |
+   | **Kreate** (YouTube Music, kế nhiệm RiMusic) | **Cài đặt** |
+   | **Trình duyệt Web** | **Cài đặt** |
+   | **VIETMAP LIVE** | **Cài từ USB / Máy**: chép file `.apks` vào USB, cắm vào xe, bấm nút |
+
+   Với nút **Cài đặt**, Store tự tải bản chính thức (trang GitHub của từng dự án), kiểm tra SHA-256 rồi cài. Các app này không cần Google Play Services.
 
 4. Cài xong, nút chuyển thành **Mở**, kèm nút **thùng rác** để gỡ (có hỏi xác nhận).
 
-**Lưu ý về VIETMAP LIVE (.xapk):** gói hiện tại chỉ có bản cho CPU `armeabi-v7a`. Nếu đầu xe không hỗ trợ, Store sẽ báo *"Không tương thích CPU"* và không cài. Khi đó cần tìm bản Vietmap có `arm64-v8a`. Kiểm tra bằng máy tính:
-```bash
-adb shell getprop ro.product.cpu.abilist
-```
+**Lưu ý về VIETMAP LIVE (.apks):** gói có bản cho CPU 64-bit `arm64-v8a`, cần khoảng 340 MB trống để cài. Vietmap dùng một số dịch vụ của Google; trên đầu xe không có Google Play Services, định vị và bản đồ vẫn chạy nhưng thông báo đẩy và đăng nhập bằng Google có thể không dùng được.
 
 ---
 
