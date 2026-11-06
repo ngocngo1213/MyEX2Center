@@ -40,8 +40,7 @@ class BootReceiver : BroadcastReceiver() {
 
             // Check if floating overlay was enabled in preferences
             val prefs = context.getSharedPreferences(CarAutomationService.PREFS_NAME, Context.MODE_PRIVATE)
-            val floatingEnabled = prefs.getBoolean("key_floating_bubble_enabled", true)
-            if (floatingEnabled) {
+            if (FloatingControlService.isWanted(context)) {
                 val overlayServiceIntent = Intent(context, FloatingControlService::class.java)
                 context.startForegroundService(overlayServiceIntent)
             }

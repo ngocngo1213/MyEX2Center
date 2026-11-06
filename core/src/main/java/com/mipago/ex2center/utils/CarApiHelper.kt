@@ -77,17 +77,60 @@ class CarApiHelper private constructor() {
         const val PROP_WINDOW_POS = 322964416
         val WINDOW_AREAS = intArrayOf(16, 64, 256, 1024) // FL, FR, RL, RR
 
-        // Trunk/tailgate: no verified property yet. DOOR_POS (373295872) is READ-ONLY and only
-        // covers areas 1/4/16/64, so it cannot open the trunk. Feature removed until probed.
+        // Front trunk (frunk) — verified on the car (06/11/2026): the car's Settings opens it with
+        // DOOR_MOVE (AOSP 0x16400B01), area 0x10000000, boolean true. Closing is manual.
+        const val PROP_DOOR_MOVE = 0x16400B01 // 373295873
+        const val AREA_FRONT_TRUNK = 0x10000000
+
+        // Comfort settings — function values verified on the car (06/11/2026) by reading each option
+        // through the ECARX adapter while it was changed in the car UI:
+        //  Follow-me-home light (SETTING_FUNC_LAMP_HOME_SAFE_LIGHT): 0 = off, BASE+1/+2/+3 = 30/60/90 s.
+        const val PROP_FOLLOW_ME_HOME = 0x2140A122 // VEHIC_FOLLOWME_HOME_TIMESELECT
+        const val FOLLOW_ME_HOME_BASE = 537134848
+        //  Speed auto-lock (SETTING_FUNC_SPEED_AUTO_LOCKING_MODE): 0 = off, BASE+1 = 10 km/h, BASE+2 = 20 km/h.
+        const val PROP_SPEED_AUTO_LOCK = 0x21402015 // BODY_DOOR_AUTO_SPEEKLOCK_ON
+        const val SPEED_AUTO_LOCK_BASE = 739247104
+        //  Close windows when locking (SETTING_FUNC_AUTO_CLOSE_WINDOW): 1 = on, 0 = off.
+        const val PROP_AUTO_CLOSE_WINDOW = 0x21402018 // BODY_WINDOW_LOCK_AUTO_UP_ON
+        //  Slow front wiper when parked (SETTING_FUNC_FRONT_WIPER_IDLE): 1 = on, 0 = off.
+        const val PROP_WIPER_IDLE = 0x2140A134
+        // Low-beam height (LIGHT_HIGHT_SET) is intentionally NOT exposed: "Cao" read back as 0,
+        // which breaks the BASE+n pattern — writing it would be a guess (glare risk).
+
+        // Courtesy light when a door opens ("Đèn chào khi mở cửa") — verified: DOOR_CONTROL_LIGHT_SWITCH,
+        // function boolean true = ON (adapter -> raw 1 / 2).
+        const val PROP_COURTESY_LIGHT = 0x2140A152 // 557883730
 
         // ADAS (AEB / HDC / ESC / Auto Hold): intentionally not exposed. Only AEB 557858874 is
         // verified (field-catalog.md §6); the other IDs were guesses inside the real ADAS block and
         // writing a boolean to an unknown ADAS property is unsafe.
 
+        // NOTE: on IHU629G the car's CarPropertyManager goes through an ECARX adapter
+        // ("getAdaptValue"/"getProperValue"): apps read and write FUNCTION values and the adapter
+        // converts them to the raw VHAL values. Verified on the car (06/11/2026) from the logs of the
+        // car's own Settings / control center:
+        //
+        // Auto Hold — DRIVE_AUTO_HOLD: function value 1 = ON / 0 = OFF, read back as boolean
+        // (raw VHAL 1 = ON, 2 = OFF). The ESC confirms within ~0.15 s and remembers the setting
+        // across restarts, so no "Ghi nhớ" is needed.
+        const val PROP_AUTO_HOLD = 0x2140208B // 557850763
+
+        // Wireless phone charger — BODY_WIRELESS_CHARGING_ON, area 5: function value true = ON
+        // (the adapter handles the inverted raw value 0 = ON).
+        const val PROP_WIRELESS_CHARGING = 0x214020C7 // 557850823
+        const val WIRELESS_AREA = 5
+
+        // Brake / ESC fault flags — READ-ONLY diagnostics, never written. 0 = no fault reported.
+        const val PROP_ESC_ABS_FAILED = 0x2140A600
+        const val PROP_ESC_TCS_FAILED = 0x2140A601
+        const val PROP_ESC_ESP_FAILED = 0x2140A602
+        const val PROP_ESC_EPB_ERROR = 0x2140A603
+        const val PROP_ESC_EBD_FAILED = 0x2140A599
+        const val PROP_IPK_WARN_ESC_FAIL = 0x2140A586
+
         // Cabin ambient lighting master switch — verified (field-catalog.md §7): boolean, area 0.
         const val PROP_AMBIENT_LIGHT_ON = 557885013
 
-        // Front trunk (frunk): NO verified property in reference/ yet — intentionally absent.
 
         // TPMS — AOSP TIRE_PRESSURE 0x17600309 (WHEEL | FLOAT, kPa). Not yet confirmed on EX2;
         // the previous id 0x15400309 had SEAT|INT32 type bits and could never be read as float.
@@ -757,6 +800,128 @@ class CarApiHelper private constructor() {
             }
         }
         return ok
+    }
+
+    // -------------------------------------------------------------
+    // AUTO HOLD
+    // -------------------------------------------------------------
+    /** true = ON, false = OFF, null = unreadable. */
+    fun readAutoHold(): Boolean? {
+        val mgr = cpm ?: return null
+        return try { mgr.getBooleanProperty(PROP_AUTO_HOLD, 0) } catch (_: Throwable) { null }
+    }
+
+    /** Same call as the car's own Settings: function value 1 = ON, 0 = OFF (adapter -> raw 1 / 2). */
+    fun setAutoHold(on: Boolean): Boolean {
+        val mgr = cpm ?: return false
+        return try {
+            mgr.setIntProperty(PROP_AUTO_HOLD, 0, if (on) 1 else 0)
+            true
+        } catch (t: Throwable) {
+            Log.w(TAG, "setAutoHold error: ${t.message}")
+            false
+        }
+    }
+
+    // -------------------------------------------------------------
+    // WIRELESS PHONE CHARGER (SẠC KHÔNG DÂY)
+    // -------------------------------------------------------------
+    /** true = charger ON (function value; the adapter already undoes the inverted raw value). */
+    fun readWirelessCharging(): Boolean? {
+        val mgr = cpm ?: return null
+        for (area in intArrayOf(WIRELESS_AREA, 0)) {
+            try { return mgr.getBooleanProperty(PROP_WIRELESS_CHARGING, area) } catch (_: Throwable) {}
+        }
+        return null
+    }
+
+    fun setWirelessCharging(on: Boolean): Boolean {
+        val mgr = cpm ?: return false
+        return try {
+            mgr.setBooleanProperty(PROP_WIRELESS_CHARGING, WIRELESS_AREA, on)
+            true
+        } catch (t: Throwable) {
+            Log.w(TAG, "setWirelessCharging error: ${t.message}")
+            false
+        }
+    }
+
+    // -------------------------------------------------------------
+    // BRAKE / ESC DIAGNOSTICS (READ-ONLY)
+    // -------------------------------------------------------------
+    /** One read-only fault flag: [code] 0 = no fault, other = fault reported, null = unreadable. */
+    data class FaultFlag(val label: String, val code: Int?)
+
+    fun readBrakeDiagnostics(): List<FaultFlag> {
+        val mgr = cpm
+        fun read(id: Int): Int? = try { mgr?.getIntProperty(id, 0) } catch (_: Throwable) { null }
+        return listOf(
+            FaultFlag("Chống bó cứng phanh (ABS)", read(PROP_ESC_ABS_FAILED)),
+            FaultFlag("Cân bằng điện tử (ESP)", read(PROP_ESC_ESP_FAILED)),
+            FaultFlag("Kiểm soát lực kéo (TCS)", read(PROP_ESC_TCS_FAILED)),
+            FaultFlag("Phân bổ lực phanh (EBD)", read(PROP_ESC_EBD_FAILED)),
+            FaultFlag("Phanh tay điện tử (EPB)", read(PROP_ESC_EPB_ERROR)),
+            FaultFlag("Đèn cảnh báo ESC trên đồng hồ", read(PROP_IPK_WARN_ESC_FAIL))
+        )
+    }
+
+    // -------------------------------------------------------------
+    // COMFORT SETTINGS (function values through the ECARX adapter)
+    // -------------------------------------------------------------
+    /** Reads a function value through the adapter (Integer or Boolean): null when unreadable. */
+    fun readFunctionInt(prop: Int): Int? {
+        val mgr = cpm ?: return null
+        return try {
+            when (val v = mgr.getProperty(Any::class.java, prop, 0)?.value) {
+                is Int -> v
+                is Boolean -> if (v) 1 else 0
+                is Number -> v.toInt()
+                else -> null
+            }
+        } catch (_: Throwable) { null }
+    }
+
+    /** Writes a function value (the adapter converts it to the raw VHAL value). */
+    fun writeFunctionInt(prop: Int, value: Int): Boolean {
+        val mgr = cpm ?: return false
+        return try {
+            mgr.setIntProperty(prop, 0, value)
+            true
+        } catch (t: Throwable) {
+            Log.w(TAG, "writeFunctionInt 0x${Integer.toHexString(prop)} error: ${t.message}")
+            false
+        }
+    }
+
+    // -------------------------------------------------------------
+    // FRONT TRUNK / COURTESY LIGHT
+    // -------------------------------------------------------------
+    /** Opens the front trunk exactly like the car's Settings does. Callers must gate on Park. */
+    fun openFrontTrunk(): Boolean {
+        val mgr = cpm ?: return false
+        return try {
+            mgr.setBooleanProperty(PROP_DOOR_MOVE, AREA_FRONT_TRUNK, true)
+            true
+        } catch (t: Throwable) {
+            Log.w(TAG, "openFrontTrunk error: ${t.message}")
+            false
+        }
+    }
+
+    fun readCourtesyLight(): Boolean? {
+        val mgr = cpm ?: return null
+        return try { mgr.getBooleanProperty(PROP_COURTESY_LIGHT, 0) } catch (_: Throwable) { null }
+    }
+
+    fun setCourtesyLight(on: Boolean): Boolean {
+        val mgr = cpm ?: return false
+        return try {
+            mgr.setBooleanProperty(PROP_COURTESY_LIGHT, 0, on)
+            true
+        } catch (t: Throwable) {
+            Log.w(TAG, "setCourtesyLight error: ${t.message}")
+            false
+        }
     }
 
     // -------------------------------------------------------------

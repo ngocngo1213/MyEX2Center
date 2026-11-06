@@ -1,7 +1,7 @@
 package com.mipago.ex2center.ui
 
 import android.app.Activity
-import android.app.AlertDialog
+import com.mipago.ex2center.utils.AppDialog
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -32,6 +32,7 @@ import com.mipago.ex2center.service.CarAutomationService
 import com.mipago.ex2center.service.FloatingControlService
 import com.mipago.ex2center.utils.CarApiHelper
 import com.mipago.ex2center.utils.CarProfile
+import com.mipago.ex2center.utils.ParkGate
 import com.mipago.ex2center.utils.ThemeManager
 import com.mipago.ex2center.utils.UiStyle
 import com.mipago.ex2center.utils.WifiStatus
@@ -66,6 +67,16 @@ class SettingsActivity : Activity() {
     private lateinit var ambientSwitch: Switch
     private lateinit var ambientSubtitle: TextView
     private lateinit var guardSubtitle: TextView
+    private lateinit var safeVolumeSubtitle: TextView
+    private val diagSubtitles = mutableListOf<TextView>()
+    private lateinit var courtesySwitch: Switch
+    private lateinit var courtesySubtitle: TextView
+    private lateinit var followMeSubtitle: TextView
+    private lateinit var speedLockSubtitle: TextView
+    private lateinit var autoCloseSwitch: Switch
+    private lateinit var autoCloseSubtitle: TextView
+    private lateinit var wiperIdleSwitch: Switch
+    private lateinit var wiperIdleSubtitle: TextView
 
     private val periodicRefresh = object : Runnable {
         override fun run() {
@@ -90,6 +101,9 @@ class SettingsActivity : Activity() {
         super.onResume()
         bindProfile()
         refreshGuard()
+        refreshDiagnostics()
+        refreshCourtesy()
+        refreshComfortSettings()
         main.post(periodicRefresh)
     }
 
@@ -157,7 +171,9 @@ class SettingsActivity : Activity() {
         left.addView(profileSection())
         left.addView(appearanceSection())
         left.addView(connectionSection())
+        left.addView(comfortSection())
         right.addView(drivingSection())
+        right.addView(diagnosticsSection())
         right.addView(systemSection())
 
         val scroll = ScrollView(this).apply {
@@ -235,17 +251,21 @@ class SettingsActivity : Activity() {
             isChecked = checked
             UiStyle.styleSwitch(this)
             isSaveEnabled = false // never restore/replay a stale checked state on recreate
-            // Click (not OnCheckedChange): only a real tap may act. Programmatic updates from
-            // the car / Wi-Fi state must never write back — a replayed "false" would turn off
-            // the head unit's Wi-Fi.
-            setOnClickListener { onChange(isChecked) }
             // The whole row is the touch target: the 32dp switch itself takes no touches, so
-            // there is no small target inside a big one. (After setOnClickListener, which
-            // re-enables clickable.) Row taps call performClick(), which still toggles.
+            // there is no small target inside a big one.
             isClickable = false
             isFocusable = false
+            isSoundEffectsEnabled = false
         }
-        val (rowView, sub) = row(title, subtitle, sw) { sw.performClick() }
+        // Only a real tap acts (never OnCheckedChange): programmatic updates from the car / Wi-Fi
+        // state must never write back. The row toggles the switch directly instead of calling
+        // sw.performClick(), which played a second click sound for the same tap.
+        val (rowView, sub) = row(title, subtitle, sw) {
+            if (sw.isEnabled) {
+                sw.toggle()
+                onChange(sw.isChecked)
+            }
+        }
         if (addDivider && parent.childCount > 1) parent.addView(divider())
         parent.addView(rowView)
         return sw to sub
@@ -351,8 +371,244 @@ class SettingsActivity : Activity() {
             prefs.edit().putBoolean(CarAutomationService.KEY_VALET_MODE, on).apply()
             toast(if (on) "Chế độ Bảo dưỡng: ĐÃ BẬT" else "Chế độ Bảo dưỡng: ĐÃ TẮT")
         }
+        toggleRow(
+            card, "Giới hạn âm lượng khi bật xe", safeVolumeText(),
+            prefs.getBoolean(CarAutomationService.KEY_SAFE_VOLUME, false)
+        ) { on ->
+            prefs.edit().putBoolean(CarAutomationService.KEY_SAFE_VOLUME, on).apply()
+            safeVolumeSubtitle.text = safeVolumeText()
+        }.let { (_, sub) -> safeVolumeSubtitle = sub }
+        actionRow(card, "Mức âm lượng tối đa khi bật xe", null) { pickSafeVolume() }
         guardSubtitle = actionRow(card, "Crash Guard", "--") { resetGuard() }.second
         return card
+    }
+
+    /** Starts the overlay service with the new preferences (it stops itself when nothing is wanted). */
+    private fun syncOverlayService() {
+        startService(Intent(this, FloatingControlService::class.java).setAction(FloatingControlService.ACTION_SYNC_PREFS))
+    }
+
+    private fun safeVolumePercent() =
+        prefs.getInt(CarAutomationService.KEY_SAFE_VOLUME_PERCENT, CarAutomationService.DEFAULT_SAFE_VOLUME_PERCENT)
+
+    private fun safeVolumeText(): String =
+        if (prefs.getBoolean(CarAutomationService.KEY_SAFE_VOLUME, false))
+            "Nhạc hạ về tối đa ${safeVolumePercent()}% khi bật xe, tránh nhạc quá to"
+        else "Đang tắt: giữ nguyên âm lượng lần trước"
+
+    private fun pickSafeVolume() {
+        val options = intArrayOf(20, 30, 40, 50, 60)
+        val current = options.indexOf(safeVolumePercent()).coerceAtLeast(0)
+        AppDialog(this)
+            .setTitle("Âm lượng tối đa khi bật xe")
+            .setSingleChoiceItems(options.map { "$it%" }.toTypedArray(), current) { dialog, which ->
+                prefs.edit().putInt(CarAutomationService.KEY_SAFE_VOLUME_PERCENT, options[which]).apply()
+                safeVolumeSubtitle.text = safeVolumeText()
+                dialog.dismiss()
+            }
+            .setNegativeButton("Hủy", null)
+            .show()
+    }
+
+    /** Car comfort settings verified on the IHU629G (same calls as the car's own Settings). */
+    private fun comfortSection(): View {
+        val card = section("Xe & tiện nghi", R.drawable.ic_car)
+        toggleRow(card, "Đèn chào khi mở cửa", "Đang đọc từ xe...", false) { on -> setCourtesy(on) }.let { (sw, sub) ->
+            courtesySwitch = sw
+            courtesySubtitle = sub
+            sw.isEnabled = false
+        }
+        toggleRow(
+            card, "Mở camera 360 khi vào số D", "Từ P sang D lúc xe đứng yên: tự mở camera của xe để nhìn quanh xe",
+            prefs.getBoolean(CarAutomationService.KEY_CAMERA_ON_DRIVE, false)
+        ) { on -> prefs.edit().putBoolean(CarAutomationService.KEY_CAMERA_ON_DRIVE, on).apply() }
+        followMeSubtitle = actionRow(card, "Đèn dẫn đường về nhà", "Đang đọc từ xe...") {
+            pickFunction("Đèn dẫn đường về nhà", CarApiHelper.PROP_FOLLOW_ME_HOME, FOLLOW_ME_OPTIONS)
+        }.second
+        speedLockSubtitle = actionRow(card, "Tự khóa theo tốc độ", "Đang đọc từ xe...") {
+            pickFunction("Tự khóa theo tốc độ", CarApiHelper.PROP_SPEED_AUTO_LOCK, SPEED_LOCK_OPTIONS)
+        }.second
+        toggleRow(card, "Tự động đóng kính khi khóa xe", "Đang đọc từ xe...", false) { on ->
+            writeFunction("Tự động đóng kính khi khóa xe", CarApiHelper.PROP_AUTO_CLOSE_WINDOW, if (on) 1 else 0)
+        }.let { (sw, sub) -> autoCloseSwitch = sw; autoCloseSubtitle = sub; sw.isEnabled = false }
+        toggleRow(card, "Giảm tốc gạt mưa khi đỗ", "Đang đọc từ xe...", false) { on ->
+            writeFunction("Giảm tốc gạt mưa khi đỗ", CarApiHelper.PROP_WIPER_IDLE, if (on) 1 else 0)
+        }.let { (sw, sub) -> wiperIdleSwitch = sw; wiperIdleSubtitle = sub; sw.isEnabled = false }
+        actionRow(card, "Mở cốp trước", "Chỉ khi xe ở số P. Đóng cốp bằng tay") { confirmFrontTrunk() }
+        return card
+    }
+
+    private val FOLLOW_ME_OPTIONS = listOf(
+        "Tắt" to 0,
+        "30 giây" to CarApiHelper.FOLLOW_ME_HOME_BASE + 1,
+        "60 giây" to CarApiHelper.FOLLOW_ME_HOME_BASE + 2,
+        "90 giây" to CarApiHelper.FOLLOW_ME_HOME_BASE + 3
+    )
+    private val SPEED_LOCK_OPTIONS = listOf(
+        "Tắt" to 0,
+        "10 km/h" to CarApiHelper.SPEED_AUTO_LOCK_BASE + 1,
+        "20 km/h" to CarApiHelper.SPEED_AUTO_LOCK_BASE + 2
+    )
+
+    private fun optionLabel(options: List<Pair<String, Int>>, value: Int?): String =
+        options.firstOrNull { it.second == value }?.first
+            ?: if (value == null) (if (CarApiHelper.isCarApiPresent) "Không đọc được từ xe" else "Chỉ có trên xe") else "--"
+
+    /** Comfort settings read through the car's adapter (function values, see CarApiHelper). */
+    private fun refreshComfortSettings() {
+        try {
+            io.execute {
+                val followMe = carHelper.readFunctionInt(CarApiHelper.PROP_FOLLOW_ME_HOME)
+                val speedLock = carHelper.readFunctionInt(CarApiHelper.PROP_SPEED_AUTO_LOCK)
+                val autoClose = carHelper.readFunctionInt(CarApiHelper.PROP_AUTO_CLOSE_WINDOW)
+                val wiperIdle = carHelper.readFunctionInt(CarApiHelper.PROP_WIPER_IDLE)
+                main.post {
+                    if (isDestroyed) return@post
+                    followMeSubtitle.text = optionLabel(FOLLOW_ME_OPTIONS, followMe)
+                    speedLockSubtitle.text = optionLabel(SPEED_LOCK_OPTIONS, speedLock)
+                    bindFunctionSwitch(autoCloseSwitch, autoCloseSubtitle, autoClose, "Kính tự đóng hết khi khóa xe")
+                    bindFunctionSwitch(wiperIdleSwitch, wiperIdleSubtitle, wiperIdle, "Gạt mưa chạy chậm lại khi xe dừng")
+                }
+            }
+        } catch (_: Throwable) {}
+    }
+
+    private fun bindFunctionSwitch(sw: Switch, sub: TextView, value: Int?, onText: String) {
+        sw.isEnabled = value == 0 || value == 1
+        if (value == 0 || value == 1) setChecked(sw, value == 1)
+        sub.text = when (value) {
+            1 -> "Đang bật: $onText"
+            0 -> "Đang tắt"
+            null -> if (CarApiHelper.isCarApiPresent) "Không đọc được từ xe" else "Chỉ có trên xe"
+            else -> "--"
+        }
+    }
+
+    private fun pickFunction(title: String, prop: Int, options: List<Pair<String, Int>>) {
+        io.execute {
+            val current = carHelper.readFunctionInt(prop)
+            main.post {
+                if (isDestroyed) return@post
+                AppDialog(this)
+                    .setTitle(title)
+                    .setSingleChoiceItems(options.map { it.first }.toTypedArray(),
+                        options.indexOfFirst { it.second == current }) { dialog, which ->
+                        dialog.dismiss()
+                        writeFunction(title, prop, options[which].second)
+                    }
+                    .setNegativeButton("Hủy", null)
+                    .show()
+            }
+        }
+    }
+
+    /** Writes, then reads back: the toast only reports a failure the car itself confirms. */
+    private fun writeFunction(label: String, prop: Int, value: Int) {
+        io.execute {
+            val accepted = carHelper.writeFunctionInt(prop, value)
+            Thread.sleep(800L)
+            val back = carHelper.readFunctionInt(prop)
+            main.post {
+                if (isDestroyed) return@post
+                if (!accepted || back != value) toast("Xe không nhận lệnh: $label")
+                refreshComfortSettings()
+            }
+        }
+    }
+
+    private fun refreshCourtesy() {
+        try {
+            io.execute {
+                val on = carHelper.readCourtesyLight()
+                main.post {
+                    if (isDestroyed) return@post
+                    courtesySwitch.isEnabled = on != null
+                    if (on != null) setChecked(courtesySwitch, on)
+                    courtesySubtitle.text = when (on) {
+                        null -> if (CarApiHelper.isCarApiPresent) "Không đọc được từ xe" else "Chỉ có trên xe"
+                        true -> "Đang bật: đèn trong xe sáng khi mở cửa"
+                        false -> "Đang tắt"
+                    }
+                }
+            }
+        } catch (_: Throwable) {}
+    }
+
+    private fun setCourtesy(on: Boolean) {
+        courtesySwitch.isEnabled = false
+        courtesySubtitle.text = "Đang gửi lệnh..."
+        io.execute {
+            val accepted = carHelper.setCourtesyLight(on)
+            Thread.sleep(800L)
+            val back = carHelper.readCourtesyLight()
+            main.post {
+                if (isDestroyed) return@post
+                if (!accepted || back != on) toast("Xe không nhận lệnh: Đèn chào khi mở cửa")
+                refreshCourtesy()
+            }
+        }
+    }
+
+    private fun confirmFrontTrunk() {
+        AppDialog(this)
+            .setTitle("Mở cốp trước?")
+            .setMessage("Kiểm tra phía trước xe trống, không có người. Cốp cần đóng lại bằng tay.")
+            .setPositiveButton("Mở cốp") { _, _ ->
+                ParkGate.runIfAllowed(this) {
+                    io.execute {
+                        val ok = carHelper.openFrontTrunk()
+                        main.post { toast(if (ok) "Đã gửi lệnh mở cốp trước" else "Xe không nhận lệnh: Mở cốp trước") }
+                    }
+                }
+            }
+            .setNegativeButton("Hủy", null)
+            .show()
+    }
+
+    /** Read-only brake / ESC fault flags reported by the car (never written). */
+    private fun diagnosticsSection(): View {
+        val card = section("Chẩn đoán phanh & ESC", R.drawable.ic_auto_hold)
+        diagSubtitles.clear()
+        for (label in listOf(
+            "Chống bó cứng phanh (ABS)", "Cân bằng điện tử (ESP)", "Kiểm soát lực kéo (TCS)",
+            "Phân bổ lực phanh (EBD)", "Phanh tay điện tử (EPB)", "Đèn cảnh báo ESC trên đồng hồ"
+        )) {
+            val (rowView, sub) = row(label, "Đang đọc…", null, null)
+            if (card.childCount > 1) card.addView(divider())
+            card.addView(rowView)
+            diagSubtitles.add(sub)
+        }
+        card.addView(text("Chỉ đọc. Có lỗi thì xe cũng báo trên đồng hồ: hãy đưa xe tới đại lý kiểm tra.",
+            14f, R.color.text_muted).apply { setPadding(0, dp(8), 0, dp(8)) })
+        return card
+    }
+
+    private fun refreshDiagnostics() {
+        try {
+            io.execute {
+                val flags = carHelper.readBrakeDiagnostics()
+                main.post {
+                    if (isDestroyed) return@post
+                    flags.forEachIndexed { i, f ->
+                        val tv = diagSubtitles.getOrNull(i) ?: return@forEachIndexed
+                        when {
+                            f.code == null -> {
+                                tv.text = if (CarApiHelper.isCarApiPresent) "Không đọc được từ xe" else "Chỉ có trên xe"
+                                tv.setTextColor(color(R.color.text_secondary))
+                            }
+                            f.code == 0 -> {
+                                tv.text = "Bình thường"
+                                tv.setTextColor(color(R.color.accent_primary))
+                            }
+                            else -> {
+                                tv.text = "Xe báo lỗi (mã ${f.code})"
+                                tv.setTextColor(color(R.color.accent_danger))
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (_: Throwable) {}
     }
 
     private fun systemSection(): View {
@@ -362,8 +618,14 @@ class SettingsActivity : Activity() {
             prefs.getBoolean(FloatingControlService.KEY_FLOATING_BUBBLE_ENABLED, true)
         ) { on ->
             prefs.edit().putBoolean(FloatingControlService.KEY_FLOATING_BUBBLE_ENABLED, on).apply()
-            val intent = Intent(this, FloatingControlService::class.java)
-            if (on) startService(intent) else stopService(intent)
+            syncOverlayService()
+        }
+        toggleRow(
+            card, "Nhiệt độ & quạt trên thanh dưới", "Chỉnh nhanh nhiệt độ và mức quạt ngay trên thanh dưới của xe",
+            prefs.getBoolean(FloatingControlService.KEY_DOCK_CLIMATE_ENABLED, true)
+        ) { on ->
+            prefs.edit().putBoolean(FloatingControlService.KEY_DOCK_CLIMATE_ENABLED, on).apply()
+            syncOverlayService()
         }
         actionRow(card, "Kho ứng dụng", "Cài đặt và cập nhật ứng dụng cho xe") {
             com.mipago.ex2center.utils.StoreLauncher.open(this)
@@ -400,10 +662,9 @@ class SettingsActivity : Activity() {
             setSingleLine(true)
         }
         val box = LinearLayout(this).apply {
-            setPadding(dp(24), dp(8), dp(24), 0)
             addView(input, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         }
-        AlertDialog.Builder(this)
+        AppDialog(this)
             .setTitle("Tên xe")
             .setView(box)
             .setPositiveButton("Lưu") { _, _ ->
@@ -523,8 +784,9 @@ class SettingsActivity : Activity() {
     private fun setWifi(on: Boolean) {
         if (!on) {
             // Turning Wi-Fi off cuts the store, catalog updates and hotspot apps: confirm first.
-            AlertDialog.Builder(this)
+            AppDialog(this)
                 .setTitle("Tắt Wi-Fi?")
+                .setDestructive()
                 .setMessage("Kho ứng dụng và các ứng dụng cần mạng sẽ mất kết nối.")
                 .setPositiveButton("Tắt Wi-Fi") { _, _ -> applyWifi(false) }
                 .setNegativeButton("Hủy") { _, _ -> refreshConnections() }

@@ -1,7 +1,7 @@
 package com.mipago.ex2store
 
 import android.app.Activity
-import android.app.AlertDialog
+import com.mipago.ex2center.utils.AppDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -29,6 +29,7 @@ import com.mipago.ex2center.repository.AppRepository
 import com.mipago.ex2center.utils.LocalApkFinder
 import com.mipago.ex2center.utils.PackageInstallerHelper
 import com.mipago.ex2center.utils.ParkGate
+import com.mipago.ex2center.utils.PowerWhitelist
 import com.mipago.ex2center.utils.WifiStatus
 import java.io.File
 import java.io.FileOutputStream
@@ -180,11 +181,27 @@ class StoreActivity : Activity() {
                 adapter.notifyDataSetChanged()
                 tvEmptyState.visibility = View.GONE
                 appRepo.cleanupDownloads(apps)
+                ensureBatteryWhitelist(apps)
             } else {
                 tvEmptyState.visibility = View.VISIBLE
                 tvEmptyState.text = error ?: "Không có ứng dụng nào trong danh mục."
             }
         }
+    }
+
+    /**
+     * Installed catalog apps flagged `batteryWhitelist` (e.g. VIETMAP LIVE) are added to the
+     * battery-optimisation whitelist. Runs after every catalog load, i.e. right after each install
+     * (both success paths reload the catalog) and whenever the Store opens, so an app installed
+     * earlier or from elsewhere is fixed too. Idempotent; off the main thread.
+     */
+    private fun ensureBatteryWhitelist(apps: List<AppInfo>) {
+        val targets = apps.filter {
+            it.batteryWhitelist && PackageInstallerHelper.isPackageInstalled(this, it.packageName)
+        }.map { it.packageName }
+        if (targets.isEmpty()) return
+        val appContext = applicationContext
+        scanExecutor.execute { targets.forEach { PowerWhitelist.ensure(appContext, it) } }
     }
 
     private fun indexOf(app: AppInfo) = appList.indexOfFirst { it.packageName == app.packageName }
@@ -307,7 +324,7 @@ class StoreActivity : Activity() {
 
     private fun showDownloadErrorDialog(app: AppInfo, error: String?) {
         if (gone) return
-        val builder = AlertDialog.Builder(this)
+        val builder = AppDialog(this)
             .setTitle("Không thể tải ${app.name}")
             .setMessage("${error ?: "Lỗi kết nối"}\n\nBạn có thể thử lại, hoặc cắm USB chứa file .apk/.xapk để cài trực tiếp.")
             .setPositiveButton("Thử lại") { _, _ -> handleInstall(app) }
@@ -334,7 +351,7 @@ class StoreActivity : Activity() {
                     "${f.name} (%.1f MB)".format(java.util.Locale.US, f.length() / (1024.0 * 1024.0))
                 }.toMutableList()
                 items.add("Chọn tệp APK / APKS / XAPK khác...")
-                AlertDialog.Builder(this)
+                AppDialog(this)
                     .setTitle("Chọn file APK / APKS / XAPK trên USB / Thiết bị")
                     .setItems(items.toTypedArray()) { _, which ->
                         if (which < localApks.size) installLocalApkFile(localApks[which], null, null)
@@ -437,8 +454,9 @@ class StoreActivity : Activity() {
     }
 
     private fun handleUninstall(app: AppInfo) {
-        AlertDialog.Builder(this)
+        AppDialog(this)
             .setTitle("Xác nhận gỡ cài đặt")
+            .setDestructive()
             .setMessage("Bạn có chắc chắn muốn gỡ ứng dụng ${app.name} khỏi hệ thống không?")
             .setPositiveButton("Gỡ cài đặt") { _, _ ->
                 ParkGate.runIfAllowed(this) {

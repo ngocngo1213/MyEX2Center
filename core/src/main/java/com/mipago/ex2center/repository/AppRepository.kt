@@ -130,7 +130,17 @@ class AppRepository(private val context: Context) {
             val r = remoteByPkg[b.packageName]
             val bundledWins = r == null ||
                 (b.versionCode > r.versionCode && b.sha256.matches(SHA256_HEX))
-            result.add(if (bundledWins) b else r!!)
+            // batteryWhitelist only widens what the Store does for an installed app, so either
+            // source may set it (lets a new build fix apps before the signed catalog is pushed).
+            val chosen = when {
+                bundledWins -> b
+                b.batteryWhitelist && !r!!.batteryWhitelist -> r.copy(batteryWhitelist = true).also {
+                    it.status = r.status // copy() does not carry the mutable install state
+                    it.downloadProgress = r.downloadProgress
+                }
+                else -> r!!
+            }
+            result.add(chosen)
             seen.add(b.packageName)
         }
         for (r in remote) {
@@ -182,6 +192,7 @@ class AppRepository(private val context: Context) {
                     abis = abis,
                     minSdk = obj.optInt("minSdk", 0),
                     requiresPark = obj.optBoolean("requiresPark", true),
+                    batteryWhitelist = obj.optBoolean("batteryWhitelist", false),
                     // "self" = the app showing this catalog (EX2 Store, or MyEX2Center's built-in fallback).
                     isSelf = pkg == context.packageName
                 )

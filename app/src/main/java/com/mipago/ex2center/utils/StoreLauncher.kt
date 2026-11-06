@@ -1,13 +1,14 @@
 package com.mipago.ex2center.utils
 
 import android.app.Activity
-import android.app.AlertDialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import com.mipago.ex2center.R
 import com.mipago.ex2center.model.AppInfo
 import com.mipago.ex2center.repository.AppRepository
 import java.io.File
@@ -30,7 +31,7 @@ object StoreLauncher {
 
     fun open(activity: Activity) {
         if (launchStore(activity)) return
-        AlertDialog.Builder(activity)
+        AppDialog(activity)
             .setTitle("Cài EX2 Store")
             .setMessage(
                 "Việc cài và cập nhật ứng dụng (kể cả MyEX2Center) do ứng dụng riêng " +
@@ -62,17 +63,20 @@ object StoreLauncher {
     // ---------------------------------------------------------------------------------------
 
     private class Progress(activity: Activity, title: String) {
-        val text = TextView(activity).apply { textSize = 18f }
+        val text = TextView(activity).apply {
+            textSize = 18f
+            setTextColor(activity.getColor(R.color.text_secondary))
+            setPadding(0, 0, 0, (12 * activity.resources.displayMetrics.density).toInt())
+        }
         val bar = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
             max = 100; isIndeterminate = true
         }
         var onCancel: (() -> Unit)? = null
-        val dialog: AlertDialog = AlertDialog.Builder(activity)
+        val builder = AppDialog(activity)
+        val dialog: android.app.Dialog = builder
             .setTitle(title)
             .setView(LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
-                val pad = (24 * activity.resources.displayMetrics.density).toInt()
-                setPadding(pad, pad / 2, pad, 0)
                 addView(text); addView(bar)
             })
             .setNegativeButton("Hủy") { _, _ -> onCancel?.invoke() }
@@ -150,7 +154,7 @@ object StoreLauncher {
 
     private fun install(activity: Activity, file: File, progress: Progress, deleteAfter: Boolean) {
         progress.set("Đang cài EX2 Store…")
-        progress.dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.isEnabled = false
+        progress.builder.getButton(DialogInterface.BUTTON_NEGATIVE)?.isEnabled = false
         PackageInstallerHelper.install(activity, file, STORE_PACKAGE) { r ->
             if (deleteAfter) try { file.delete() } catch (_: Throwable) {}
             activity.runOnUiThread {
@@ -166,7 +170,7 @@ object StoreLauncher {
     }
 
     private fun fail(activity: Activity, message: String) {
-        AlertDialog.Builder(activity)
+        AppDialog(activity)
             .setTitle("EX2 Store")
             .setMessage(message)
             .setPositiveButton("Đóng", null)

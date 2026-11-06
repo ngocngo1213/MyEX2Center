@@ -1,7 +1,7 @@
 package com.mipago.ex2center.ui
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
+import com.mipago.ex2center.utils.AppDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -651,6 +651,8 @@ class OverlayViewManager(private val context: Context) {
      */
     var onOverlayClosed: (() -> Unit)? = null
 
+    val isBlackoutShowing: Boolean get() = blackoutView != null
+
     /** True while any overlay window (bubble, panel, Blackout, split bar) is attached. */
     val hasVisibleOverlay: Boolean
         get() = bubbleView != null || panelView != null || blackoutView != null || splitControlView != null
@@ -837,7 +839,9 @@ class OverlayViewManager(private val context: Context) {
 
     private fun showRebootDialog() {
         try {
-            val builder = AlertDialog.Builder(context)
+            val builder = AppDialog(context)
+                .asOverlay()
+                .setDestructive()
                 .setTitle(context.getString(R.string.confirm_reboot_title))
                 .setMessage(context.getString(R.string.confirm_reboot_msg))
                 .setPositiveButton(context.getString(R.string.btn_confirm)) { _, _ ->
@@ -847,7 +851,6 @@ class OverlayViewManager(private val context: Context) {
                 .setNegativeButton(context.getString(R.string.btn_cancel), null)
 
             val dialog = builder.create()
-            dialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
             dialog.show()
         } catch (t: Throwable) {
             Log.e(TAG, "Failed to display reboot confirmation dialog: ${t.message}", t)

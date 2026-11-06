@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import com.mipago.ex2center.R
+import com.mipago.ex2center.ui.DockClimateOverlay
 import com.mipago.ex2center.ui.MainActivity
 import com.mipago.ex2center.ui.OverlayViewManager
 import com.mipago.ex2center.utils.CarApiHelper
@@ -32,6 +33,16 @@ class FloatingControlService : Service() {
         const val ACTION_HIDE_SPLIT_CONTROL = "com.mipago.ex2center.action.HIDE_SPLIT_CONTROL"
 
         const val KEY_FLOATING_BUBBLE_ENABLED = "key_floating_bubble_enabled"
+        /** "Nhiệt độ & quạt trên thanh dưới" (DockClimateOverlay), on by default. */
+        const val KEY_DOCK_CLIMATE_ENABLED = "key_dock_climate_enabled"
+        /** Re-read the bubble / dock-label preferences and show or hide them accordingly. */
+        const val ACTION_SYNC_PREFS = "com.mipago.ex2center.action.SYNC_OVERLAY_PREFS"
+
+        /** True when some overlay preference needs this service running. */
+        fun isWanted(context: Context): Boolean {
+            val p = context.getSharedPreferences(CarAutomationService.PREFS_NAME, Context.MODE_PRIVATE)
+            return p.getBoolean(KEY_FLOATING_BUBBLE_ENABLED, true) || p.getBoolean(KEY_DOCK_CLIMATE_ENABLED, true)
+        }
         private const val VHAL_HOLDER = "floating-service"
     }
 
@@ -40,7 +51,23 @@ class FloatingControlService : Service() {
         getSharedPreferences(CarAutomationService.PREFS_NAME, Context.MODE_PRIVATE)
             .getBoolean(KEY_FLOATING_BUBBLE_ENABLED, true)
 
+    private fun isDockClimateEnabled(): Boolean =
+        getSharedPreferences(CarAutomationService.PREFS_NAME, Context.MODE_PRIVATE)
+            .getBoolean(KEY_DOCK_CLIMATE_ENABLED, true)
+
     private var overlayViewManager: OverlayViewManager? = null
+    private var dockClimate: DockClimateOverlay? = null
+
+    private fun syncDockClimate() {
+        if (isDockClimateEnabled()) {
+            val dock = dockClimate ?: DockClimateOverlay(com.mipago.ex2center.utils.ThemeManager.wrap(this)).also { dockClimate = it }
+            dock.show()
+            dock.setBlocked(overlayViewManager?.isBlackoutShowing == true)
+        } else {
+            dockClimate?.release()
+            dockClimate = null
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -48,9 +75,13 @@ class FloatingControlService : Service() {
         // The overlay reads/writes HVAC and watches the gear for Blackout: hold the shared link.
         CarApiHelper.getInstance().acquire(this, VHAL_HOLDER)
         overlayViewManager = OverlayViewManager(com.mipago.ex2center.utils.ThemeManager.wrap(this)).also {
-            it.onOverlayClosed = { stopIfIdle() }
+            it.onOverlayClosed = {
+                dockClimate?.setBlocked(it.isBlackoutShowing)
+                stopIfIdle()
+            }
         }
         if (isBubbleEnabled()) overlayViewManager?.showBubble()
+        syncDockClimate()
     }
 
     /**
@@ -58,7 +89,7 @@ class FloatingControlService : Service() {
      * are closed, stop so it does not keep a foreground notification and the VHAL link alive.
      */
     private fun stopIfIdle() {
-        if (isBubbleEnabled()) return
+        if (isBubbleEnabled() || isDockClimateEnabled()) return
         if (overlayViewManager?.hasVisibleOverlay == true) return
         stopSelf()
     }
@@ -72,8 +103,17 @@ class FloatingControlService : Service() {
                 overlayViewManager?.deactivateBlackoutMode()
                 stopSelf()
             }
+            ACTION_SYNC_PREFS -> {
+                if (isBubbleEnabled()) overlayViewManager?.showBubble() else {
+                    overlayViewManager?.hideBubble()
+                    overlayViewManager?.hidePanel()
+                }
+                syncDockClimate()
+                stopIfIdle()
+            }
             ACTION_TRIGGER_BLACKOUT -> {
                 overlayViewManager?.activateBlackoutMode()
+                dockClimate?.setBlocked(overlayViewManager?.isBlackoutShowing == true)
                 stopIfIdle() // stops only if the window could not be added
             }
             ACTION_SHOW_SPLIT_CONTROL -> {
@@ -92,6 +132,8 @@ class FloatingControlService : Service() {
     }
 
     override fun onDestroy() {
+        dockClimate?.release()
+        dockClimate = null
         overlayViewManager?.release()
         overlayViewManager = null
         CarApiHelper.getInstance().release(VHAL_HOLDER)

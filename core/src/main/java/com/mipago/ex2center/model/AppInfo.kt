@@ -7,6 +7,8 @@ package com.mipago.ex2center.model
  * [abis] lists the native ABIs the package ships (empty = no native code / unknown).
  * [apkUrl] may be empty: the app is then "not published" and can only be installed from USB/local.
  * [isSelf] marks MyEX2Center itself (self-update: no uninstall button, process restarts).
+ * [batteryWhitelist]: EX2 Store adds the installed app to the battery-optimisation whitelist
+ * (navigation apps that must run in the background; see PowerWhitelist).
  */
 data class AppInfo(
     val name: String,
@@ -24,7 +26,8 @@ data class AppInfo(
     val abis: List<String> = emptyList(),
     val minSdk: Int = 0,
     val requiresPark: Boolean = true,
-    val isSelf: Boolean = false
+    val isSelf: Boolean = false,
+    val batteryWhitelist: Boolean = false
 ) {
     companion object {
         const val TYPE_APK = "apk"

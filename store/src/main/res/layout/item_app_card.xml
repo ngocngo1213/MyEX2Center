@@ -9,6 +9,7 @@
 
     <!-- Top Row: Icon (Left) & Status Badge (Right) -->
     <LinearLayout
+        android:baselineAligned="false"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -118,6 +119,7 @@
 
     <!-- 2. Installed State: Open Button (75%) + Delete Button (25%) -->
     <LinearLayout
+        android:baselineAligned="false"
         android:id="@+id/layoutInstalledActions"
         android:layout_width="match_parent"
         android:layout_height="56dp"

@@ -1,9 +1,11 @@
 package com.mipago.ex2center.ui
 
 import android.app.Activity
-import android.app.AlertDialog
+import com.mipago.ex2center.utils.AppDialog
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.media.AudioManager
@@ -62,6 +64,7 @@ class MainActivity : Activity() {
     companion object {
         private const val TAG = "MainActivity"
         private const val WINDOW_OPEN_MAX_KMH = 30f
+        private const val PKG_SURROUND_CAMERA = "com.ecarx.parking"
         private const val VHAL_HOLDER = "dashboard"
 
         private const val TEMP_MIN = 17
@@ -84,6 +87,8 @@ class MainActivity : Activity() {
         private const val K_REGEN = "regen"
         private const val K_AVAS = "avas"
         private const val K_AMBIENT = "ambient"
+        private const val K_AUTO_HOLD = "auto_hold"
+        private const val K_WIRELESS = "wireless"
 
         private val WATCH_PROPS = intArrayOf(
             CarApiHelper.PROP_GEAR,
@@ -98,7 +103,9 @@ class MainActivity : Activity() {
             CarApiHelper.PROP_DRIVE,
             CarApiHelper.PROP_REGEN,
             CarApiHelper.PROP_WINDOW_POS,
-            CarApiHelper.PROP_AMBIENT_LIGHT_ON
+            CarApiHelper.PROP_AMBIENT_LIGHT_ON,
+            CarApiHelper.PROP_AUTO_HOLD,
+            CarApiHelper.PROP_WIRELESS_CHARGING
         )
     }
 
@@ -114,7 +121,9 @@ class MainActivity : Activity() {
         val drive: Int? = null,
         val regen: Int? = null,
         val avas: Int? = null,
-        val ambient: Boolean? = null
+        val ambient: Boolean? = null,
+        val autoHold: Boolean? = null,
+        val wireless: Boolean? = null
     )
 
     private data class MediaInfo(val title: String?, val isPlaying: Boolean)
@@ -173,6 +182,10 @@ class MainActivity : Activity() {
     private lateinit var btnAvasToggle: LinearLayout
     private lateinit var btnAmbientLight: LinearLayout
     private lateinit var tvAmbientLabel: TextView
+    private lateinit var btnAutoHold: LinearLayout
+    private lateinit var tvAutoHoldLabel: TextView
+    private lateinit var btnWirelessCharge: LinearLayout
+    private lateinit var tvWirelessLabel: TextView
     private lateinit var tvAvasLabel: TextView
     private lateinit var btnCamera360: LinearLayout
     private lateinit var btnValetMode: LinearLayout
@@ -294,6 +307,8 @@ class MainActivity : Activity() {
         mainHandler.post(clockRunnable)
         setupWifiInfo()
         updateAutomationPillUI()
+        syncVolumeFromSystem() // may have changed while another screen was in front
+        registerReceiver(volumeReceiver, IntentFilter("android.media.VOLUME_CHANGED_ACTION"))
 
         // Start 3-second background polling via ScheduledExecutorService (no main thread blocking)
         telemetryFuture?.cancel(false)
@@ -309,6 +324,7 @@ class MainActivity : Activity() {
     }
 
     override fun onPause() {
+        try { unregisterReceiver(volumeReceiver) } catch (_: Throwable) {}
         mainHandler.removeCallbacks(clockRunnable)
         mainHandler.removeCallbacks(eventRefresh)
         val token = watchToken
@@ -375,6 +391,10 @@ class MainActivity : Activity() {
         btnAvasToggle = findViewById(R.id.btnAvasToggle)
         btnAmbientLight = findViewById(R.id.btnAmbientLight)
         tvAmbientLabel = findViewById(R.id.tvAmbientLabel)
+        btnAutoHold = findViewById(R.id.btnAutoHold)
+        tvAutoHoldLabel = findViewById(R.id.tvAutoHoldLabel)
+        btnWirelessCharge = findViewById(R.id.btnWirelessCharge)
+        tvWirelessLabel = findViewById(R.id.tvWirelessLabel)
         tvAvasLabel = findViewById(R.id.tvAvasLabel)
         btnCamera360 = findViewById(R.id.btnCamera360)
         btnValetMode = findViewById(R.id.btnValetMode)
@@ -436,7 +456,7 @@ class MainActivity : Activity() {
         btnSpeedLimitSign = findViewById(R.id.btnSpeedLimitSign)
         tvSpeedLimitValue = findViewById(R.id.tvSpeedLimitValue)
         // No verified source for the road speed limit yet — never show a made-up number.
-        tvSpeedLimitValue.text = "--"
+        tvSpeedLimitValue.setTextIfChanged("--")
 
         setupVolumeControl()
         updateAutomationPillUI()
@@ -446,31 +466,53 @@ class MainActivity : Activity() {
     private fun updateDigitalClock() {
         val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
         val timeStr = sdf.format(Date())
-        tvDigitalClock.text = timeStr
+        tvDigitalClock.setTextIfChanged(timeStr)
     }
 
     private fun setupWifiInfo() {
         val wifi = WifiStatus.read(this)
-        tvWifiSsid.text = wifi.ssidLabel
-        tvWifiIp.text = wifi.ip
+        tvWifiSsid.setTextIfChanged(wifi.ssidLabel)
+        tvWifiIp.setTextIfChanged(wifi.ip)
+    }
+
+    private var isTrackingVolume = false
+
+    /**
+     * Volume changed elsewhere (steering-wheel keys, the car's own volume bar, another app):
+     * the system broadcasts VOLUME_CHANGED_ACTION, so the Dashboard slider follows at once.
+     */
+    private val volumeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val stream = intent?.getIntExtra("android.media.EXTRA_VOLUME_STREAM_TYPE", -1) ?: -1
+            if (stream == -1 || stream == AudioManager.STREAM_MUSIC) syncVolumeFromSystem()
+        }
+    }
+
+    /** Reflects the real media volume on the slider (never while the driver is dragging it). */
+    private fun syncVolumeFromSystem() {
+        if (isTrackingVolume) return
+        val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        val current = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+        if (sbVolume.max != max) sbVolume.max = max
+        if (sbVolume.progress != current) sbVolume.progress = current
+        tvVolumeValue.setTextIfChanged(current.toString())
     }
 
     private fun setupVolumeControl() {
-        val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-        sbVolume.max = maxVolume
-        sbVolume.progress = currentVolume
-        tvVolumeValue.text = currentVolume.toString()
+        syncVolumeFromSystem()
 
         sbVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
                     audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0)
-                    tvVolumeValue.text = progress.toString()
+                    tvVolumeValue.setTextIfChanged(progress.toString())
                 }
             }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStartTrackingTouch(seekBar: SeekBar?) { isTrackingVolume = true }
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                isTrackingVolume = false
+                syncVolumeFromSystem()
+            }
         })
     }
 
@@ -485,7 +527,7 @@ class MainActivity : Activity() {
             carHelper.connect(this) // re-establish after suspend/wake; cheap no-op if in progress
             runOnUiThread {
                 applyFallbackTelemetry()
-                applyMediaInfo(media)
+                applyMediaInfoAndVolume(media)
             }
             return
         }
@@ -506,7 +548,7 @@ class MainActivity : Activity() {
             runOnUiThread {
                 lastControls = controls
                 renderControls()
-                applyMediaInfo(media)
+                applyMediaInfoAndVolume(media)
                 applySpeedLimit(speedLimit)
                 applyTelemetryData(
                     speed = speed,
@@ -523,7 +565,7 @@ class MainActivity : Activity() {
             Log.w(TAG, "Error polling background telemetry: ${t.message}")
             runOnUiThread {
                 applyFallbackTelemetry()
-                applyMediaInfo(media)
+                applyMediaInfoAndVolume(media)
             }
         }
     }
@@ -539,43 +581,43 @@ class MainActivity : Activity() {
         winPos: Array<Int?>
     ) {
         // Speed & Gear
-        tvSpeedValue.text = if (speed != null) speed.toInt().toString() else "--"
+        tvSpeedValue.setTextIfChanged(if (speed != null) speed.toInt().toString() else "--")
         updateGearUI(gear ?: -1)
 
         // Battery SoC & Estimated Range
         if (soc != null) {
-            tvBatterySoc.text = "${soc.toInt()}%"
+            tvBatterySoc.setTextIfChanged("${soc.toInt()}%")
             pbBatterySoc.progress = soc.toInt()
         } else {
-            tvBatterySoc.text = "--%"
+            tvBatterySoc.setTextIfChanged("--%")
             pbBatterySoc.progress = 0
         }
 
-        tvEstimatedRange.text = if (range != null) "${range.toInt()} km" else "-- km"
+        tvEstimatedRange.setTextIfChanged(if (range != null) "${range.toInt()} km" else "-- km")
 
         // Outside Temp & 12V Battery
-        tvOutsideTemp.text = if (outsideTemp != null) "${outsideTemp.toInt()}°C" else "--°C"
+        tvOutsideTemp.setTextIfChanged(if (outsideTemp != null) "${outsideTemp.toInt()}°C" else "--°C")
         if (v12 != null) {
-            tvBattery12v.text = String.format(Locale.US, "%.1f V • Ắc quy", v12)
+            tvBattery12v.setTextIfChanged(String.format(Locale.US, "%.1f V • Ắc quy", v12))
             if (v12 < 12.0f) {
                 tvBattery12v.setTextColor(getColor(R.color.accent_danger)) // Red alert
             } else {
                 tvBattery12v.setTextColor(getColor(R.color.accent_primary)) // Emerald normal
             }
         } else {
-            tvBattery12v.text = "-- V • Ắc quy"
+            tvBattery12v.setTextIfChanged("-- V • Ắc quy")
             tvBattery12v.setTextColor(getColor(R.color.text_secondary))
         }
 
         // TPMS
-        tvTpmsFlKpa.text = if (tpms.flKpa != null) "${tpms.flKpa} kPa" else "-- kPa"
-        tvTpmsFlTemp.text = if (tpms.flTemp != null) "${tpms.flTemp}°C" else "--°C"
-        tvTpmsFrKpa.text = if (tpms.frKpa != null) "${tpms.frKpa} kPa" else "-- kPa"
-        tvTpmsFrTemp.text = if (tpms.frTemp != null) "${tpms.frTemp}°C" else "--°C"
-        tvTpmsRlKpa.text = if (tpms.rlKpa != null) "${tpms.rlKpa} kPa" else "-- kPa"
-        tvTpmsRlTemp.text = if (tpms.rlTemp != null) "${tpms.rlTemp}°C" else "--°C"
-        tvTpmsRrKpa.text = if (tpms.rrKpa != null) "${tpms.rrKpa} kPa" else "-- kPa"
-        tvTpmsRrTemp.text = if (tpms.rrTemp != null) "${tpms.rrTemp}°C" else "--°C"
+        tvTpmsFlKpa.setTextIfChanged(if (tpms.flKpa != null) "${tpms.flKpa} kPa" else "-- kPa")
+        tvTpmsFlTemp.setTextIfChanged(if (tpms.flTemp != null) "${tpms.flTemp}°C" else "--°C")
+        tvTpmsFrKpa.setTextIfChanged(if (tpms.frKpa != null) "${tpms.frKpa} kPa" else "-- kPa")
+        tvTpmsFrTemp.setTextIfChanged(if (tpms.frTemp != null) "${tpms.frTemp}°C" else "--°C")
+        tvTpmsRlKpa.setTextIfChanged(if (tpms.rlKpa != null) "${tpms.rlKpa} kPa" else "-- kPa")
+        tvTpmsRlTemp.setTextIfChanged(if (tpms.rlTemp != null) "${tpms.rlTemp}°C" else "--°C")
+        tvTpmsRrKpa.setTextIfChanged(if (tpms.rrKpa != null) "${tpms.rrKpa} kPa" else "-- kPa")
+        tvTpmsRrTemp.setTextIfChanged(if (tpms.rrTemp != null) "${tpms.rrTemp}°C" else "--°C")
 
         renderTire(tvTpmsFlKpa, vWheelFl, tpms.flKpa)
         renderTire(tvTpmsFrKpa, vWheelFr, tpms.frKpa)
@@ -583,9 +625,9 @@ class MainActivity : Activity() {
         renderTire(tvTpmsRrKpa, vWheelRr, tpms.rrKpa)
         if (tpms.isValid) {
             val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-            tvTpmsUpdated.text = "Cập nhật ${sdf.format(Date())}"
+            tvTpmsUpdated.setTextIfChanged("Cập nhật ${sdf.format(Date())}")
         } else {
-            tvTpmsUpdated.text = "Xe không cung cấp dữ liệu áp suất lốp"
+            tvTpmsUpdated.setTextIfChanged("Chưa có dữ liệu lốp từ xe")
         }
 
         // Window Positions (real VHAL readback only)
@@ -596,8 +638,13 @@ class MainActivity : Activity() {
 
     /** Speed limit sign: real value from the car or "--" (never a guessed number). */
     private fun applySpeedLimit(limit: CarApiHelper.SpeedLimit?) {
-        tvSpeedLimitValue.text = limit?.kmh?.toString() ?: "--"
-        tvSpeedLimitValue.setTextSize(TypedValue.COMPLEX_UNIT_SP, if ((limit?.kmh ?: 0) >= 100) 20f else 22f)
+        tvSpeedLimitValue.setTextIfChanged(limit?.kmh?.toString() ?: "--")
+        val sizeSp = if ((limit?.kmh ?: 0) >= 100) 20f else 22f
+        // setTextSize() always requests a layout pass: only call it when the size really changes.
+        if (tvSpeedLimitValue.tag != sizeSp) {
+            tvSpeedLimitValue.setTextSize(TypedValue.COMPLEX_UNIT_SP, sizeSp)
+            tvSpeedLimitValue.tag = sizeSp
+        }
         btnSpeedLimitSign.contentDescription =
             limit?.let { "Giới hạn tốc độ ${it.kmh} km/h" } ?: "Giới hạn tốc độ: chưa có dữ liệu"
         if (limit?.source != lastSpeedLimitSource) {
@@ -609,24 +656,24 @@ class MainActivity : Activity() {
 
     private fun applyFallbackTelemetry() {
         applySpeedLimit(null)
-        tvSpeedValue.text = "--"
+        tvSpeedValue.setTextIfChanged("--")
         updateGearUI(-1)
-        tvBatterySoc.text = "--%"
+        tvBatterySoc.setTextIfChanged("--%")
         pbBatterySoc.progress = 0
-        tvEstimatedRange.text = "-- km"
-        tvOutsideTemp.text = "--°C"
-        tvBattery12v.text = "-- V • Ắc quy"
+        tvEstimatedRange.setTextIfChanged("-- km")
+        tvOutsideTemp.setTextIfChanged("--°C")
+        tvBattery12v.setTextIfChanged("-- V • Ắc quy")
         tvBattery12v.setTextColor(getColor(R.color.text_secondary))
 
-        tvTpmsFlKpa.text = "-- kPa"
-        tvTpmsFlTemp.text = "--°C"
-        tvTpmsFrKpa.text = "-- kPa"
-        tvTpmsFrTemp.text = "--°C"
-        tvTpmsRlKpa.text = "-- kPa"
-        tvTpmsRlTemp.text = "--°C"
-        tvTpmsRrKpa.text = "-- kPa"
-        tvTpmsRrTemp.text = "--°C"
-        tvTpmsUpdated.text = "Chưa kết nối xe"
+        tvTpmsFlKpa.setTextIfChanged("-- kPa")
+        tvTpmsFlTemp.setTextIfChanged("--°C")
+        tvTpmsFrKpa.setTextIfChanged("-- kPa")
+        tvTpmsFrTemp.setTextIfChanged("--°C")
+        tvTpmsRlKpa.setTextIfChanged("-- kPa")
+        tvTpmsRlTemp.setTextIfChanged("--°C")
+        tvTpmsRrKpa.setTextIfChanged("-- kPa")
+        tvTpmsRrTemp.setTextIfChanged("--°C")
+        tvTpmsUpdated.setTextIfChanged("Chưa kết nối xe")
         listOf(tvTpmsFlKpa to vWheelFl, tvTpmsFrKpa to vWheelFr, tvTpmsRlKpa to vWheelRl, tvTpmsRrKpa to vWheelRr)
             .forEach { (tv, wheel) -> renderTire(tv, wheel, null) }
         updateWindowPositionUI(arrayOfNulls(4))
@@ -650,7 +697,7 @@ class MainActivity : Activity() {
     }
 
     private fun bindCarProfile() {
-        tvHeaderCarName.text = CarProfile.getName(this)
+        tvHeaderCarName.setTextIfChanged(CarProfile.getName(this))
         CarProfile.bindPhoto(this, ivHeaderCarAvatar)
     }
 
@@ -685,7 +732,9 @@ class MainActivity : Activity() {
         drive = carHelper.readDriveMode(),
         regen = carHelper.readRegenMode(),
         avas = carHelper.getAvasMode(),
-        ambient = carHelper.readAmbientLight()
+        ambient = carHelper.readAmbientLight(),
+        autoHold = carHelper.readAutoHold(),
+        wireless = carHelper.readWirelessCharging()
     )
 
     /** Runs on [telemetryExecutor]. Registers VHAL push events once per connection. */
@@ -725,12 +774,17 @@ class MainActivity : Activity() {
         return MediaInfo(title, playing)
     }
 
+    private fun applyMediaInfoAndVolume(info: MediaInfo) {
+        applyMediaInfo(info)
+        syncVolumeFromSystem()
+    }
+
     private fun applyMediaInfo(info: MediaInfo) {
-        tvMediaTitle.text = when {
+        tvMediaTitle.setTextIfChanged(when {
             info.title != null -> info.title
             info.isPlaying -> "Đang phát"
             else -> "Chưa có nội dung đang phát"
-        }
+        })
         btnMediaPlayPause.setImageResource(if (info.isPlaying) R.drawable.ic_pause else R.drawable.ic_play)
     }
 
@@ -754,7 +808,9 @@ class MainActivity : Activity() {
             drive = pending.resolve(K_DRIVE, c.drive, rejectToast("Chế độ lái")),
             regen = pending.resolve(K_REGEN, c.regen, rejectToast("Phanh tái sinh")),
             avas = pending.resolve(K_AVAS, c.avas, rejectToast("AVAS")),
-            ambient = pending.resolve(K_AMBIENT, c.ambient, rejectToast("Đèn viền"))
+            ambient = pending.resolve(K_AMBIENT, c.ambient, rejectToast("Đèn viền")),
+            autoHold = pending.resolve(K_AUTO_HOLD, c.autoHold, rejectToast("Auto Hold")),
+            wireless = pending.resolve(K_WIRELESS, c.wireless, rejectToast("Sạc không dây"))
         )
         val s = shown
 
@@ -764,16 +820,16 @@ class MainActivity : Activity() {
         renderCompound(btnDefrostRear, s.defrostRear)
 
         // While a slider is being dragged its readout shows the dragged value, not the last poll.
-        if (!isTrackingTempSlider) tvClimateTargetTemp.text = s.tempC?.let { "$it°C" } ?: "--°C"
+        if (!isTrackingTempSlider) tvClimateTargetTemp.setTextIfChanged(s.tempC?.let { "$it°C" } ?: "--°C")
         if (!isTrackingTempSlider && s.tempC != null) {
             sbTempGradient.progress = (s.tempC - TEMP_MIN).coerceIn(0, TEMP_MAX - TEMP_MIN)
         }
         sbTempGradient.hasValue = s.tempC != null || isTrackingTempSlider
-        if (!isTrackingFanSlider) tvClimateFanSpeed.text = when (val f = s.fan) {
+        if (!isTrackingFanSlider) tvClimateFanSpeed.setTextIfChanged(when (val f = s.fan) {
             null -> "Mức --"
             0 -> "Tắt"
             else -> "Mức $f"
-        }
+        })
         if (!isTrackingFanSlider && s.fan != null) sbFanSpeed.progress = s.fan.coerceIn(FAN_MIN, FAN_MAX)
         sbFanSpeed.hasValue = (s.fan ?: 0) in FAN_MIN..FAN_MAX || isTrackingFanSlider
 
@@ -794,18 +850,32 @@ class MainActivity : Activity() {
         tintIcons(btnAvasToggle, if (muted == true) Color.WHITE else getColor(R.color.text_secondary))
         btnAvasToggle.alpha = if (muted == null) 0.6f else 1f
         tvAvasLabel.setTextColor(if (muted == true) Color.WHITE else getColor(R.color.text_secondary))
-        tvAvasLabel.text = when (muted) {
+        tvAvasLabel.setTextIfChanged(when (muted) {
             null -> "AVAS: --"
             true -> "AVAS: Đã tắt âm"
             false -> "AVAS: Đang bật"
-        }
+        })
 
         renderCompound(btnAmbientLight, s.ambient)
-        tvAmbientLabel.text = when (s.ambient) {
+        tvAmbientLabel.setTextIfChanged(when (s.ambient) {
             null -> "Đèn viền: --"
             true -> "Đèn viền: Bật"
             false -> "Đèn viền: Tắt"
-        }
+        })
+
+        renderCompound(btnAutoHold, s.autoHold)
+        tvAutoHoldLabel.setTextIfChanged(when (s.autoHold) {
+            null -> "Auto Hold: --"
+            true -> "Auto Hold: Bật"
+            false -> "Auto Hold: Tắt"
+        })
+
+        renderCompound(btnWirelessCharge, s.wireless)
+        tvWirelessLabel.setTextIfChanged(when (s.wireless) {
+            null -> "Sạc không dây: --"
+            true -> "Sạc không dây: Bật"
+            false -> "Sạc không dây: Tắt"
+        })
 
         // "Sending" state: a control whose command is still awaiting the car's confirmation
         // is shown slightly dimmed, so the driver can tell requested from confirmed.
@@ -820,6 +890,8 @@ class MainActivity : Activity() {
         sending(btnVentFloor, K_VENT)
         sending(btnAvasToggle, K_AVAS)
         sending(btnAmbientLight, K_AMBIENT)
+        sending(btnAutoHold, K_AUTO_HOLD)
+        sending(btnWirelessCharge, K_WIRELESS)
         listOf(btnDriveEco, btnDriveComfort, btnDriveSport).forEach { sending(it, K_DRIVE) }
         listOf(btnRegenLow, btnRegenMid, btnRegenHigh).forEach { sending(it, K_REGEN) }
         tvClimateTargetTemp.alpha = if (pending.isPending(K_TEMP)) 0.7f else 1f
@@ -835,11 +907,11 @@ class MainActivity : Activity() {
 
     /** Air intake is a mode, not on/off: the button always names the current one. */
     private fun renderAirIntake(recirc: Boolean?) {
-        tvRecircLabel.text = when (recirc) {
+        tvRecircLabel.setTextIfChanged(when (recirc) {
             true -> "Gió trong"
             false -> "Gió ngoài"
             null -> "Gió: --"
-        }
+        })
         ivRecircIcon.setImageResource(if (recirc == false) R.drawable.ic_air_fresh else R.drawable.ic_air_recirc)
         renderCompound(btnRecirc, recirc) // emerald = recirculating (cabin closed off)
     }
@@ -897,7 +969,7 @@ class MainActivity : Activity() {
 
         if (isGuardHalted) {
             layoutAutomationPill.setBackgroundResource(R.drawable.bg_btn_active_amber)
-            tvAutomationStatus.text = "Crash Guard: Đã ngắt (Bấm để đặt lại)"
+            tvAutomationStatus.setTextIfChanged("Crash Guard: Đã ngắt (Bấm để đặt lại)")
             ivAutomationIcon.setImageResource(R.drawable.ic_warning)
             tvAutomationStatus.setTextColor(Color.WHITE)
             ivAutomationIcon.setColorFilter(Color.WHITE)
@@ -906,7 +978,7 @@ class MainActivity : Activity() {
             tvValetLabel.setTextColor(getColor(R.color.text_secondary))
         } else if (isValet) {
             layoutAutomationPill.setBackgroundResource(R.drawable.bg_pill_valet)
-            tvAutomationStatus.text = "Chế độ Bảo dưỡng: Đang bật"
+            tvAutomationStatus.setTextIfChanged("Chế độ Bảo dưỡng: Đang bật")
             ivAutomationIcon.setImageResource(R.drawable.ic_wrench)
             tvAutomationStatus.setTextColor(getColor(R.color.text_amber))
             ivAutomationIcon.setColorFilter(getColor(R.color.text_amber))
@@ -915,7 +987,7 @@ class MainActivity : Activity() {
             tvValetLabel.setTextColor(Color.WHITE)
         } else {
             layoutAutomationPill.setBackgroundResource(R.drawable.bg_pill_automation)
-            tvAutomationStatus.text = "Tự động hóa: Đang bật"
+            tvAutomationStatus.setTextIfChanged("Tự động hóa: Đang bật")
             ivAutomationIcon.setImageResource(R.drawable.ic_lightning)
             tvAutomationStatus.setTextColor(getColor(R.color.text_emerald))
             ivAutomationIcon.setColorFilter(getColor(R.color.text_emerald))
@@ -931,15 +1003,15 @@ class MainActivity : Activity() {
             val percent = pos.getOrNull(i)
             when {
                 percent == null -> {
-                    views[i].text = "Kính: --"
+                    views[i].setTextIfChanged("Kính: --")
                     views[i].setTextColor(getColor(R.color.text_muted))
                 }
                 percent == 0 -> {
-                    views[i].text = "Kính: 0%"
+                    views[i].setTextIfChanged("Kính: 0%")
                     views[i].setTextColor(getColor(R.color.accent_primary))
                 }
                 else -> {
-                    views[i].text = "Kính: $percent%"
+                    views[i].setTextIfChanged("Kính: $percent%")
                     views[i].setTextColor(getColor(R.color.accent_secondary))
                 }
             }
@@ -1003,18 +1075,30 @@ class MainActivity : Activity() {
             commandControl(K_AVAS, if (mute) 0 else 1, "AVAS") { carHelper.setAvasMode(if (mute) 0 else 1) }
         }
 
+        // Auto Hold: same switch as the car's own Settings (DRIVE_AUTO_HOLD 1 = ON / 2 = OFF).
+        // Unknown state (powertrain not READY) -> the tap asks for ON.
+        btnAutoHold.setOnClickListener {
+            val target = shown.autoHold != true
+            commandControl(K_AUTO_HOLD, target, "Auto Hold") { carHelper.setAutoHold(target) }
+        }
+
+        btnWirelessCharge.setOnClickListener {
+            val target = shown.wireless != true
+            commandControl(K_WIRELESS, target, "Sạc không dây") { carHelper.setWirelessCharging(target) }
+        }
+
         btnAmbientLight.setOnClickListener {
             val target = shown.ambient != true
             commandControl(K_AMBIENT, target, "Đèn viền") { carHelper.setAmbientLight(target) }
         }
 
+        // The car's own surround-view (360/540°) app on IHU629G: com.ecarx.parking/.MainAvmActivity.
         btnCamera360.setOnClickListener {
-            val pkg360 = "com.flyme.auto.camera"
-            val launchIntent = packageManager.getLaunchIntentForPackage(pkg360)
+            val launchIntent = packageManager.getLaunchIntentForPackage(PKG_SURROUND_CAMERA)
             if (launchIntent != null) {
-                startActivity(launchIntent)
+                startActivity(launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             } else {
-                Toast.makeText(this, "Không tìm thấy ứng dụng Camera 360 ($pkg360) trên xe.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Không tìm thấy ứng dụng camera của xe ($PKG_SURROUND_CAMERA).", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -1075,7 +1159,7 @@ class MainActivity : Activity() {
                 if (!fromUser) return
                 val target = TEMP_MIN + progress
                 sbTempGradient.hasValue = true
-                tvClimateTargetTemp.text = "$target°C"
+                tvClimateTargetTemp.setTextIfChanged("$target°C")
                 tempDebounceRunnable?.let { mainHandler.removeCallbacks(it) }
                 val runnable = Runnable { setTemperature(target) }
                 tempDebounceRunnable = runnable
@@ -1096,7 +1180,7 @@ class MainActivity : Activity() {
                 if (!fromUser) return
                 val target = progress.coerceIn(FAN_MIN, FAN_MAX)
                 sbFanSpeed.hasValue = true
-                tvClimateFanSpeed.text = "Mức $target"
+                tvClimateFanSpeed.setTextIfChanged("Mức $target")
                 fanDebounceRunnable?.let { mainHandler.removeCallbacks(it) }
                 val runnable = Runnable { setFan(target) }
                 fanDebounceRunnable = runnable
@@ -1176,7 +1260,7 @@ class MainActivity : Activity() {
     }
 
     private fun showCrashGuardResetDialog() {
-        AlertDialog.Builder(this)
+        AppDialog(this)
             .setTitle("Cảnh báo Crash Guard")
             .setMessage("Hệ thống tự động hóa đã tự động ngắt bảo vệ do phát hiện lỗi liên tiếp để tránh treo hệ thống.\n\nBạn có muốn đặt lại (Reset) để tiếp tục chạy tự động hóa?")
             .setPositiveButton("Đặt lại (Reset)") { _, _ ->
@@ -1281,5 +1365,7 @@ class MainActivity : Activity() {
     private fun startCoreServices() {
         val autoServiceIntent = Intent(this, CarAutomationService::class.java)
         startForegroundService(autoServiceIntent)
+        // Floating bubble and/or the dock climate label (both hosted by FloatingControlService).
+        if (FloatingControlService.isWanted(this)) startService(Intent(this, FloatingControlService::class.java))
     }
 }

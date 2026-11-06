@@ -11,6 +11,7 @@
 
     <!-- Top Action Bar -->
     <LinearLayout
+        android:baselineAligned="false"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:orientation="horizontal"

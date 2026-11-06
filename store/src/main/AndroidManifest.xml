@@ -4,6 +4,8 @@
     <!-- Silent install / uninstall (granted to the platform-signed system uid) -->
     <uses-permission android:name="android.permission.INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.DELETE_PACKAGES" />
+    <!-- Battery-optimisation whitelist for navigation apps (PowerWhitelist); granted to uid system -->
+    <uses-permission android:name="android.permission.DEVICE_POWER" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />

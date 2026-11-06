@@ -47,6 +47,14 @@ class CarAutomationService : Service() {
         const val KEY_PREFERRED_REGEN_MODE = "key_preferred_regen_mode"
         const val KEY_GUARD_HALTED = "key_guard_halted"
         const val KEY_VALET_MODE = "isValetModeEnabled"
+        // "Âm lượng an toàn khi bật xe": media volume is capped at this % on start / wake.
+        const val KEY_SAFE_VOLUME = "key_safe_volume"
+        const val KEY_SAFE_VOLUME_PERCENT = "key_safe_volume_percent"
+        const val DEFAULT_SAFE_VOLUME_PERCENT = 40
+        // "Mở camera 360 khi vào số D": P -> D at standstill opens the car's surround-view app.
+        const val KEY_CAMERA_ON_DRIVE = "key_camera_on_drive"
+        private const val PKG_SURROUND_CAMERA = "com.ecarx.parking"
+        private const val CAMERA_MAX_KMH = 5f
 
         const val ACTION_TRIGGER_CHECK = "com.mipago.ex2center.action.TRIGGER_CHECK"
         const val ACTION_RESET_GUARD = "com.mipago.ex2center.action.RESET_GUARD"
@@ -126,6 +134,7 @@ class CarAutomationService : Service() {
                 worker.post {
                     resetEnforcers()
                     lastGear = -1
+                    capStartVolume()
                 }
                 scheduleTick(WAKE_SETTLE_MS)
             }
@@ -143,7 +152,10 @@ class CarAutomationService : Service() {
 
         registerReceiver(wakeReceiver, IntentFilter(Intent.ACTION_SCREEN_ON))
         carHelper.acquire(this, HOLDER)
-        worker.post { resetEnforcers() } // service start == car start (boot / app update)
+        worker.post {
+            resetEnforcers() // service start == car start (boot / app update)
+            capStartVolume()
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -251,6 +263,7 @@ class CarAutomationService : Service() {
             Log.i(TAG, "Gear $previousGear -> $gear")
             lastGear = gear
             if (gear == CarApiHelper.GEAR_PARK) avasEnforcer.reset() // fresh chances at every stop
+            if (gear == CarApiHelper.GEAR_DRIVE && previousGear == CarApiHelper.GEAR_PARK) openCameraOnDrive()
         }
 
         // 1. AVAS mute — every tick, any gear (the car re-arms it on wake).
@@ -324,6 +337,45 @@ class CarAutomationService : Service() {
         "RegenMode", KEY_AUTO_REGEN_MODE, KEY_PREFERRED_REGEN_MODE,
         { carHelper.readRegenMode() }, { carHelper.writeRegenMode(it) }
     )
+
+    /**
+     * "Âm lượng an toàn khi bật xe": music left loud from the last drive must not blast on start.
+     * Only lowers the media volume (never raises it); runs on start and on every wake.
+     */
+    private fun capStartVolume() {
+        if (!prefs.getBoolean(KEY_SAFE_VOLUME, false)) return
+        try {
+            val am = getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+            val stream = android.media.AudioManager.STREAM_MUSIC
+            val max = am.getStreamMaxVolume(stream)
+            val percent = prefs.getInt(KEY_SAFE_VOLUME_PERCENT, DEFAULT_SAFE_VOLUME_PERCENT).coerceIn(10, 100)
+            val cap = (max * percent + 50) / 100
+            val current = am.getStreamVolume(stream)
+            if (current > cap) {
+                am.setStreamVolume(stream, cap, 0)
+                Log.i(TAG, "Safe start volume: $current -> $cap (max $max, $percent%)")
+            }
+        } catch (t: Throwable) {
+            Log.w(TAG, "Safe start volume failed: ${t.message}")
+        }
+    }
+
+    /**
+     * "Mở camera 360 khi vào số D": pulling out of a parking spot (P -> D, still at standstill)
+     * opens the car's own surround-view app so the driver sees the front corners.
+     */
+    private fun openCameraOnDrive() {
+        if (!prefs.getBoolean(KEY_CAMERA_ON_DRIVE, false)) return
+        val speed = carHelper.readSpeed() ?: return
+        if (speed > CAMERA_MAX_KMH) return
+        try {
+            val intent = packageManager.getLaunchIntentForPackage(PKG_SURROUND_CAMERA) ?: return
+            startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            Log.i(TAG, "P -> D: opened surround-view camera")
+        } catch (t: Throwable) {
+            Log.w(TAG, "Cannot open surround-view camera: ${t.message}")
+        }
+    }
 
     /** Start / wake: re-arm AVAS enforcement and restore the remembered modes. */
     private fun resetEnforcers() {

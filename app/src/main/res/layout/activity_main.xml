@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -15,6 +14,7 @@
     <!-- 1. TOP STATUS PILL BAR                                    -->
     <!-- ======================================================== -->
     <LinearLayout
+        android:baselineAligned="false"
         android:layout_width="match_parent"
         android:layout_height="@dimen/header_height"
         android:orientation="horizontal"
@@ -255,6 +255,7 @@
     <!-- 2. MAIN COCKPIT BODY: 3 DRIVER-CENTRIC COLUMNS            -->
     <!-- ======================================================== -->
     <LinearLayout
+        android:baselineAligned="false"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -272,14 +273,14 @@
             <!-- Card 1.1: Operating HUD (Gear, Speed, Battery) -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1.0"
+                android:layout_height="wrap_content"
                 android:background="@drawable/bg_card"
                 android:padding="@dimen/card_padding"
                 android:orientation="vertical">
 
                 <!-- Gear Indicators & Large Speed -->
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -363,11 +364,14 @@
                             android:textStyle="bold" />
                     </LinearLayout>
 
-                    <!-- Speedometer (Large 48sp) -->
+                    <!-- Speedometer: fixed width (fits "199"), so a new speed only redraws instead of
+                         re-laying out the whole Dashboard (~120 ms on the head unit). -->
                     <TextView
                         android:id="@+id/tvSpeedValue"
-                        android:layout_width="wrap_content"
+                        android:layout_width="136dp"
                         android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:maxLines="1"
                         android:text="--"
                         android:textColor="@color/text_primary"
                         android:textSize="72sp"
@@ -384,11 +388,11 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
+                    android:layout_height="@dimen/space_16" />
 
                 <!-- Battery & Range Row -->
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -441,8 +445,7 @@
             <!-- Card 1.2: Drive Mode & Regeneration (Large 48dp Buttons) -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1.1"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/card_gap"
                 android:background="@drawable/bg_card"
                 android:padding="@dimen/card_padding"
@@ -450,6 +453,7 @@
 
                 <!-- Drive Mode Row -->
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -480,6 +484,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="64dp"
                     android:orientation="horizontal">
@@ -525,6 +530,7 @@
 
                 <!-- Regen Row -->
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -556,6 +562,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="64dp"
                     android:orientation="horizontal">
@@ -600,11 +607,11 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Card 1.3: Core shortcuts (2x2 grid: AVAS, Đèn viền, Camera 360, Bảo dưỡng) -->
+            <!-- Card 1.3: Core shortcuts (3x2 grid: AVAS, Đèn viền, Auto Hold, Sạc không dây, Camera 360, Bảo dưỡng) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1.3"
+                android:layout_weight="1"
                 android:layout_marginTop="@dimen/card_gap"
                 android:background="@drawable/bg_card"
                 android:padding="@dimen/card_padding"
@@ -619,8 +626,9 @@
                     android:textStyle="bold"
                     android:layout_marginBottom="@dimen/space_8" />
 
-                <!-- Row 1: AVAS + Đèn viền (Auto Hold removed: no verified VHAL property on IHU629G) -->
+                <!-- Row 1: AVAS + Đèn viền -->
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"
@@ -687,8 +695,78 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Row 2: Camera 360 & Valet Mode -->
+                <!-- Row 2: Auto Hold (DRIVE_AUTO_HOLD, verified) + wireless charger (verified) -->
                 <LinearLayout
+                    android:baselineAligned="false"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="@dimen/space_8">
+
+                    <LinearLayout
+                        android:id="@+id/btnAutoHold"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="@dimen/space_12"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:background="@drawable/bg_btn_inactive"
+                        android:alpha="0.6"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_auto_hold"
+                            android:tint="@color/text_secondary"
+                            android:layout_marginEnd="@dimen/space_8" />
+
+                        <TextView
+                            android:id="@+id/tvAutoHoldLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Auto Hold: --"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/btnWirelessCharge"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:background="@drawable/bg_btn_inactive"
+                        android:alpha="0.6"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_wireless_charge"
+                            android:tint="@color/text_secondary"
+                            android:layout_marginEnd="@dimen/space_8" />
+
+                        <TextView
+                            android:id="@+id/tvWirelessLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sạc không dây: --"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Row 3: Camera 360 & Valet Mode -->
+                <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"
@@ -767,14 +845,14 @@
             <!-- Card 2.1: Split-Screen Launcher Hero & Media Controls -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1.15"
+                android:layout_height="wrap_content"
                 android:background="@drawable/bg_card"
                 android:padding="@dimen/card_padding"
                 android:orientation="vertical">
 
                 <!-- Split-Screen Hero Button (Height 54dp) -->
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:id="@+id/btnSplitScreenHero"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/touch_primary"
@@ -826,11 +904,11 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
+                    android:layout_height="@dimen/space_16" />
 
                 <!-- Media Player Row -->
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -888,6 +966,7 @@
 
                 <!-- Volume Slider Row -->
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -935,7 +1014,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="2.0"
+                android:layout_weight="1"
                 android:layout_marginTop="@dimen/card_gap"
                 android:background="@drawable/bg_card"
                 android:padding="@dimen/card_padding"
@@ -952,6 +1031,7 @@
 
                 <!-- Row 1: A/C, Recirc, Quick Cool (64dp: most-used while driving) -->
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/touch_primary"
                     android:orientation="horizontal">
@@ -1044,198 +1124,191 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Flexible gap (min 16dp): the card's spare height is shared evenly between sections. -->
+                <!-- Flexible gap: the card's spare height is shared evenly between sections. -->
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/space_16"
-                    android:layout_weight="1"
-                    tools:ignore="InefficientWeight" />
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
 
-                <!-- Row 2: Temperature (top) and Fan speed (bottom), each on its own full-width row.
-                     Weighted like the gaps above/below so all three gaps grow equally. -->
+                <!-- Temperature Controls -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:orientation="vertical">
 
-                    <!-- Temperature Controls -->
                     <LinearLayout
+                        android:baselineAligned="false"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="@dimen/space_8">
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginBottom="@dimen/space_8">
+                            android:layout_weight="1"
+                            android:text="Nhiệt độ"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="16sp" />
 
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Nhiệt độ"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="16sp" />
-
-                            <TextView
-                                android:id="@+id/tvClimateTargetTemp"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="--°C"
-                                android:textColor="@color/text_primary"
-                                android:textSize="22sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:id="@+id/tvClimateTargetTemp"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <Button
-                                android:id="@+id/btnTempMinus"
-                                android:layout_width="@dimen/touch_primary"
-                                android:layout_height="@dimen/touch_primary"
-                                android:text="-"
-                                android:textColor="@color/text_primary"
-                                android:textSize="22sp"
-                                android:textStyle="bold"
-                                android:background="@drawable/bg_btn_inactive"
-                                android:minWidth="0dp"
-                                android:minHeight="0dp"
-                                android:padding="0dp" />
-
-                            <com.mipago.ex2center.ui.StepSeekBar
-                                android:thumb="@drawable/bg_seek_thumb"
-                                android:splitTrack="false"
-                                android:minHeight="8dp"
-                                android:maxHeight="8dp"
-                                android:id="@+id/sbTempGradient"
-                                android:layout_width="0dp"
-                                android:layout_height="@dimen/slider_scale_height"
-                                android:paddingTop="@dimen/space_24"
-                                android:paddingBottom="@dimen/space_24"
-                                android:layout_weight="1"
-                                android:max="15"
-                                android:progress="8"
-                                android:progressDrawable="@drawable/bg_temp_slider" />
-
-                            <Button
-                                android:id="@+id/btnTempPlus"
-                                android:layout_width="@dimen/touch_primary"
-                                android:layout_height="@dimen/touch_primary"
-                                android:text="+"
-                                android:textColor="@color/text_primary"
-                                android:textSize="22sp"
-                                android:textStyle="bold"
-                                android:background="@drawable/bg_btn_inactive"
-                                android:minWidth="0dp"
-                                android:minHeight="0dp"
-                                android:padding="0dp" />
-                        </LinearLayout>
+                            android:text="--°C"
+                            android:textColor="@color/text_primary"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/space_16"
-                        android:layout_weight="1"
-                        tools:ignore="InefficientWeight" />
-
-                    <!-- Fan Speed Controls -->
                     <LinearLayout
+                        android:baselineAligned="false"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginBottom="@dimen/space_8">
+                        <Button
+                            android:id="@+id/btnTempMinus"
+                            android:layout_width="@dimen/touch_primary"
+                            android:layout_height="@dimen/touch_primary"
+                            android:text="-"
+                            android:textColor="@color/text_primary"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            android:background="@drawable/bg_btn_inactive"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:padding="0dp" />
 
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Quạt gió"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="16sp" />
+                        <com.mipago.ex2center.ui.StepSeekBar
+                            android:thumb="@drawable/bg_seek_thumb"
+                            android:splitTrack="false"
+                            android:minHeight="8dp"
+                            android:maxHeight="8dp"
+                            android:id="@+id/sbTempGradient"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/slider_scale_height"
+                            android:paddingTop="@dimen/space_24"
+                            android:paddingBottom="@dimen/space_24"
+                            android:layout_weight="1"
+                            android:max="15"
+                            android:progress="8"
+                            android:progressDrawable="@drawable/bg_temp_slider" />
 
-                            <TextView
-                                android:id="@+id/tvClimateFanSpeed"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Mức --"
-                                android:textColor="@color/text_primary"
-                                android:textSize="22sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <Button
-                                android:id="@+id/btnFanMinus"
-                                android:layout_width="@dimen/touch_primary"
-                                android:layout_height="@dimen/touch_primary"
-                                android:text="-"
-                                android:textColor="@color/text_primary"
-                                android:textSize="22sp"
-                                android:textStyle="bold"
-                                android:background="@drawable/bg_btn_inactive"
-                                android:minWidth="0dp"
-                                android:minHeight="0dp"
-                                android:padding="0dp" />
-
-                            <com.mipago.ex2center.ui.StepSeekBar
-                                android:thumb="@drawable/bg_seek_thumb"
-                                android:splitTrack="false"
-                                android:minHeight="8dp"
-                                android:maxHeight="8dp"
-                                android:id="@+id/sbFanSpeed"
-                                android:layout_width="0dp"
-                                android:layout_height="@dimen/slider_scale_height"
-                                android:paddingTop="@dimen/space_24"
-                                android:paddingBottom="@dimen/space_24"
-                                android:layout_weight="1"
-                                android:min="1"
-                                android:max="8"
-                                android:progress="1"
-                                android:progressTint="@color/accent_emerald" />
-
-                            <Button
-                                android:id="@+id/btnFanPlus"
-                                android:layout_width="@dimen/touch_primary"
-                                android:layout_height="@dimen/touch_primary"
-                                android:text="+"
-                                android:textColor="@color/text_primary"
-                                android:textSize="22sp"
-                                android:textStyle="bold"
-                                android:background="@drawable/bg_btn_inactive"
-                                android:minWidth="0dp"
-                                android:minHeight="0dp"
-                                android:padding="0dp" />
-                        </LinearLayout>
+                        <Button
+                            android:id="@+id/btnTempPlus"
+                            android:layout_width="@dimen/touch_primary"
+                            android:layout_height="@dimen/touch_primary"
+                            android:text="+"
+                            android:textColor="@color/text_primary"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            android:background="@drawable/bg_btn_inactive"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:padding="0dp" />
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Flexible gap (min 16dp): the card's spare height is shared evenly between sections. -->
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/space_16"
-                    android:layout_weight="1"
-                    tools:ignore="InefficientWeight" />
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <!-- Fan Speed Controls -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:baselineAligned="false"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="@dimen/space_8">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Quạt gió"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/tvClimateFanSpeed"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Mức --"
+                            android:textColor="@color/text_primary"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:baselineAligned="false"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <Button
+                            android:id="@+id/btnFanMinus"
+                            android:layout_width="@dimen/touch_primary"
+                            android:layout_height="@dimen/touch_primary"
+                            android:text="-"
+                            android:textColor="@color/text_primary"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            android:background="@drawable/bg_btn_inactive"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:padding="0dp" />
+
+                        <com.mipago.ex2center.ui.StepSeekBar
+                            android:thumb="@drawable/bg_seek_thumb"
+                            android:splitTrack="false"
+                            android:minHeight="8dp"
+                            android:maxHeight="8dp"
+                            android:id="@+id/sbFanSpeed"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/slider_scale_height"
+                            android:paddingTop="@dimen/space_24"
+                            android:paddingBottom="@dimen/space_24"
+                            android:layout_weight="1"
+                            android:min="1"
+                            android:max="8"
+                            android:progress="1"
+                            android:progressTint="@color/accent_emerald" />
+
+                        <Button
+                            android:id="@+id/btnFanPlus"
+                            android:layout_width="@dimen/touch_primary"
+                            android:layout_height="@dimen/touch_primary"
+                            android:text="+"
+                            android:textColor="@color/text_primary"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            android:background="@drawable/bg_btn_inactive"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:padding="0dp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Flexible gap: the card's spare height is shared evenly between sections. -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
 
                 <!-- Row 3: Vents & Defrost (64dp) -->
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/touch_primary"
                     android:orientation="horizontal">
@@ -1375,6 +1448,7 @@
                 android:orientation="vertical">
 
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -1676,6 +1750,7 @@
                     android:layout_marginBottom="@dimen/space_16" />
 
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"
@@ -1741,6 +1816,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"

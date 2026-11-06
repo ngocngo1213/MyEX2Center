@@ -48,7 +48,8 @@
     "browserUrl": "https://apkcube.com/vietmap-live-mimi-ai/vn.vietmap.live",
     "iconResName": "ic_app_vietmap",
     "description": "Bản đồ dẫn đường cho ô tô, cảnh báo tốc độ và camera phạt nguội. Gói .apks 64-bit (split APK) — cài từ USB / máy.",
-    "sha256": "3fb48ddba9e9eab5b8bb6bc0fc3e07ba03c67f2fe216bf9933d787e6e5e1f564"
+    "sha256": "3fb48ddba9e9eab5b8bb6bc0fc3e07ba03c67f2fe216bf9933d787e6e5e1f564",
+    "batteryWhitelist": true
   },
   {
     "name": "SmartTube",
