@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PIN & QUÃNG ĐƯỜNG 2×1. Same ids as the battery part of widget_drive. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/DashCard"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView style="@style/DashLabel" android:text="Pin &amp; quãng đường" />
+
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:baselineAligned="true"
+        android:gravity="bottom"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tvBatterySoc"
+            style="@style/DashText"
+            android:layout_width="170dp"
+            android:layout_height="wrap_content"
+            android:textSize="56sp"
+            tools:text="78%" />
+
+        <TextView
+            android:id="@+id/tvEstimatedRange"
+            style="@style/DashMuted"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="24sp"
+            tools:text="còn 312 km" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/pbBatterySoc"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="14dp"
+        android:layout_marginTop="14dp"
+        android:max="100"
+        android:progressDrawable="@drawable/dash_progress" />
+</LinearLayout>

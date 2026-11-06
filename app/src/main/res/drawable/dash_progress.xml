@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Battery bar: recessed track, solid fill. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background">
+        <shape><solid android:color="@color/dash_well" /><corners android:radius="7dp" /></shape>
+    </item>
+    <item android:id="@android:id/progress">
+        <clip>
+            <shape><solid android:color="@color/dash_text" /><corners android:radius="7dp" /></shape>
+        </clip>
+    </item>
+</layer-list>

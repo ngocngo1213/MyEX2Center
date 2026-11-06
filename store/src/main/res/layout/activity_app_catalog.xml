@@ -32,7 +32,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:src="@drawable/ic_store"
-                android:tint="#FFFFFF"
+                android:tint="@color/text_on_accent"
                 android:background="@drawable/bg_btn_active"
                 android:padding="@dimen/space_12"
                 android:layout_marginEnd="@dimen/space_12" />
@@ -56,7 +56,7 @@
                     android:layout_height="wrap_content"
                     android:text="Cài đặt và cập nhật ứng dụng cho xe"
                     android:textColor="@color/text_secondary"
-                    android:textSize="14sp" />
+                    android:textSize="18sp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -90,7 +90,7 @@
                 android:layout_height="wrap_content"
                 android:text="Bộ nhớ trống: -- GB"
                 android:textColor="@color/accent_emerald"
-                android:textSize="14sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -123,7 +123,7 @@
                     android:layout_height="wrap_content"
                     android:text="Wi-Fi"
                     android:textColor="@color/text_primary"
-                    android:textSize="14sp"
+                    android:textSize="18sp"
                     android:textStyle="bold"
                     android:maxLines="1"
                     android:ellipsize="end" />
@@ -134,7 +134,7 @@
                     android:layout_height="wrap_content"
                     android:text="--"
                     android:textColor="@color/text_secondary"
-                    android:textSize="14sp" />
+                    android:textSize="18sp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -164,7 +164,7 @@
                 android:layout_height="wrap_content"
                 android:text="Cài từ USB / Máy"
                 android:textColor="@color/accent_emerald"
-                android:textSize="14sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -195,7 +195,7 @@
         android:layout_gravity="center"
         android:layout_marginTop="@dimen/space_32"
         android:textColor="@color/text_muted"
-        android:textSize="16sp"
+        android:textSize="18sp"
         android:visibility="gone" />
 
     <!-- 4x2 Grid of Applications -->

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- LÁI XE 2×2 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    style="@style/DashCard">
+
+    <TextView style="@style/DashLabel" android:text="Lái xe" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvSpeedValue"
+                style="@style/DashText"
+                android:layout_width="match_parent"
+                android:layout_height="216dp"
+                android:gravity="center_vertical|start"
+                android:letterSpacing="-0.02"
+                android:textSize="176sp"
+                tools:text="58" />
+
+            <!-- Fixed height ≥ the font's full line height, so neither the digits nor "km/h" get cut. -->
+            <TextView
+                style="@style/DashMuted"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:gravity="center_vertical"
+                android:text="km/h"
+                android:textSize="24sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnSpeedLimitSign"
+            android:layout_width="128dp"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:visibility="invisible"
+            tools:visibility="visible">
+
+            <TextView
+                android:id="@+id/tvSpeedLimitValue"
+                style="@style/DashText"
+                android:layout_width="128dp"
+                android:layout_height="128dp"
+                android:background="@drawable/dash_speed_limit"
+                android:gravity="center"
+                android:textColor="#111111"
+                android:textSize="48sp"
+                tools:text="60" />
+
+            <TextView
+                style="@style/DashMuted"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="Giới hạn" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:baselineAligned="true"
+        android:gravity="bottom"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tvBatterySoc"
+            style="@style/DashText"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:textSize="48sp"
+            tools:text="78%" />
+
+        <TextView
+            android:id="@+id/tvEstimatedRange"
+            style="@style/DashMuted"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="24sp"
+            tools:text="còn 312 km" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/pbBatterySoc"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="14dp"
+        android:layout_marginTop="12dp"
+        android:max="100"
+        android:progressDrawable="@drawable/dash_progress" />
+</LinearLayout>

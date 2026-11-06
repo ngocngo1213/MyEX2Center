@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- XE · CỐP · KÍNH 2×2 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    style="@style/DashCard">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView style="@style/DashLabel" android:text="Xe · Cốp · Kính" />
+
+        <TextView
+            android:id="@+id/tvWindowHint"
+            style="@style/DashMuted"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="end"
+            tools:text="50/100% khi dưới 30 km/h" />
+    </LinearLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="12dp"
+        android:layout_weight="1"
+        android:background="@drawable/dash_stage">
+
+        <ImageView
+            android:id="@+id/ivCarTop"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:contentDescription="Xe Geely EX2 nhìn từ trên xuống"
+            android:scaleType="fitCenter"
+            android:src="@drawable/img_car_top"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="400:679"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/pillFl"
+            style="@style/DashPill"
+            android:orientation="horizontal"
+            android:layout_marginEnd="12dp"
+            android:gravity="center_vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/ivCarTop"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.42">
+
+            <TextView style="@style/DashMuted" android:layout_width="wrap_content" android:layout_height="wrap_content" android:contentDescription="Kính trước trái" android:text="TT" />
+            <TextView android:id="@+id/tvWindowFl" style="@style/DashText" android:layout_width="64dp" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:gravity="end" android:textSize="26sp" tools:text="0%" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/pillFr"
+            style="@style/DashPill"
+            android:orientation="horizontal"
+            android:layout_marginStart="12dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/ivCarTop"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.42">
+
+            <TextView style="@style/DashMuted" android:layout_width="wrap_content" android:layout_height="wrap_content" android:contentDescription="Kính trước phải" android:text="TP" />
+            <TextView android:id="@+id/tvWindowFr" style="@style/DashText" android:layout_width="64dp" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:gravity="end" android:textSize="26sp" tools:text="0%" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/pillRl"
+            style="@style/DashPill"
+            android:orientation="horizontal"
+            android:layout_marginEnd="12dp"
+            android:gravity="center_vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/ivCarTop"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.74">
+
+            <TextView style="@style/DashMuted" android:layout_width="wrap_content" android:layout_height="wrap_content" android:contentDescription="Kính sau trái" android:text="ST" />
+            <TextView android:id="@+id/tvWindowRl" style="@style/DashText" android:layout_width="64dp" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:gravity="end" android:textSize="26sp" tools:text="0%" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/pillRr"
+            style="@style/DashPill"
+            android:orientation="horizontal"
+            android:layout_marginStart="12dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/ivCarTop"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.74">
+
+            <TextView style="@style/DashMuted" android:layout_width="wrap_content" android:layout_height="wrap_content" android:contentDescription="Kính sau phải" android:text="SP" />
+            <TextView android:id="@+id/tvWindowRr" style="@style/DashText" android:layout_width="64dp" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:gravity="end" android:textSize="26sp" tools:text="0%" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnFrontTrunk"
+            style="@style/DashChip"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginTop="14dp"
+            android:contentDescription="Mở cốp trước"
+            android:drawableStart="@drawable/ic_trunk_front"
+            android:text="Cốp trước"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Shown once the rear-trunk command has been verified on the car (see MainActivity). -->
+        <TextView
+            android:id="@+id/btnRearTrunk"
+            style="@style/DashChip"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="14dp"
+            android:contentDescription="Mở cốp sau"
+            android:drawableStart="@drawable/ic_trunk_rear"
+            android:text="Cốp sau"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="76dp"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal">
+
+        <TextView android:id="@+id/btnWindowsClose" style="@style/DashBtn.Row" android:layout_height="76dp" android:text="Đóng" android:textSize="20sp" />
+        <TextView android:id="@+id/btnWindowsVent" style="@style/DashBtn.Row" android:layout_height="76dp" android:layout_marginStart="12dp" android:text="10%" android:textSize="20sp" />
+        <TextView android:id="@+id/btnWindowsHalf" style="@style/DashBtn.Row" android:layout_height="76dp" android:layout_marginStart="12dp" android:text="50%" android:textSize="20sp" />
+        <TextView android:id="@+id/btnWindowsOpen" style="@style/DashBtn.Row" android:layout_height="76dp" android:layout_marginStart="12dp" android:text="100%" android:textSize="20sp" />
+    </LinearLayout>
+</LinearLayout>

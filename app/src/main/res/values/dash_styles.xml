@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bento grid placement of a widget (cells of BentoGridLayout). -->
+    <declare-styleable name="BentoGridLayout_Layout">
+        <attr name="bento_col" format="integer" />
+        <attr name="bento_row" format="integer" />
+        <attr name="bento_colSpan" format="integer" />
+        <attr name="bento_rowSpan" format="integer" />
+    </declare-styleable>
+    <declare-styleable name="BentoGridLayout">
+        <attr name="bento_columns" format="integer" />
+        <attr name="bento_rows" format="integer" />
+        <attr name="bento_gap" format="dimension" />
+    </declare-styleable>
+
+    <style name="DashCard">
+        <item name="android:background">@drawable/dash_card</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="android:paddingTop">20dp</item>
+        <item name="android:paddingBottom">20dp</item>
+    </style>
+
+    <!-- Card title: small caps label, never smaller than 18sp. -->
+    <style name="DashLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">28dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:fontFamily">@font/be_vietnam_pro_semibold</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/dash_muted</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <style name="DashText">
+        <item name="android:textColor">@color/dash_text</item>
+        <item name="android:fontFamily">@font/be_vietnam_pro_bold</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+    </style>
+
+    <style name="DashMuted">
+        <item name="android:textColor">@color/dash_muted</item>
+        <item name="android:fontFamily">@font/be_vietnam_pro_semibold</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- Physical-feeling button: ≥76dp, sinks on press, state set from code (dash_btn / dash_btn_on). -->
+    <style name="DashBtn">
+        <item name="android:background">@drawable/dash_btn</item>
+        <item name="android:minHeight">76dp</item>
+        <item name="android:minWidth">76dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">@font/be_vietnam_pro_semibold</item>
+        <item name="android:textColor">@color/dash_text</item>
+        <item name="android:drawableTint">@color/dash_text</item>
+        <item name="android:drawablePadding">10dp</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:stateListAnimator">@animator/dash_press</item>
+    </style>
+
+    <style name="DashBtn.Step">
+        <item name="android:layout_width">88dp</item>
+        <item name="android:layout_height">76dp</item>
+        <item name="android:textSize">36sp</item>
+        <item name="android:fontFamily">@font/be_vietnam_pro_bold</item>
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:paddingEnd">0dp</item>
+    </style>
+
+    <style name="DashBtn.Row">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">68dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:minHeight">68dp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+    </style>
+
+    <style name="DashSegItem">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@drawable/dash_seg_item</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">@font/be_vietnam_pro_semibold</item>
+        <item name="android:textColor">@color/dash_text</item>
+        <item name="android:drawableTint">@color/dash_text</item>
+        <item name="android:drawablePadding">8dp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:stateListAnimator">@animator/dash_press</item>
+    </style>
+
+    <!-- Icon-only button: the glyph is centred and large (≈44dp), the whole cell is the target. -->
+    <style name="DashIconBtn">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">84dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@drawable/dash_btn</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:padding">20dp</item>
+        <item name="android:tint">@color/dash_text</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:stateListAnimator">@animator/dash_press</item>
+    </style>
+
+    <style name="DashIconSeg">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@drawable/dash_seg_item</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:tint">@color/dash_text</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:stateListAnimator">@animator/dash_press</item>
+    </style>
+
+    <style name="DashSeg">
+        <item name="android:background">@drawable/dash_seg</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:padding">5dp</item>
+    </style>
+
+    <style name="DashChip">
+        <item name="android:layout_height">56dp</item>
+        <item name="android:background">@drawable/dash_chip</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">18dp</item>
+        <item name="android:paddingEnd">18dp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:fontFamily">@font/be_vietnam_pro_semibold</item>
+        <item name="android:textColor">@color/dash_text</item>
+        <item name="android:drawableTint">@color/dash_text</item>
+        <item name="android:drawablePadding">10dp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:stateListAnimator">@animator/dash_press</item>
+    </style>
+
+    <style name="DashIconChip">
+        <item name="android:layout_width">56dp</item>
+        <item name="android:layout_height">56dp</item>
+        <item name="android:background">@drawable/dash_chip</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:tint">@color/dash_text</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:stateListAnimator">@animator/dash_press</item>
+    </style>
+
+    <style name="DashGear">
+        <item name="android:layout_width">52dp</item>
+        <item name="android:layout_height">52dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:fontFamily">@font/be_vietnam_pro_bold</item>
+        <item name="android:textColor">@color/dash_muted</item>
+    </style>
+
+    <style name="DashPill">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/dash_chip</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+    </style>
+</resources>

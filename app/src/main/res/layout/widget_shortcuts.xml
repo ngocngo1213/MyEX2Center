@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PHÍM TẮT 2×1 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    style="@style/DashCard">
+
+    <TextView style="@style/DashLabel" android:text="Phím tắt" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="10dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <TextView android:id="@+id/btnAvasToggle" style="@style/DashBtn.Row" android:layout_height="match_parent" android:minHeight="0dp" android:drawableStart="@drawable/ic_avas" android:gravity="center_vertical" android:text="Tắt âm AVAS" />
+        <TextView android:id="@+id/btnAutoHold" style="@style/DashBtn.Row" android:layout_height="match_parent" android:layout_marginStart="10dp" android:minHeight="0dp" android:drawableStart="@drawable/ic_auto_hold" android:gravity="center_vertical" android:text="Auto Hold" />
+        <TextView android:id="@+id/btnAmbientLight" style="@style/DashBtn.Row" android:layout_height="match_parent" android:layout_marginStart="10dp" android:minHeight="0dp" android:drawableStart="@drawable/ic_ambient_light" android:gravity="center_vertical" android:text="Đèn nội thất" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="10dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <TextView android:id="@+id/btnWirelessCharge" style="@style/DashBtn.Row" android:layout_height="match_parent" android:minHeight="0dp" android:drawableStart="@drawable/ic_wireless_charge" android:gravity="center_vertical" android:text="Sạc không dây" />
+        <TextView android:id="@+id/btnSplitScreen" style="@style/DashBtn.Row" android:layout_height="match_parent" android:layout_marginStart="10dp" android:minHeight="0dp" android:drawableStart="@drawable/ic_splitscreen" android:gravity="center_vertical" android:text="Chạy đôi" />
+        <TextView android:id="@+id/btnValetMode" style="@style/DashBtn.Row" android:layout_height="match_parent" android:layout_marginStart="10dp" android:minHeight="0dp" android:drawableStart="@drawable/ic_wrench" android:gravity="center_vertical" android:text="Valet" />
+    </LinearLayout>
+</LinearLayout>

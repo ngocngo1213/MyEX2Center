@@ -13,28 +13,27 @@
 
 ---
 
-## 2. Design System — "Cyber Emerald & Obsidian"
-| Token | Màu | Dùng cho |
-|---|---|---|
-| `bg_primary` | `#090D14` | Nền chính |
-| `card_surface` | `#121824` (viền `#1F293D` 1dp, bo 20dp) | Thẻ |
-| `accent_primary` | `#10B981` | Nút Active, gear đang chọn |
-| `accent_secondary` | `#F59E0B` | Cảnh báo, Valet, "Làm mát nhanh" |
-| `accent_danger` | `#EF4444` | Nguy hiểm/xóa, 12V < 12.0V |
+## 2. Design System — "Tactile Cockpit" (từ 1.1.0)
+Bề mặt nhám như vật liệu thật, **một** màu nhấn ấm cho trạng thái "đang bật", không gradient phát sáng / kính mờ / emoji.
 
-**Quy tắc Driver-Centric** (màn 1920×1080, 1dp = 1px, nhìn từ ~75 cm):
-- Cỡ chữ tối thiểu **14sp**; nhãn nút **16sp**; giá trị chính 22–48sp. Không dùng 9–13sp.
-- **Lưới 8pt** (`res/values/dimens.xml`): mọi khoảng cách/kích thước là bội số của 8dp (4 và 12 cho chi tiết/khe giữa nút). Vùng chạm tối thiểu 48dp, nút dùng khi lái ≥ 56dp, nút chính 64dp, khe giữa các nút ≥ 8dp (12dp cho nút điều khiển xe). Chi tiết đo trước/sau: `docs/UI_AUDIT_8PT.md`.
-- Vùng chạm: header 56dp (thanh 64dp), chế độ lái / Regen 64dp, điều hòa (hàng nút, +/−) 64dp, kính 64dp, media 56dp, thanh trượt 56dp (rãnh 8dp, núm 28dp). Tốc độ 72sp. Nút nổi 64dp, hút về mép trái/phải, tránh dải header 112dp và vùng cử chỉ 96dp.
-- Gear đang chọn nền Emerald, chữ trắng; nút Active luôn chữ trắng.
-- **4 trạng thái nút điều khiển xe:** chưa biết (mờ 0.6, hiện `--`) · đang gửi (mờ 0.7 tới khi xe xác nhận) · active (Emerald, chữ trắng) · lỗi (toast "Xe không nhận lệnh: …", trở về trạng thái thật). Bị chặn do không ở số P → toast lý do.
-- Ô TPMS bị ẩn khi xe không cung cấp dữ liệu lốp (không hiện `-- kPa` cố định).
-- Nút nổi mặc định ở mép phải, phần dưới màn hình (không đè cần số/HUD); vị trí kéo được ghi nhớ.
-- Màn hình đêm hiện gợi ý "Chạm bất kỳ đâu để thoát" 3 giây rồi mờ dần.
-- Kho ứng dụng: lưới **3 cột** (~620dp/thẻ), chữ 14–20sp, mô tả cố định 3 dòng, nút 56dp.
-- **Bộ icon thống nhất:** mọi icon là vector 24×24, glyph Material bo tròn (Material Icons, Apache-2.0) + icon xe riêng cùng lưới (gió mặt/chân, sấy kính trước/sau, ắc quy 12V, vô lăng, chia đôi màn hình) nét 2dp bo tròn. Icon vẽ màu trắng và **nhận màu tại nơi dùng** (`android:tint` / `setColorFilter`): `text_primary` cho nút điều hướng, `text_secondary` cho icon phụ, trắng trên nền xanh/cam, `accent` cho tiêu đề mục Cài đặt, đỏ cho xóa. Icon trong nút điều khiển đổi theo trạng thái (trắng khi active). Không dùng emoji làm icon. Icon thông báo `ic_notification` đơn sắc. Ảnh tạm của ứng dụng chưa có icon: `ic_app_placeholder` (màu `text_muted`, không tint để không đè màu icon thật).
+| Token (Dashboard `dash_*`, app `core`) | Tối | Sáng | Dùng cho |
+|---|---|---|---|
+| `dash_bg` | `#0E1114` | `#E6EAEE` | Nền |
+| `dash_card` | `#161B20` | `#F7F8FA` | Thẻ: viền sáng 1px trên + viền tối 1px dưới (`dash_card.xml`) |
+| `dash_well` | `#0C1013` | `#E1E5E9` | Nút tắt: lõm (`dash_btn.xml`, ripple) |
+| `dash_accent` = `accent_primary` | `#F2A93B` | `#F2A93B` | Nút bật, cần số đang chọn, công tắc |
+| `dash_on_accent` = `text_on_accent` | `#1B1205` | `#1B1205` | Chữ/icon trên màu nhấn (chữ trắng trên hổ phách không đủ tương phản) |
+| `accent_secondary` | `#FF7A3D` | `#E8590C` | Cảnh báo (cam, khác màu nhấn) |
+| `dash_cool` | `#6CB6FF` | `#1F6FC2` | Mức quạt |
 
----
+**Quy tắc:**
+- Chữ tối thiểu **18sp** (nhãn thẻ 18sp chữ hoa giãn 8%); giá trị 26–60sp; tốc độ 176sp; chữ số dạng `tnum`.
+- Nút điều khiển ≥ 76dp (nút icon 84dp, icon ~44dp); khe ≥ 10–12dp. Nút bật đổi **cả** nền, chữ và icon (không chỉ màu).
+- Phản hồi chạm ngay khung đầu: nút lún 0.96 (`animator/dash_press.xml`) + ripple; không chờ xe.
+- Trạng thái: chưa biết (mờ 0.6, `--`) · đang gửi (mờ 0.7) · bật (màu nhấn) · lỗi (toast "Xe không nhận lệnh: …").
+- Icon điều hòa và cốp lấy từ app gốc của xe (`GeelyAutoClimate`, `GeelyAutoSettings` › phím tắt) để người lái nhận ra ngay; ảnh xe nhìn từ trên xuống lấy từ Cài đặt › Điều khiển của xe (`img_car_top`, bản sáng và tối).
+- Bố cục **Đi đêm tối giản**: luôn giao diện tối + phủ tối đồng đều 18% (giữ nguyên tỉ lệ tương phản).
+- Kho ứng dụng: lưới 3 cột, chữ ≥ 18sp, nút 56dp.
 
 ## 3. Core Modules & Architecture
 
@@ -76,16 +75,27 @@ Màn hình Kho chỉ có trong EX2 Store; MyEX2Center không có Kho tích hợp
 ### Module 4: Split-Screen Launcher — `SplitScreenLauncher.kt`
 - Một chạm: Vietmap Live (trái) + SmartTube/YouTube (phải) bằng split-screen Android 9.
 
-### Module 5: Dashboard — `MainActivity.kt`, `activity_main.xml`
-Bố cục 3 cột (32% / 38% / 30%) + thanh Header.
+### Module 5: Dashboard — `MainActivity.kt`, `ui/dash/*`, `layout/widget_*.xml`
+**Thanh trạng thái (64dp):** giờ, nhiệt độ ngoài, P R N D, ô cảnh báo (chỉ hiện khi Crash Guard đã ngắt / Valet bật), Wi-Fi (chạm → màn Wi-Fi của xe `com.flyme.auto.intent.action.ACTION_WIFI_SETTINGS`), **Chỉnh bố cục**, Blackout, Cài đặt. Đã bỏ: ắc quy 12V, nút Kho ứng dụng, pill Tự động hóa, áp suất lốp (xe không cấp dữ liệu).
 
-**Header:** hồ sơ xe (ảnh tròn + tên, chạm → Cài đặt), giờ `HH:mm`, nhiệt độ ngoài, điện áp 12V (đỏ nếu < 12.0V), Pill Tự động hóa (xanh = bật; cam = Valet; cam cảnh báo = Crash Guard đã ngắt, bấm để reset), Wi-Fi SSID + IP, nút Kho ứng dụng / Blackout / Cài đặt.
+**Lưới Bento 6×3** (`BentoGridLayout`): ô ~299×248dp, khe 16dp, luôn lấp 100% vùng app 1920×896; mỗi widget đo đúng một lần với kích thước cố định nên cập nhật chữ không làm cả màn hình đo lại.
 
-**Cột 1 (lái):** HUD (P R N D, **biển giới hạn tốc độ ngay cạnh tốc độ**, % pin, km ước tính + progress); chế độ lái (Tiết kiệm/Thoải mái/Thể thao) và Regen (Thấp/Vừa/Cao), mỗi nhóm có công tắc **"Ghi nhớ"**; phím tắt (lưới 2×2): Tắt âm AVAS, **Đèn viền** (`PROP_AMBIENT_LIGHT_ON`, đọc/ghi qua `ControlSnapshot` như các nút khác), Camera 360, Bảo dưỡng (Valet). Auto Hold / HDC / ESC **đã ẩn** (mã VHAL chưa được kiểm chứng, nằm trong khối ADAS thật).
+| Widget | Cỡ | Nội dung |
+|---|---|---|
+| Lái xe `DRIVE` | 2×2 | tốc độ, biển giới hạn (chỉ khi có dữ liệu thật), % pin, km |
+| Điều hòa `CLIMATE` / `CLIMATE_COMPACT` | 2×2 / 2×1 | −/+ nhiệt độ (thang 17–32), −/+ quạt (1–8); nút icon A/C, gió trong, gió ngoài, làm mát nhanh, 3 hướng gió (mặt 1 / mặt+chân 3 / chân 2), sấy trước/sau |
+| Xe · Cốp · Kính `CAR` | 2×2 | ảnh xe thật, kính TT/TP/ST/SP + %, cốp trước (chỉ ở P, xác nhận), kính Đóng/10/50/100 (50/100 khoá khi ≥ 30 km/h hoặc không đọc được tốc độ) |
+| Nhạc `MEDIA` / `MEDIA_LARGE` | 2×1 / 2×2 | bài + app đang phát, trước/phát/sau, âm lượng (theo kịp vô lăng) |
+| Chế độ lái `DRIVE_MODE` | 2×1 | Eco/Comfort/Sport + phanh tái sinh |
+| Phím tắt `SHORTCUTS` | 2×1 | Tắt âm AVAS, Auto Hold, Đèn nội thất, Sạc không dây, Chạy đôi, Valet |
+| Pin `BATTERY`, Chạy đôi `SPLIT` | 2×1 | |
+| Ô 1×1 `TILE` | 1×1 | Tắt màn hình, Đèn nội thất, Sấy kính, Auto Hold, Valet, AVAS, Sạc không dây, Mở cốp trước |
 
-**Cột 2:** nút "Chạy Đôi: Vietmap + YouTube", media (prev/play/next, volume); điều hòa (A/C có icon bông tuyết, nút **lấy gió** một chạm đổi Gió trong ⇄ Gió ngoài — nhãn + icon `ic_air_recirc` / `ic_air_fresh` luôn hiện chế độ hiện tại, xanh = Gió trong (nút AUTO đã bỏ vì `HVAC_AUTO_ON` là NOOP trên xe), ⚡Làm mát nhanh; nhiệt độ 17–32°C và quạt 1–8 **trên 2 dòng riêng**, mỗi thanh trượt (`StepSeekBar`) có vạch và số cho từng nấc (chạm vào số để nhảy tới nấc đó; nấc hiện tại tô xanh, chưa có dữ liệu thì không tô); gió mặt/chân; sấy trước/sau).
+**Bố cục** (`DashPresets.kt`): 3 preset (Lái xe hàng ngày · Đi đêm tối giản · Đỗ xe / Cắm trại — preset đỗ xe không có chạy đôi). Bố cục đang dùng lưu JSON có phiên bản (`prefs dashboard/layout_v1`); dữ liệu sai (widget lạ, ra ngoài lưới, chồng lấn, trùng) → về "Lái xe hàng ngày". Chọn preset trong Cài đặt › Giao diện.
 
-**Cột 3:** ảnh vector EX2 nhìn từ trên xuống (`img_ex2_top_down`, tự vẽ, 130×260dp), chỉ báo màu ở từng bánh (xanh 200–300 kPa, vàng ngoài khoảng, đỏ <170 / >330, xám chưa có dữ liệu), áp suất + nhiệt độ cạnh mỗi bánh, 4 chỉ báo kính cạnh mỗi cửa (đọc thật từ VHAL, không đọc được → `Kính: --`); cột chia 70/30: card lốp 70% trên (ảnh xe = 86% chiều cao vùng vẽ, ConstraintLayout, bánh/nhãn đặt theo tỉ lệ ảnh xe), card Kính 30% dưới, lưới 2×2: 0% Đóng kín / 10% Hé thoáng / 50% Mở một nửa / 100% Hạ hết (50% và 100% chỉ khi < 30 km/h, không đọc được tốc độ → chặn), biển tốc độ (mở Vietmap). Nút mở cốp **đã ẩn** (`DOOR_POS` chỉ đọc, chưa có mã cốp).
+**Chỉnh bố cục (chỉ ở P):** nút "Chỉnh bố cục" (khoá khi không ở P). Lớp `EditOverlay` nhận mọi chạm (nút widget không thể bấm nhầm): viền nét đứt, "−" ẩn, "⇲" đổi cỡ, kéo để di chuyển (ô trống → chuyển; widget dưới vừa chỗ cũ → đổi chỗ; không thì đẩy sang chỗ trống; không được → bật về). Thanh trên: 3 preset, + Thêm widget (khay widget đang ẩn), Hoàn tác (30 bước), Về mặc định, Xong. Xe rời P hoặc mất tín hiệu → tự lưu và khoá ngay.
+
+**Dữ liệu xe:** `car/CarStateHub.kt` — một luồng đọc VHAL cho cả app (Dashboard + thanh dưới), chỉ đọc nhóm tín hiệu đang có người đăng ký, một callback thay đổi VHAL cho cả tiến trình, poll theo chu kỳ ngắn nhất được yêu cầu (Dashboard 3s, thanh dưới 2s). Ghi qua `CarCommands` (một luồng, đọc lại sau 1.2s). Dashboard chỉ đổi nền/icon khi trạng thái thật sự đổi: khi đứng yên ~1 khung hình / 30s (14ms).
 
 **"Ghi nhớ" chế độ lái / phanh tái sinh** (`KEY_AUTO_DRIVE_MODE`, `KEY_AUTO_REGEN_MODE`): trong 20s sau khi service khởi động hoặc head unit thức dậy, chế độ đã lưu được ghi lại vào xe (đọc lại xác nhận, tối đa 3 lần); sau đó chỉ theo dõi — lựa chọn của người lái (trên Dashboard hoặc màn hình gốc của xe) ổn định qua 2 tick sẽ được lưu. Không còn ép chế độ khi đang lái.
 
@@ -112,9 +122,7 @@ Bố cục 3 cột (32% / 38% / 30%) + thanh Header.
 - Wi-Fi (`utils/WifiStatus.kt`): SSID/IP thật qua `ConnectivityManager` + `WifiManager`; không có → "Không có Wi-Fi" / `--`. Kho: dung lượng/kích thước không rõ → `--`.
 - Overlay: mọi lệnh đọc/ghi VHAL của panel nổi và thanh chia đôi chạy trên executor nền.
 
-**Threading:**
-- Telemetry: `ScheduledExecutorService` (3s) đọc VHAL ở background, đẩy snapshot về `runOnUiThread`; bắt đầu ở `onResume`, hủy ở `onPause`; shutdown ở `onDestroy`.
-- Ghi VHAL (nhiệt độ, quạt, chế độ lái, regen, kính, cốp, AVAS…) qua `climateExecutor` (single thread). Slider debounce 120ms; nút +/- ghi ngay.
+**Threading:** đọc VHAL trên luồng `car-state-hub`, ghi trên `car-commands`, thông tin media trên `mediaExecutor`; đăng ký Hub ở `onResume`, hủy ở `onPause`.
 
 ### `CarApiHelper.kt` (VHAL)
 - Singleton, một kết nối `Car` dùng chung cho cả tiến trình. Thành phần đăng ký bằng `acquire(context, owner)` / `release(owner)` (holders: `dashboard`, `automation-service`, `floating-service`, `park-gate`); chỉ đóng kết nối khi holder cuối cùng release → đóng Dashboard không cắt VHAL của service.

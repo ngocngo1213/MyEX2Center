@@ -35,8 +35,8 @@ object ThemeManager {
     }
 
     /** Wraps [base] so its resources resolve the chosen light/dark colours. */
-    fun wrap(base: Context): Context {
-        val mode = getMode(base)
+    fun wrap(base: Context, forceDark: Boolean = false): Context {
+        val mode = if (forceDark) MODE_DARK else getMode(base)
         if (mode == MODE_SYSTEM) return base
         val config = Configuration(base.resources.configuration)
         val night = if (mode == MODE_DARK) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO

@@ -1,27 +1,25 @@
 package com.mipago.ex2center.ui
 
 import android.app.Activity
-import com.mipago.ex2center.utils.AppDialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
-import android.graphics.Color
+import android.content.res.ColorStateList
 import android.media.AudioManager
 import android.media.MediaMetadata
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
-import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.provider.Settings
 import android.util.Log
-import android.util.TypedValue
 import android.view.KeyEvent
 import android.view.View
-import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
@@ -29,51 +27,61 @@ import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import com.mipago.ex2center.R
+import com.mipago.ex2center.car.CarCommands
+import com.mipago.ex2center.car.CarSnapshot
+import com.mipago.ex2center.car.CarStateHub
+import com.mipago.ex2center.car.ClimateState
+import com.mipago.ex2center.car.ControlsState
+import com.mipago.ex2center.car.Signal
 import com.mipago.ex2center.launcher.SplitScreenLauncher
 import com.mipago.ex2center.service.CarAutomationService
 import com.mipago.ex2center.service.FloatingControlService
+import com.mipago.ex2center.ui.dash.BentoGridLayout
+import com.mipago.ex2center.ui.dash.DashLayout
+import com.mipago.ex2center.ui.dash.DashPreset
+import com.mipago.ex2center.ui.dash.EditOverlay
+import com.mipago.ex2center.ui.dash.Placement
+import com.mipago.ex2center.ui.dash.LevelIndicator
+import com.mipago.ex2center.ui.dash.TileKind
+import com.mipago.ex2center.ui.dash.WidgetType
+import com.mipago.ex2center.utils.AppDialog
 import com.mipago.ex2center.utils.CarApiHelper
 import com.mipago.ex2center.utils.ParkGate
-import com.mipago.ex2center.utils.WifiStatus
-import com.mipago.ex2center.utils.CarProfile
-import com.mipago.ex2center.utils.ThemeManager
-import com.mipago.ex2center.utils.UiStyle
-import android.widget.Switch
 import com.mipago.ex2center.utils.PendingWrites
-import java.net.InetAddress
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
+import com.mipago.ex2center.utils.ThemeManager
+import com.mipago.ex2center.utils.WifiStatus
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
 /**
- * Main Activity & Dashboard for EX2 Center
+ * Dashboard — Bento grid 6×3 filled by the preset chosen in Cài đặt (ui/dash/DashPresets.kt):
+ * Lái xe hàng ngày · Đi đêm tối giản · Đỗ xe / Cắm trại.
  *
- * Driver-Centric Cockpit layout (Cyber Emerald & Obsidian):
- * - Top Status Pill Bar: Digital Clock, Outside Temp, 12V Battery, Automation/CrashGuard/Valet Pill, Wi-Fi info, Quick actions.
- * - Column 1 (32%): Driver Operating HUD (Gear, Speed, Battery), Drive Mode & Regen, 6 Core Shortcuts.
- * - Column 2 (38%): Multitasking & Climate (Hero Split-Screen, Media & Volume, Smart Climate with Quick Cool).
- * - Column 3 (30%): Visual Vehicle Status (TPMS 4 Wheels + 4 Window Positions, Quick Window Actions; trunk removed until a verified property exists).
+ * Car values come from [CarStateHub] (one reader for the whole app), writes go through
+ * [CarCommands]. A tapped control shows the requested state at once (tracked by [PendingWrites]),
+ * then the car's confirmed state; unknown values are shown as "--", never guessed.
  */
 class MainActivity : Activity() {
 
     companion object {
         private const val TAG = "MainActivity"
         private const val WINDOW_OPEN_MAX_KMH = 30f
-        private const val PKG_SURROUND_CAMERA = "com.ecarx.parking"
         private const val VHAL_HOLDER = "dashboard"
+        private const val POLL_INTERVAL_MS = 3_000L
+        private const val POST_WRITE_REFRESH_MS = 1_200L
 
         private const val TEMP_MIN = 17
         private const val TEMP_MAX = 32
         private const val FAN_MIN = 1
         private const val FAN_MAX = 8
-        private const val SLIDER_WRITE_DEBOUNCE_MS = 250L
-        private const val EVENT_REFRESH_DEBOUNCE_MS = 200L
-        private const val POST_WRITE_REFRESH_MS = 1200L
+
+        // Airflow bitmask written to the car: 1 = face, 2 = floor, 3 = face + floor.
+        private const val VENT_FACE = 1
+        private const val VENT_FLOOR = 2
+        private const val VENT_FACE_FLOOR = 3
 
         // PendingWrites keys
         private const val K_AC = "ac"
@@ -90,27 +98,13 @@ class MainActivity : Activity() {
         private const val K_AUTO_HOLD = "auto_hold"
         private const val K_WIRELESS = "wireless"
 
-        private val WATCH_PROPS = intArrayOf(
-            CarApiHelper.PROP_GEAR,
-            CarApiHelper.PROP_HVAC_POWER,
-            CarApiHelper.PROP_HVAC_AC_ON,
-            CarApiHelper.PROP_HVAC_TEMP_SETPOINT,
-            CarApiHelper.PROP_HVAC_FAN_SPEED,
-            CarApiHelper.PROP_HVAC_AIR_DIRECTION,
-            CarApiHelper.PROP_HVAC_RECIRC,
-            CarApiHelper.PROP_HVAC_DEFROST_FRONT,
-            CarApiHelper.PROP_HVAC_DEFROST_REAR,
-            CarApiHelper.PROP_DRIVE,
-            CarApiHelper.PROP_REGEN,
-            CarApiHelper.PROP_WINDOW_POS,
-            CarApiHelper.PROP_AMBIENT_LIGHT_ON,
-            CarApiHelper.PROP_AUTO_HOLD,
-            CarApiHelper.PROP_WIRELESS_CHARGING
+        private val SIGNALS = setOf(
+            Signal.DRIVE, Signal.BATTERY, Signal.ENV, Signal.WINDOWS, Signal.CLIMATE, Signal.CONTROLS
         )
     }
 
-    /** Control state exactly as the car reports it (null = unknown, never assumed). */
-    private data class ControlSnapshot(
+    /** Controls as displayed: the car's state with in-flight commands applied (null = unknown). */
+    private data class Shown(
         val acOn: Boolean? = null,
         val recircOn: Boolean? = null,
         val defrostFront: Boolean? = null,
@@ -126,1167 +120,960 @@ class MainActivity : Activity() {
         val wireless: Boolean? = null
     )
 
-    private data class MediaInfo(val title: String?, val isPlaying: Boolean)
+    private data class MediaInfo(val track: String?, val app: String?, val isPlaying: Boolean)
 
     private val carHelper = CarApiHelper.getInstance()
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val telemetryExecutor = Executors.newSingleThreadScheduledExecutor()
-    private val climateExecutor = Executors.newSingleThreadExecutor()
-    private var telemetryFuture: ScheduledFuture<*>? = null
+    /** Now-playing info is not VHAL: read on its own thread, alongside each car update. */
+    private val mediaExecutor = Executors.newSingleThreadScheduledExecutor()
+    private var carSub: CarStateHub.Subscription? = null
 
     private lateinit var prefs: SharedPreferences
     private lateinit var audioManager: AudioManager
-
-    // Top Header Views
-    private lateinit var tvDigitalClock: TextView
-    private lateinit var tvOutsideTemp: TextView
-    private lateinit var tvBattery12v: TextView
-    private lateinit var layoutAutomationPill: LinearLayout
-    private lateinit var ivAutomationIcon: ImageView
-    private lateinit var tvAutomationStatus: TextView
-    private lateinit var tvWifiSsid: TextView
-    private lateinit var tvWifiIp: TextView
-    private lateinit var btnOpenCatalogHeader: ImageView
-    private lateinit var btnNightBlackout: ImageView
-    private lateinit var btnSettings: ImageView
-    private lateinit var layoutCarProfile: LinearLayout
-    private lateinit var ivHeaderCarAvatar: ImageView
-    private lateinit var tvHeaderCarName: TextView
-    private lateinit var swRememberDrive: Switch
-    private lateinit var swRememberRegen: Switch
-    private lateinit var vWheelFl: View
-    private lateinit var vWheelFr: View
-    private lateinit var vWheelRl: View
-    private lateinit var vWheelRr: View
-
-    /** Appearance this Activity was created with; recreated when Cài đặt changes it. */
     private var createdThemeMode = -1
 
-    // Column 1: Driver Zone
-    private lateinit var tvGearP: TextView
-    private lateinit var tvGearR: TextView
-    private lateinit var tvGearN: TextView
-    private lateinit var tvGearD: TextView
-    private lateinit var tvSpeedValue: TextView
-    private lateinit var tvEstimatedRange: TextView
-    private lateinit var tvBatterySoc: TextView
-    private lateinit var pbBatterySoc: ProgressBar
+    // Colours of the current theme
+    private var cText = 0
+    private var cMuted = 0
+    private var cOnAccent = 0
 
-    private lateinit var btnDriveEco: TextView
-    private lateinit var btnDriveComfort: TextView
-    private lateinit var btnDriveSport: TextView
-    private lateinit var btnRegenLow: TextView
-    private lateinit var btnRegenMid: TextView
-    private lateinit var btnRegenHigh: TextView
+    // Status strip
+    private lateinit var tvDigitalClock: TextView
+    private lateinit var tvOutsideTemp: TextView
+    private lateinit var gearViews: List<Pair<TextView, Int>>
+    private lateinit var tvStatusChip: TextView
+    private lateinit var btnWifi: TextView
 
-    private lateinit var btnAvasToggle: LinearLayout
-    private lateinit var btnAmbientLight: LinearLayout
-    private lateinit var tvAmbientLabel: TextView
-    private lateinit var btnAutoHold: LinearLayout
-    private lateinit var tvAutoHoldLabel: TextView
-    private lateinit var btnWirelessCharge: LinearLayout
-    private lateinit var tvWirelessLabel: TextView
-    private lateinit var tvAvasLabel: TextView
-    private lateinit var btnCamera360: LinearLayout
-    private lateinit var btnValetMode: LinearLayout
-    private lateinit var tvValetLabel: TextView
+    // Widget views. The preset decides which widgets exist, so every group is a list (empty when
+    // the widget is not on screen; several entries when two widgets show the same value).
+    private var layoutItems: List<Placement> = emptyList()
+    private var builtRevision = -1
+    private lateinit var grid: BentoGridLayout
+    private val viewsByKey = HashMap<String, View>()
+    private var lastSnap = CarSnapshot(connected = false)
 
-    // Column 2: Multitasking & Climate
-    private lateinit var btnSplitScreenHero: LinearLayout
-    private lateinit var tvMediaTitle: TextView
-    private lateinit var btnMediaPrev: ImageView
-    private lateinit var btnMediaPlayPause: ImageView
-    private lateinit var btnMediaNext: ImageView
-    private lateinit var sbVolume: SeekBar
-    private lateinit var tvVolumeValue: TextView
+    // Edit mode (only in P)
+    private var editing = false
+    private val undoStack = ArrayList<List<Placement>>()
+    private lateinit var editOverlay: EditOverlay
+    private lateinit var normalStrip: View
+    private lateinit var editStrip: View
+    private lateinit var editTray: View
+    private lateinit var trayItems: LinearLayout
+    private lateinit var presetChips: LinearLayout
+    private lateinit var btnEditLayout: TextView
 
-    private lateinit var btnAcCompressor: LinearLayout
-    private lateinit var btnRecirc: LinearLayout
-    private lateinit var ivRecircIcon: ImageView
-    private lateinit var tvRecircLabel: TextView
-    private lateinit var btnQuickCool: LinearLayout
+    // Lái xe / Pin
+    private var tvSpeedValue = listOf<TextView>()
+    private var btnSpeedLimitSign = listOf<View>()
+    private var tvSpeedLimitValue = listOf<TextView>()
+    private var tvBatterySoc = listOf<TextView>()
+    private var tvEstimatedRange = listOf<TextView>()
+    private var pbBatterySoc = listOf<ProgressBar>()
 
-    private lateinit var tvClimateTargetTemp: TextView
-    private lateinit var btnTempMinus: Button
-    private lateinit var sbTempGradient: StepSeekBar
-    private lateinit var btnTempPlus: Button
+    // Điều hòa
+    private var tvClimateTargetTemp = listOf<TextView>()
+    private var levelTemp = listOf<LevelIndicator>()
+    private var tvClimateFanSpeed = listOf<TextView>()
+    private var levelFan = listOf<LevelIndicator>()
+    private var btnAc = listOf<TextView>()
+    private var btnRecirc = listOf<View>()
+    private var btnFresh = listOf<View>()
+    private var btnVentFace = listOf<View>()
+    private var btnVentFaceFloor = listOf<View>()
+    private var btnVentFloor = listOf<View>()
+    private var btnQuickCool = listOf<View>()
+    private var btnDefrostFront = listOf<View>()
+    private var btnDefrostRear = listOf<View>()
 
-    private lateinit var tvClimateFanSpeed: TextView
-    private lateinit var btnFanMinus: Button
-    private lateinit var sbFanSpeed: StepSeekBar
-    private lateinit var btnFanPlus: Button
+    // Xe · Cốp · Kính
+    private var windowLabels = listOf<List<TextView>>()
+    private var tvWindowHint = listOf<TextView>()
+    private var btnFrontTrunk = listOf<TextView>()
+    private var windowButtons = listOf<Pair<TextView, Int>>()
 
-    private lateinit var btnVentFace: LinearLayout
-    private lateinit var btnVentFloor: LinearLayout
-    private lateinit var btnDefrostFront: LinearLayout
-    private lateinit var btnDefrostRear: LinearLayout
+    // Nhạc
+    private var tvMediaSource = listOf<TextView>()
+    private var tvMediaTitle = listOf<TextView>()
+    private var btnMediaPlayPause = listOf<ImageView>()
+    private var sbVolume = listOf<SeekBar>()
+    private var tvVolumeValue = listOf<TextView>()
 
-    // Column 3: TPMS & Windows
-    private lateinit var tvTpmsFlKpa: TextView
-    private lateinit var tvTpmsFlTemp: TextView
-    private lateinit var tvTpmsFrKpa: TextView
-    private lateinit var tvTpmsFrTemp: TextView
-    private lateinit var tvTpmsRlKpa: TextView
-    private lateinit var tvTpmsRlTemp: TextView
-    private lateinit var tvTpmsRrKpa: TextView
-    private lateinit var tvTpmsRrTemp: TextView
-    private lateinit var tvTpmsUpdated: TextView
+    // Chế độ lái
+    private var driveButtons = listOf<Pair<TextView, Int>>()
+    private var regenButtons = listOf<Pair<TextView, Int>>()
 
-    private lateinit var tvWindowFl: TextView
-    private lateinit var tvWindowFr: TextView
-    private lateinit var tvWindowRl: TextView
-    private lateinit var tvWindowRr: TextView
+    // Phím tắt
+    private var btnAvas = listOf<TextView>()
+    private var btnAutoHold = listOf<TextView>()
+    private var btnAmbient = listOf<TextView>()
+    private var btnWireless = listOf<TextView>()
+    private var btnValet = listOf<TextView>()
 
-    private lateinit var btnWindowsClose: View
-    private lateinit var btnWindowsVent: View
-    private lateinit var btnWindowsHalf: View
-    private lateinit var btnWindowsOpen: View
-    private lateinit var btnSpeedLimitSign: LinearLayout
-    private lateinit var tvSpeedLimitValue: TextView
+    /** 1×1 tiles of the preset. */
+    private class Tile(val kind: TileKind, val root: View, val icon: ImageView, val title: TextView, val state: TextView)
+    private var tiles = listOf<Tile>()
 
-    // Control state: what the car reported last, and what is displayed (car state + in-flight
-    // commands from PendingWrites). Never seeded with assumed values.
-    private var lastControls = ControlSnapshot()
-    private var shown = ControlSnapshot()
+    private var lastClimate: ClimateState? = null
+    private var lastControls: ControlsState? = null
+    private var shown = Shown()
     private val pending = PendingWrites()
-
-    private var isTrackingTempSlider = false
-    private var isTrackingFanSlider = false
-    @Volatile private var watchToken: Any? = null
-
-    // Debounce runnables for sliders
-    private var tempDebounceRunnable: Runnable? = null
-    private var fanDebounceRunnable: Runnable? = null
-
-    /** VHAL change event → one coalesced refresh. */
-    private val eventRefresh = Runnable { scheduleTelemetryRefresh(0L) }
+    private var lastSpeed: Float? = null
+    private var lastGear: Int? = null
+    private var lastWindows: List<Int?>? = null
+    private var lastSpeedLimitSource: String? = null
 
     private val clockRunnable = object : Runnable {
         override fun run() {
-            updateDigitalClock()
+            tvDigitalClock.setTextIfChanged(SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()))
             mainHandler.postDelayed(this, 1000L)
         }
     }
 
+    /** "Đi đêm tối giản" layout: always the dark palette, dimmed a little more (see [applyNightLook]). */
+    private var nightLook = false
+
+    private fun isNightLayout(context: Context) = DashLayout.load(context).toSet() == DashPreset.NIGHT.placements.toSet()
+
     override fun attachBaseContext(newBase: Context) {
-        super.attachBaseContext(ThemeManager.wrap(newBase))
+        nightLook = isNightLayout(newBase)
+        super.attachBaseContext(ThemeManager.wrap(newBase, forceDark = nightLook))
+    }
+
+    /**
+     * Night look: one uniform 18% dim over the whole Dashboard. It lowers white text, the accent
+     * and the car photo together, so contrast ratios between them stay the same while the
+     * screen glows less in a dark cabin.
+     */
+    private fun applyNightLook() {
+        findViewById<View>(android.R.id.content).foreground =
+            if (nightLook) android.graphics.drawable.ColorDrawable(0x2E000000) else null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         createdThemeMode = ThemeManager.getMode(this)
         setContentView(R.layout.activity_main)
-        com.mipago.ex2center.utils.ThemeManager.applyWindow(this)
+        ThemeManager.applyWindow(this)
 
         prefs = getSharedPreferences(CarAutomationService.PREFS_NAME, Context.MODE_PRIVATE)
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        cText = getColor(R.color.dash_text)
+        cMuted = getColor(R.color.dash_muted)
+        cOnAccent = getColor(R.color.dash_on_accent)
 
         initViews()
-        setupWifiInfo()
+        applyNightLook()
+        buildGrid(DashLayout.load(this))
         setupListeners()
         startCoreServices()
+        applyDisconnected()
 
-        // Shared connection: releasing it here never cuts off CarAutomationService/overlay.
-        carHelper.acquire(this, VHAL_HOLDER) { ready ->
-            if (ready && !telemetryExecutor.isShutdown) {
-                try {
-                    telemetryExecutor.execute { pollTelemetryBackground() }
-                } catch (_: Throwable) {}
-            }
-        }
+        // Shared connection for the writes; reads go through CarStateHub (which holds its own).
+        carHelper.acquire(this, VHAL_HOLDER)
     }
 
     override fun onResume() {
         super.onResume()
-        if (ThemeManager.getMode(this) != createdThemeMode) {
-            recreate() // appearance changed in Cài đặt
+        if (ThemeManager.getMode(this) != createdThemeMode || isNightLayout(this) != nightLook) {
+            recreate() // appearance changed in Cài đặt, or the night layout was picked / left
             return
         }
-        bindCarProfile()
-        bindRememberSwitches()
+        if (DashLayout.revision(this) != builtRevision) buildGrid(DashLayout.load(this)) // preset changed in Cài đặt
         mainHandler.post(clockRunnable)
-        setupWifiInfo()
-        updateAutomationPillUI()
+        refreshWifi()
+        renderStatusChip()
+        renderValet()
         syncVolumeFromSystem() // may have changed while another screen was in front
         registerReceiver(volumeReceiver, IntentFilter("android.media.VOLUME_CHANGED_ACTION"))
-
-        // Start 3-second background polling via ScheduledExecutorService (no main thread blocking)
-        telemetryFuture?.cancel(false)
-        telemetryFuture = telemetryExecutor.scheduleWithFixedDelay(
-            { pollTelemetryBackground() },
-            0L,
-            3000L,
-            TimeUnit.MILLISECONDS
-        )
-        try {
-            telemetryExecutor.execute { ensureWatch() }
-        } catch (_: Throwable) {}
+        carSub = CarStateHub.subscribe(this, SIGNALS, POLL_INTERVAL_MS) { state, _ -> onCarState(state) }
     }
 
     override fun onPause() {
+        if (editing) exitEdit(save = true)
         try { unregisterReceiver(volumeReceiver) } catch (_: Throwable) {}
         mainHandler.removeCallbacks(clockRunnable)
-        mainHandler.removeCallbacks(eventRefresh)
-        val token = watchToken
-        watchToken = null
-        if (token != null) {
-            try {
-                telemetryExecutor.execute { carHelper.unwatch(token) }
-            } catch (_: Throwable) {}
-        }
-        telemetryFuture?.cancel(false)
-        telemetryFuture = null
+        CarStateHub.unsubscribe(carSub)
+        carSub = null
         super.onPause()
     }
 
     override fun onDestroy() {
-        telemetryExecutor.shutdownNow()
-        climateExecutor.shutdownNow()
+        mediaExecutor.shutdownNow()
         carHelper.release(VHAL_HOLDER)
         super.onDestroy()
     }
 
     private fun initViews() {
-        // Top Header
         tvDigitalClock = findViewById(R.id.tvDigitalClock)
         tvOutsideTemp = findViewById(R.id.tvOutsideTemp)
-        tvBattery12v = findViewById(R.id.tvBattery12v)
-        layoutAutomationPill = findViewById(R.id.layoutAutomationPill)
-        ivAutomationIcon = findViewById(R.id.ivAutomationIcon)
-        tvAutomationStatus = findViewById(R.id.tvAutomationStatus)
-        tvWifiSsid = findViewById(R.id.tvWifiSsid)
-        tvWifiIp = findViewById(R.id.tvWifiIp)
-        btnOpenCatalogHeader = findViewById(R.id.btnOpenCatalogHeader)
-        btnNightBlackout = findViewById(R.id.btnNightBlackout)
-        btnSettings = findViewById(R.id.btnSettings)
-        layoutCarProfile = findViewById(R.id.layoutCarProfile)
-        ivHeaderCarAvatar = findViewById(R.id.ivHeaderCarAvatar)
-        tvHeaderCarName = findViewById(R.id.tvHeaderCarName)
-        swRememberDrive = findViewById(R.id.swRememberDrive)
-        swRememberRegen = findViewById(R.id.swRememberRegen)
-        UiStyle.styleSwitch(swRememberDrive)
-        UiStyle.styleSwitch(swRememberRegen)
-        vWheelFl = findViewById(R.id.vWheelFl)
-        vWheelFr = findViewById(R.id.vWheelFr)
-        vWheelRl = findViewById(R.id.vWheelRl)
-        vWheelRr = findViewById(R.id.vWheelRr)
-
-        // Column 1: Driver Zone
-        tvGearP = findViewById(R.id.tvGearP)
-        tvGearR = findViewById(R.id.tvGearR)
-        tvGearN = findViewById(R.id.tvGearN)
-        tvGearD = findViewById(R.id.tvGearD)
-        tvSpeedValue = findViewById(R.id.tvSpeedValue)
-        tvEstimatedRange = findViewById(R.id.tvEstimatedRange)
-        tvBatterySoc = findViewById(R.id.tvBatterySoc)
-        pbBatterySoc = findViewById(R.id.pbBatterySoc)
-
-        btnDriveEco = findViewById(R.id.btnDriveEco)
-        btnDriveComfort = findViewById(R.id.btnDriveComfort)
-        btnDriveSport = findViewById(R.id.btnDriveSport)
-        btnRegenLow = findViewById(R.id.btnRegenLow)
-        btnRegenMid = findViewById(R.id.btnRegenMid)
-        btnRegenHigh = findViewById(R.id.btnRegenHigh)
-
-        btnAvasToggle = findViewById(R.id.btnAvasToggle)
-        btnAmbientLight = findViewById(R.id.btnAmbientLight)
-        tvAmbientLabel = findViewById(R.id.tvAmbientLabel)
-        btnAutoHold = findViewById(R.id.btnAutoHold)
-        tvAutoHoldLabel = findViewById(R.id.tvAutoHoldLabel)
-        btnWirelessCharge = findViewById(R.id.btnWirelessCharge)
-        tvWirelessLabel = findViewById(R.id.tvWirelessLabel)
-        tvAvasLabel = findViewById(R.id.tvAvasLabel)
-        btnCamera360 = findViewById(R.id.btnCamera360)
-        btnValetMode = findViewById(R.id.btnValetMode)
-        tvValetLabel = findViewById(R.id.tvValetLabel)
-
-        // Column 2: Multitasking & Climate
-        btnSplitScreenHero = findViewById(R.id.btnSplitScreenHero)
-        tvMediaTitle = findViewById(R.id.tvMediaTitle)
-        btnMediaPrev = findViewById(R.id.btnMediaPrev)
-        btnMediaPlayPause = findViewById(R.id.btnMediaPlayPause)
-        btnMediaNext = findViewById(R.id.btnMediaNext)
-        sbVolume = findViewById(R.id.sbVolume)
-        tvVolumeValue = findViewById(R.id.tvVolumeValue)
-
-        btnAcCompressor = findViewById(R.id.btnAcCompressor)
-        btnRecirc = findViewById(R.id.btnRecirc)
-        ivRecircIcon = findViewById(R.id.ivRecircIcon)
-        tvRecircLabel = findViewById(R.id.tvRecircLabel)
-        btnQuickCool = findViewById(R.id.btnQuickCool)
-
-        tvClimateTargetTemp = findViewById(R.id.tvClimateTargetTemp)
-        btnTempMinus = findViewById(R.id.btnTempMinus)
-        sbTempGradient = findViewById(R.id.sbTempGradient)
-        sbTempGradient.labelFor = { (TEMP_MIN + it).toString() } // progress 0..15 = 17..32°C
-        sbTempGradient.hasValue = false
-        btnTempPlus = findViewById(R.id.btnTempPlus)
-
-        tvClimateFanSpeed = findViewById(R.id.tvClimateFanSpeed)
-        btnFanMinus = findViewById(R.id.btnFanMinus)
-        sbFanSpeed = findViewById(R.id.sbFanSpeed)
-        sbFanSpeed.hasValue = false // progress = fan level 1..8 (android:min=1)
-        btnFanPlus = findViewById(R.id.btnFanPlus)
-
-        btnVentFace = findViewById(R.id.btnVentFace)
-        btnVentFloor = findViewById(R.id.btnVentFloor)
-        btnDefrostFront = findViewById(R.id.btnDefrostFront)
-        btnDefrostRear = findViewById(R.id.btnDefrostRear)
-
-        // Column 3: TPMS & Windows
-        tvTpmsFlKpa = findViewById(R.id.tvTpmsFlKpa)
-        tvTpmsFlTemp = findViewById(R.id.tvTpmsFlTemp)
-        tvTpmsFrKpa = findViewById(R.id.tvTpmsFrKpa)
-        tvTpmsFrTemp = findViewById(R.id.tvTpmsFrTemp)
-        tvTpmsRlKpa = findViewById(R.id.tvTpmsRlKpa)
-        tvTpmsRlTemp = findViewById(R.id.tvTpmsRlTemp)
-        tvTpmsRrKpa = findViewById(R.id.tvTpmsRrKpa)
-        tvTpmsRrTemp = findViewById(R.id.tvTpmsRrTemp)
-        tvTpmsUpdated = findViewById(R.id.tvTpmsUpdated)
-
-        tvWindowFl = findViewById(R.id.tvWindowFl)
-        tvWindowFr = findViewById(R.id.tvWindowFr)
-        tvWindowRl = findViewById(R.id.tvWindowRl)
-        tvWindowRr = findViewById(R.id.tvWindowRr)
-
-        btnWindowsClose = findViewById(R.id.btnWindowsClose)
-        btnWindowsVent = findViewById(R.id.btnWindowsVent)
-        btnWindowsHalf = findViewById(R.id.btnWindowsHalf)
-        btnWindowsOpen = findViewById(R.id.btnWindowsOpen)
-        btnSpeedLimitSign = findViewById(R.id.btnSpeedLimitSign)
-        tvSpeedLimitValue = findViewById(R.id.tvSpeedLimitValue)
-        // No verified source for the road speed limit yet — never show a made-up number.
-        tvSpeedLimitValue.setTextIfChanged("--")
-
-        setupVolumeControl()
-        updateAutomationPillUI()
-        updateWindowPositionUI(arrayOfNulls(4))
-    }
-
-    private fun updateDigitalClock() {
-        val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-        val timeStr = sdf.format(Date())
-        tvDigitalClock.setTextIfChanged(timeStr)
-    }
-
-    private fun setupWifiInfo() {
-        val wifi = WifiStatus.read(this)
-        tvWifiSsid.setTextIfChanged(wifi.ssidLabel)
-        tvWifiIp.setTextIfChanged(wifi.ip)
-    }
-
-    private var isTrackingVolume = false
-
-    /**
-     * Volume changed elsewhere (steering-wheel keys, the car's own volume bar, another app):
-     * the system broadcasts VOLUME_CHANGED_ACTION, so the Dashboard slider follows at once.
-     */
-    private val volumeReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            val stream = intent?.getIntExtra("android.media.EXTRA_VOLUME_STREAM_TYPE", -1) ?: -1
-            if (stream == -1 || stream == AudioManager.STREAM_MUSIC) syncVolumeFromSystem()
+        gearViews = listOf(
+            findViewById<TextView>(R.id.tvGearP) to CarApiHelper.GEAR_PARK,
+            findViewById<TextView>(R.id.tvGearR) to CarApiHelper.GEAR_REVERSE,
+            findViewById<TextView>(R.id.tvGearN) to CarApiHelper.GEAR_NEUTRAL,
+            findViewById<TextView>(R.id.tvGearD) to CarApiHelper.GEAR_DRIVE
+        )
+        tvStatusChip = findViewById(R.id.tvStatusChip)
+        btnWifi = findViewById(R.id.btnWifi)
+        grid = findViewById(R.id.bentoGrid)
+        normalStrip = findViewById(R.id.normalStrip)
+        editStrip = findViewById(R.id.editStrip)
+        editTray = findViewById(R.id.editTray)
+        trayItems = findViewById(R.id.trayItems)
+        presetChips = findViewById(R.id.presetChips)
+        btnEditLayout = findViewById(R.id.btnEditLayout)
+        editOverlay = EditOverlay(this).apply {
+            grid = this@MainActivity.grid
+            visibility = View.GONE
+            host = editHost
         }
+        findViewById<FrameLayout>(R.id.gridHost).addView(
+            editOverlay, 1, // above the grid, below the tray
+            FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+        )
     }
 
-    /** Reflects the real media volume on the slider (never while the driver is dragging it). */
-    private fun syncVolumeFromSystem() {
-        if (isTrackingVolume) return
-        val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        val current = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-        if (sbVolume.max != max) sbVolume.max = max
-        if (sbVolume.progress != current) sbVolume.progress = current
-        tvVolumeValue.setTextIfChanged(current.toString())
-    }
-
-    private fun setupVolumeControl() {
-        syncVolumeFromSystem()
-
-        sbVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0)
-                    tvVolumeValue.setTextIfChanged(progress.toString())
+    /** Places the layout's widgets on the grid, collects their views, wires and renders them. */
+    private fun buildGrid(items: List<Placement>) {
+        layoutItems = items
+        builtRevision = DashLayout.revision(this)
+        grid.removeAllViews()
+        viewsByKey.clear()
+        val inflater = layoutInflater
+        val tileList = ArrayList<Tile>()
+        for (p in items) {
+            val view = inflater.inflate(p.type.layout, grid, false)
+            grid.addView(view, BentoGridLayout.LayoutParams(p.col, p.row, p.colSpan, p.rowSpan))
+            viewsByKey[p.key] = view
+            if (editing) {
+                view.scaleX = 0.97f
+                view.scaleY = 0.97f
+            }
+            if (p.type == WidgetType.TILE && p.tile != null) {
+                tileList += Tile(
+                    p.tile, view,
+                    view.findViewById(R.id.tileIcon), view.findViewById(R.id.tileTitle), view.findViewById(R.id.tileState)
+                ).also { t ->
+                    t.icon.setImageResource(p.tile.icon)
+                    t.title.text = p.tile.title
+                    t.root.contentDescription = p.tile.title
                 }
             }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) { isTrackingVolume = true }
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                isTrackingVolume = false
-                syncVolumeFromSystem()
-            }
-        })
+        }
+        tiles = tileList
+
+        tvSpeedValue = all(R.id.tvSpeedValue)
+        btnSpeedLimitSign = all(R.id.btnSpeedLimitSign)
+        tvSpeedLimitValue = all(R.id.tvSpeedLimitValue)
+        tvBatterySoc = all(R.id.tvBatterySoc)
+        tvEstimatedRange = all(R.id.tvEstimatedRange)
+        pbBatterySoc = all(R.id.pbBatterySoc)
+
+        tvClimateTargetTemp = all(R.id.tvClimateTargetTemp)
+        levelTemp = all<LevelIndicator>(R.id.levelTemp).onEach {
+            it.mode = LevelIndicator.Mode.TICKS
+            it.steps = TEMP_MAX - TEMP_MIN + 1
+        }
+        tvClimateFanSpeed = all(R.id.tvClimateFanSpeed)
+        levelFan = all<LevelIndicator>(R.id.levelFan).onEach {
+            it.mode = LevelIndicator.Mode.BARS
+            it.steps = FAN_MAX
+            it.activeColor = getColor(R.color.dash_cool)
+        }
+        btnAc = all(R.id.btnAcCompressor)
+        btnRecirc = all(R.id.btnRecirc)
+        btnFresh = all(R.id.btnFresh)
+        btnVentFace = all(R.id.btnVentFace)
+        btnVentFaceFloor = all(R.id.btnVentFaceFloor)
+        btnVentFloor = all(R.id.btnVentFloor)
+        btnQuickCool = all(R.id.btnQuickCool)
+        btnDefrostFront = all(R.id.btnDefrostFront)
+        btnDefrostRear = all(R.id.btnDefrostRear)
+
+        windowLabels = listOf(all(R.id.tvWindowFl), all(R.id.tvWindowFr), all(R.id.tvWindowRl), all(R.id.tvWindowRr))
+        tvWindowHint = all(R.id.tvWindowHint)
+        btnFrontTrunk = all(R.id.btnFrontTrunk)
+        windowButtons = all<TextView>(R.id.btnWindowsClose).map { it to 0 } +
+            all<TextView>(R.id.btnWindowsVent).map { it to 10 } +
+            all<TextView>(R.id.btnWindowsHalf).map { it to 50 } +
+            all<TextView>(R.id.btnWindowsOpen).map { it to 100 }
+
+        tvMediaSource = all(R.id.tvMediaSource)
+        tvMediaTitle = all(R.id.tvMediaTitle)
+        btnMediaPlayPause = all(R.id.btnMediaPlayPause)
+        sbVolume = all(R.id.sbVolume)
+        tvVolumeValue = all(R.id.tvVolumeValue)
+
+        driveButtons = all<TextView>(R.id.btnDriveEco).map { it to CarApiHelper.DRIVE_ECO } +
+            all<TextView>(R.id.btnDriveComfort).map { it to CarApiHelper.DRIVE_COMFORT } +
+            all<TextView>(R.id.btnDriveSport).map { it to CarApiHelper.DRIVE_SPORT }
+        regenButtons = all<TextView>(R.id.btnRegenLow).map { it to CarApiHelper.REGEN_LOW } +
+            all<TextView>(R.id.btnRegenMid).map { it to CarApiHelper.REGEN_MID } +
+            all<TextView>(R.id.btnRegenHigh).map { it to CarApiHelper.REGEN_HIGH }
+
+        btnAvas = all(R.id.btnAvasToggle)
+        btnAutoHold = all(R.id.btnAutoHold)
+        btnAmbient = all(R.id.btnAmbientLight)
+        btnWireless = all(R.id.btnWirelessCharge)
+        btnValet = all(R.id.btnValetMode)
+
+        // Shortcut icons at 32dp (the 24dp glyphs read too small from the driver's seat).
+        val icon = (32 * resources.displayMetrics.density).toInt()
+        (btnAvas + btnAutoHold + btnAmbient + btnWireless + btnValet + all<TextView>(R.id.btnSplitScreen)).forEach { tv ->
+            val d = tv.compoundDrawablesRelative[0] ?: return@forEach
+            d.setBounds(0, 0, icon, icon)
+            tv.setCompoundDrawablesRelative(d, null, null, null)
+        }
+
+        bindWidgetListeners()
+        setupVolumeControl()
+        renderAll()
+        if (editing) {
+            renderTray()
+            editOverlay.invalidate()
+        }
     }
 
-    /**
-     * Polls VHAL properties in a background executor thread to avoid UI Binder blocking.
-     * Posts immutable data to UI thread for rendering with fallback display.
-     */
-    private fun pollTelemetryBackground() {
-        val media = readMediaInfo()
-        if (!carHelper.isReady) {
-            watchToken = null // the connection that owned the callback is gone
-            carHelper.connect(this) // re-establish after suspend/wake; cheap no-op if in progress
-            runOnUiThread {
-                applyFallbackTelemetry()
-                applyMediaInfoAndVolume(media)
-            }
+    /** Everything on screen from the last known state (after a rebuild). */
+    private fun renderAll() {
+        if (lastSnap.connected) onCarState(lastSnap) else applyDisconnected()
+        refreshMedia()
+        renderValet()
+    }
+
+    /** Every view with [id] inside the grid (a value may appear in more than one widget). */
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : View> all(id: Int): List<T> {
+        val out = ArrayList<T>()
+        fun walk(v: View) {
+            if (v.id == id) out += v as T
+            if (v is android.view.ViewGroup) for (i in 0 until v.childCount) walk(v.getChildAt(i))
+        }
+        walk(grid)
+        return out
+    }
+
+    // -------------------------------------------------------------------------------------------
+    // CAR STATE
+    // -------------------------------------------------------------------------------------------
+
+    private fun onCarState(s: CarSnapshot) {
+        if (isFinishing || isDestroyed) return
+        lastSnap = s
+        // Safety: the layout can only be edited in P. Leaving P saves and locks it at once.
+        if (editing && s.gear != CarApiHelper.GEAR_PARK) {
+            exitEdit(save = true)
+            Toast.makeText(this, "Đã lưu và khoá bố cục vì xe rời số P", Toast.LENGTH_SHORT).show()
+        }
+        renderEditButton(s.gear)
+        refreshMedia()
+        if (!s.connected) {
+            applyDisconnected()
             return
         }
-        ensureWatch()
-
-        try {
-            val speed = carHelper.readSpeed()
-            val speedLimit = carHelper.readSpeedLimit()
-            val gear = carHelper.readGear()
-            val soc = carHelper.readBatterySoc()
-            val range = carHelper.readEstimatedRange()
-            val outsideTemp = carHelper.readOutsideTemperature()
-            val v12 = carHelper.read12vBatteryVoltage(this)
-            val tpms = carHelper.readTpmsData()
-            val winPos = carHelper.readWindowPositions()
-            val controls = readControlSnapshot()
-
-            runOnUiThread {
-                lastControls = controls
-                renderControls()
-                applyMediaInfoAndVolume(media)
-                applySpeedLimit(speedLimit)
-                applyTelemetryData(
-                    speed = speed,
-                    gear = gear,
-                    soc = soc,
-                    range = range,
-                    outsideTemp = outsideTemp,
-                    v12 = v12,
-                    tpms = tpms,
-                    winPos = winPos
-                )
-            }
-        } catch (t: Throwable) {
-            Log.w(TAG, "Error polling background telemetry: ${t.message}")
-            runOnUiThread {
-                applyFallbackTelemetry()
-                applyMediaInfoAndVolume(media)
-            }
-        }
+        lastClimate = s.climate
+        lastControls = s.controls
+        renderControls()
+        renderDrive(s)
+        tvOutsideTemp.setTextIfChanged(s.outsideTemp?.let { "${it.toInt()}°C ngoài trời" } ?: "--°C ngoài trời")
+        lastWindows = s.windows
+        renderWindows()
     }
 
-    private fun applyTelemetryData(
-        speed: Float?,
-        gear: Int?,
-        soc: Float?,
-        range: Float?,
-        outsideTemp: Float?,
-        v12: Float?,
-        tpms: CarApiHelper.TpmsData,
-        winPos: Array<Int?>
-    ) {
-        // Speed & Gear
-        tvSpeedValue.setTextIfChanged(if (speed != null) speed.toInt().toString() else "--")
-        updateGearUI(gear ?: -1)
-
-        // Battery SoC & Estimated Range
-        if (soc != null) {
-            tvBatterySoc.setTextIfChanged("${soc.toInt()}%")
-            pbBatterySoc.progress = soc.toInt()
-        } else {
-            tvBatterySoc.setTextIfChanged("--%")
-            pbBatterySoc.progress = 0
-        }
-
-        tvEstimatedRange.setTextIfChanged(if (range != null) "${range.toInt()} km" else "-- km")
-
-        // Outside Temp & 12V Battery
-        tvOutsideTemp.setTextIfChanged(if (outsideTemp != null) "${outsideTemp.toInt()}°C" else "--°C")
-        if (v12 != null) {
-            tvBattery12v.setTextIfChanged(String.format(Locale.US, "%.1f V • Ắc quy", v12))
-            if (v12 < 12.0f) {
-                tvBattery12v.setTextColor(getColor(R.color.accent_danger)) // Red alert
-            } else {
-                tvBattery12v.setTextColor(getColor(R.color.accent_primary)) // Emerald normal
-            }
-        } else {
-            tvBattery12v.setTextIfChanged("-- V • Ắc quy")
-            tvBattery12v.setTextColor(getColor(R.color.text_secondary))
-        }
-
-        // TPMS
-        tvTpmsFlKpa.setTextIfChanged(if (tpms.flKpa != null) "${tpms.flKpa} kPa" else "-- kPa")
-        tvTpmsFlTemp.setTextIfChanged(if (tpms.flTemp != null) "${tpms.flTemp}°C" else "--°C")
-        tvTpmsFrKpa.setTextIfChanged(if (tpms.frKpa != null) "${tpms.frKpa} kPa" else "-- kPa")
-        tvTpmsFrTemp.setTextIfChanged(if (tpms.frTemp != null) "${tpms.frTemp}°C" else "--°C")
-        tvTpmsRlKpa.setTextIfChanged(if (tpms.rlKpa != null) "${tpms.rlKpa} kPa" else "-- kPa")
-        tvTpmsRlTemp.setTextIfChanged(if (tpms.rlTemp != null) "${tpms.rlTemp}°C" else "--°C")
-        tvTpmsRrKpa.setTextIfChanged(if (tpms.rrKpa != null) "${tpms.rrKpa} kPa" else "-- kPa")
-        tvTpmsRrTemp.setTextIfChanged(if (tpms.rrTemp != null) "${tpms.rrTemp}°C" else "--°C")
-
-        renderTire(tvTpmsFlKpa, vWheelFl, tpms.flKpa)
-        renderTire(tvTpmsFrKpa, vWheelFr, tpms.frKpa)
-        renderTire(tvTpmsRlKpa, vWheelRl, tpms.rlKpa)
-        renderTire(tvTpmsRrKpa, vWheelRr, tpms.rrKpa)
-        if (tpms.isValid) {
-            val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-            tvTpmsUpdated.setTextIfChanged("Cập nhật ${sdf.format(Date())}")
-        } else {
-            tvTpmsUpdated.setTextIfChanged("Chưa có dữ liệu lốp từ xe")
-        }
-
-        // Window Positions (real VHAL readback only)
-        updateWindowPositionUI(winPos)
+    private fun applyDisconnected() {
+        lastClimate = null
+        lastControls = null
+        renderControls()
+        renderDrive(CarSnapshot(connected = false))
+        tvOutsideTemp.setTextIfChanged("--°C ngoài trời")
+        lastWindows = null
+        renderWindows()
     }
 
-    private var lastSpeedLimitSource: String? = null
-
-    /** Speed limit sign: real value from the car or "--" (never a guessed number). */
-    private fun applySpeedLimit(limit: CarApiHelper.SpeedLimit?) {
-        tvSpeedLimitValue.setTextIfChanged(limit?.kmh?.toString() ?: "--")
-        val sizeSp = if ((limit?.kmh ?: 0) >= 100) 20f else 22f
-        // setTextSize() always requests a layout pass: only call it when the size really changes.
-        if (tvSpeedLimitValue.tag != sizeSp) {
-            tvSpeedLimitValue.setTextSize(TypedValue.COMPLEX_UNIT_SP, sizeSp)
-            tvSpeedLimitValue.tag = sizeSp
+    private fun renderDrive(s: CarSnapshot) {
+        lastSpeed = s.speed
+        lastGear = s.gear
+        tvSpeedValue.forEach { it.setTextIfChanged(s.speed?.toInt()?.toString() ?: "--") }
+        for ((view, gear) in gearViews) {
+            val on = s.gear == gear
+            setBackgroundIfChanged(view, if (on) R.drawable.dash_btn_on else 0)
+            view.setTextColor(if (on) cOnAccent else cMuted)
         }
-        btnSpeedLimitSign.contentDescription =
-            limit?.let { "Giới hạn tốc độ ${it.kmh} km/h" } ?: "Giới hạn tốc độ: chưa có dữ liệu"
+        val soc = s.soc?.toInt()
+        tvBatterySoc.forEach { it.setTextIfChanged(soc?.let { v -> "$v%" } ?: "--%") }
+        pbBatterySoc.forEach { it.progress = soc ?: 0 }
+        tvEstimatedRange.forEach { it.setTextIfChanged(s.range?.let { r -> "còn ${r.toInt()} km" } ?: "-- km") }
+
+        // Speed limit: only a real value from the car is shown (sign hidden otherwise).
+        val limit = s.speedLimit
+        btnSpeedLimitSign.forEach {
+            it.visibility = if (limit != null) View.VISIBLE else View.INVISIBLE
+            it.contentDescription = limit?.let { l -> "Giới hạn tốc độ ${l.kmh} km/h" } ?: ""
+        }
+        tvSpeedLimitValue.forEach { it.setTextIfChanged(limit?.kmh?.toString() ?: "") }
         if (limit?.source != lastSpeedLimitSource) {
-            // Logged on change so a car test shows which (unverified) property actually reports.
             Log.i(TAG, "Speed limit source: ${limit?.source ?: "none"} (${limit?.kmh ?: "-"} km/h)")
             lastSpeedLimitSource = limit?.source
         }
     }
 
-    private fun applyFallbackTelemetry() {
-        applySpeedLimit(null)
-        tvSpeedValue.setTextIfChanged("--")
-        updateGearUI(-1)
-        tvBatterySoc.setTextIfChanged("--%")
-        pbBatterySoc.progress = 0
-        tvEstimatedRange.setTextIfChanged("-- km")
-        tvOutsideTemp.setTextIfChanged("--°C")
-        tvBattery12v.setTextIfChanged("-- V • Ắc quy")
-        tvBattery12v.setTextColor(getColor(R.color.text_secondary))
-
-        tvTpmsFlKpa.setTextIfChanged("-- kPa")
-        tvTpmsFlTemp.setTextIfChanged("--°C")
-        tvTpmsFrKpa.setTextIfChanged("-- kPa")
-        tvTpmsFrTemp.setTextIfChanged("--°C")
-        tvTpmsRlKpa.setTextIfChanged("-- kPa")
-        tvTpmsRlTemp.setTextIfChanged("--°C")
-        tvTpmsRrKpa.setTextIfChanged("-- kPa")
-        tvTpmsRrTemp.setTextIfChanged("--°C")
-        tvTpmsUpdated.setTextIfChanged("Chưa kết nối xe")
-        listOf(tvTpmsFlKpa to vWheelFl, tvTpmsFrKpa to vWheelFr, tvTpmsRlKpa to vWheelRl, tvTpmsRrKpa to vWheelRr)
-            .forEach { (tv, wheel) -> renderTire(tv, wheel, null) }
-        updateWindowPositionUI(arrayOfNulls(4))
-        lastControls = ControlSnapshot()
-        renderControls()
-    }
-
-    /**
-     * Tire status at a glance: wheel marker + pressure colour.
-     * Normal 200–300 kPa (emerald) · outside that range amber · below 170 / above 330 red · no data grey.
-     */
-    private fun renderTire(label: TextView, wheel: View, kpa: Int?) {
-        val color = when {
-            kpa == null -> getColor(R.color.text_muted)
-            kpa < 170 || kpa > 330 -> getColor(R.color.accent_danger)
-            kpa < 200 || kpa > 300 -> getColor(R.color.accent_secondary)
-            else -> getColor(R.color.accent_primary)
+    private fun renderWindows() {
+        val pos = lastWindows
+        windowLabels.forEachIndexed { i, views ->
+            views.forEach { it.setTextIfChanged(pos?.getOrNull(i)?.let { p -> "$p%" } ?: "--") }
         }
-        (wheel.background?.mutate() as? android.graphics.drawable.GradientDrawable)?.setColor(color)
-        label.setTextColor(if (kpa == null) getColor(R.color.text_muted) else getColor(R.color.text_primary))
-    }
-
-    private fun bindCarProfile() {
-        tvHeaderCarName.setTextIfChanged(CarProfile.getName(this))
-        CarProfile.bindPhoto(this, ivHeaderCarAvatar)
-    }
-
-    /** "Ghi nhớ" = keep the last used mode and restore it after the car restarts. */
-    private fun bindRememberSwitches() {
-        swRememberDrive.isSaveEnabled = false
-        swRememberRegen.isSaveEnabled = false
-        swRememberDrive.isChecked = prefs.getBoolean(CarAutomationService.KEY_AUTO_DRIVE_MODE, true)
-        swRememberRegen.isChecked = prefs.getBoolean(CarAutomationService.KEY_AUTO_REGEN_MODE, true)
-        // Click listeners: only a real tap changes the preference.
-        swRememberDrive.setOnClickListener {
-            val on = swRememberDrive.isChecked
-            prefs.edit().putBoolean(CarAutomationService.KEY_AUTO_DRIVE_MODE, on).apply()
-            Toast.makeText(this, if (on) "Sẽ ghi nhớ chế độ lái khi tắt/mở xe" else "Đã tắt ghi nhớ chế độ lái", Toast.LENGTH_SHORT).show()
+        // A preset is "current" only when all four panes report it.
+        val all = pos?.takeIf { it.size == 4 && it.all { p -> p != null } }?.distinct()?.singleOrNull()
+        val fast = !isSlowEnough()
+        for ((view, percent) in windowButtons) {
+            val locked = percent >= 50 && fast
+            renderButton(view, all == percent && !locked)
+            setStartIcon(view, if (locked) R.drawable.ic_lock else 0, cMuted)
+            view.alpha = if (locked) 0.55f else 1f
         }
-        swRememberRegen.setOnClickListener {
-            val on = swRememberRegen.isChecked
-            prefs.edit().putBoolean(CarAutomationService.KEY_AUTO_REGEN_MODE, on).apply()
-            Toast.makeText(this, if (on) "Sẽ ghi nhớ mức phanh tái sinh khi tắt/mở xe" else "Đã tắt ghi nhớ phanh tái sinh", Toast.LENGTH_SHORT).show()
+        tvWindowHint.forEach { it.setTextIfChanged(if (fast) "50/100% khi dưới 30 km/h" else "") }
+        val parked = lastGear == CarApiHelper.GEAR_PARK
+        btnFrontTrunk.forEach {
+            it.alpha = if (parked) 1f else 0.55f
+            setStartIcon(it, if (parked) R.drawable.ic_trunk_front else R.drawable.ic_lock, cText)
         }
+        renderTiles()
     }
 
-    /** Runs on [telemetryExecutor]. */
-    private fun readControlSnapshot(): ControlSnapshot = ControlSnapshot(
-        acOn = carHelper.isAcCompressorOn(),
-        recircOn = carHelper.readRecirculation(),
-        defrostFront = carHelper.readDefrostFront(),
-        defrostRear = carHelper.readDefrostRear(),
-        tempC = carHelper.readTargetTemperature()?.let { Math.round(it) },
-        fan = carHelper.readFanSpeed(),
-        vent = carHelper.readAirflowDirection(),
-        drive = carHelper.readDriveMode(),
-        regen = carHelper.readRegenMode(),
-        avas = carHelper.getAvasMode(),
-        ambient = carHelper.readAmbientLight(),
-        autoHold = carHelper.readAutoHold(),
-        wireless = carHelper.readWirelessCharging()
-    )
+    /** Fail-closed: unknown speed counts as too fast. */
+    private fun isSlowEnough() = (lastSpeed ?: Float.MAX_VALUE) < WINDOW_OPEN_MAX_KMH
 
-    /** Runs on [telemetryExecutor]. Registers VHAL push events once per connection. */
-    private fun ensureWatch() {
-        if (watchToken != null || !carHelper.isReady || isFinishing) return
-        watchToken = carHelper.watch(WATCH_PROPS) {
-            mainHandler.removeCallbacks(eventRefresh)
-            mainHandler.postDelayed(eventRefresh, EVENT_REFRESH_DEBOUNCE_MS)
-        }
-    }
+    // -------------------------------------------------------------------------------------------
+    // CONTROLS (car state + in-flight commands)
+    // -------------------------------------------------------------------------------------------
 
-    /** Runs on [telemetryExecutor]. Real now-playing info; null title when unknown. */
-    private fun readMediaInfo(): MediaInfo {
-        var playing = try { audioManager.isMusicActive } catch (_: Throwable) { false }
-        var title: String? = null
-        try {
-            // Needs MEDIA_CONTENT_CONTROL (granted to the system uid on the head unit).
-            val msm = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
-            val controllers = msm.getActiveSessions(null)
-            val active = controllers.firstOrNull { it.playbackState?.state == PlaybackState.STATE_PLAYING }
-                ?: controllers.firstOrNull()
-            if (active != null) {
-                val appLabel = try {
-                    packageManager.getApplicationLabel(
-                        packageManager.getApplicationInfo(active.packageName, 0)
-                    ).toString()
-                } catch (_: Throwable) {
-                    active.packageName
-                }
-                val track = active.metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
-                title = if (!track.isNullOrBlank()) "$track • $appLabel" else appLabel
-                playing = active.playbackState?.state == PlaybackState.STATE_PLAYING
-            }
-        } catch (_: Throwable) {
-            // No permission (e.g. emulator, not system uid) — keep isMusicActive only.
-        }
-        return MediaInfo(title, playing)
-    }
-
-    private fun applyMediaInfoAndVolume(info: MediaInfo) {
-        applyMediaInfo(info)
-        syncVolumeFromSystem()
-    }
-
-    private fun applyMediaInfo(info: MediaInfo) {
-        tvMediaTitle.setTextIfChanged(when {
-            info.title != null -> info.title
-            info.isPlaying -> "Đang phát"
-            else -> "Chưa có nội dung đang phát"
-        })
-        btnMediaPlayPause.setImageResource(if (info.isPlaying) R.drawable.ic_pause else R.drawable.ic_play)
-    }
-
-    // -------------------------------------------------------------
-    // CONTROL STATE RENDERING (car state + in-flight commands)
-    // -------------------------------------------------------------
     private fun rejectToast(label: String): (Any) -> Unit = {
         Toast.makeText(this, "Xe không nhận lệnh: $label", Toast.LENGTH_SHORT).show()
     }
 
     private fun renderControls() {
-        val c = lastControls
-        shown = ControlSnapshot(
-            acOn = pending.resolve(K_AC, c.acOn, rejectToast("A/C")),
-            recircOn = pending.resolve(K_RECIRC, c.recircOn, rejectToast("Lấy gió trong / ngoài")),
-            defrostFront = pending.resolve(K_DEFROST_FRONT, c.defrostFront, rejectToast("Sấy kính trước")),
-            defrostRear = pending.resolve(K_DEFROST_REAR, c.defrostRear, rejectToast("Sấy kính sau")),
-            tempC = pending.resolve(K_TEMP, c.tempC, rejectToast("Nhiệt độ")),
-            fan = pending.resolve(K_FAN, c.fan, rejectToast("Quạt gió")),
-            vent = pending.resolve(K_VENT, c.vent, rejectToast("Hướng gió")),
-            drive = pending.resolve(K_DRIVE, c.drive, rejectToast("Chế độ lái")),
-            regen = pending.resolve(K_REGEN, c.regen, rejectToast("Phanh tái sinh")),
-            avas = pending.resolve(K_AVAS, c.avas, rejectToast("AVAS")),
-            ambient = pending.resolve(K_AMBIENT, c.ambient, rejectToast("Đèn viền")),
-            autoHold = pending.resolve(K_AUTO_HOLD, c.autoHold, rejectToast("Auto Hold")),
-            wireless = pending.resolve(K_WIRELESS, c.wireless, rejectToast("Sạc không dây"))
+        val c = lastClimate
+        val k = lastControls
+        shown = Shown(
+            acOn = pending.resolve(K_AC, c?.acOn, rejectToast("A/C")),
+            recircOn = pending.resolve(K_RECIRC, c?.recircOn, rejectToast("Gió trong / ngoài")),
+            defrostFront = pending.resolve(K_DEFROST_FRONT, c?.defrostFront, rejectToast("Sấy kính trước")),
+            defrostRear = pending.resolve(K_DEFROST_REAR, c?.defrostRear, rejectToast("Sấy kính sau")),
+            tempC = pending.resolve(K_TEMP, c?.tempC, rejectToast("Nhiệt độ")),
+            fan = pending.resolve(K_FAN, c?.fan, rejectToast("Quạt gió")),
+            vent = pending.resolve(K_VENT, c?.vent, rejectToast("Hướng gió")),
+            drive = pending.resolve(K_DRIVE, k?.drive, rejectToast("Chế độ lái")),
+            regen = pending.resolve(K_REGEN, k?.regen, rejectToast("Phanh tái sinh")),
+            avas = pending.resolve(K_AVAS, k?.avas, rejectToast("AVAS")),
+            ambient = pending.resolve(K_AMBIENT, k?.ambient, rejectToast("Đèn nội thất")),
+            autoHold = pending.resolve(K_AUTO_HOLD, k?.autoHold, rejectToast("Auto Hold")),
+            wireless = pending.resolve(K_WIRELESS, k?.wireless, rejectToast("Sạc không dây"))
         )
         val s = shown
 
-        renderCompound(btnAcCompressor, s.acOn)
-        renderAirIntake(s.recircOn)
-        renderCompound(btnDefrostFront, s.defrostFront)
-        renderCompound(btnDefrostRear, s.defrostRear)
-
-        // While a slider is being dragged its readout shows the dragged value, not the last poll.
-        if (!isTrackingTempSlider) tvClimateTargetTemp.setTextIfChanged(s.tempC?.let { "$it°C" } ?: "--°C")
-        if (!isTrackingTempSlider && s.tempC != null) {
-            sbTempGradient.progress = (s.tempC - TEMP_MIN).coerceIn(0, TEMP_MAX - TEMP_MIN)
-        }
-        sbTempGradient.hasValue = s.tempC != null || isTrackingTempSlider
-        if (!isTrackingFanSlider) tvClimateFanSpeed.setTextIfChanged(when (val f = s.fan) {
-            null -> "Mức --"
+        val tempText = s.tempC?.let { "$it°C" } ?: "--°C"
+        val fanText = when (val f = s.fan) {
+            null -> "--"
             0 -> "Tắt"
-            else -> "Mức $f"
-        })
-        if (!isTrackingFanSlider && s.fan != null) sbFanSpeed.progress = s.fan.coerceIn(FAN_MIN, FAN_MAX)
-        sbFanSpeed.hasValue = (s.fan ?: 0) in FAN_MIN..FAN_MAX || isTrackingFanSlider
-
-        // Airflow bitmask: 1=FACE, 2=FLOOR, 3=FACE|FLOOR, 4=DEFROST, 6=DEFROST|FLOOR
-        val vent = s.vent
-        renderCompound(btnVentFace, vent?.let { it and 1 != 0 })
-        renderCompound(btnVentFloor, vent?.let { it and 2 != 0 })
-
-        renderChoice(btnDriveEco, s.drive, CarApiHelper.DRIVE_ECO)
-        renderChoice(btnDriveComfort, s.drive, CarApiHelper.DRIVE_COMFORT)
-        renderChoice(btnDriveSport, s.drive, CarApiHelper.DRIVE_SPORT)
-        renderChoice(btnRegenLow, s.regen, CarApiHelper.REGEN_LOW)
-        renderChoice(btnRegenMid, s.regen, CarApiHelper.REGEN_MID)
-        renderChoice(btnRegenHigh, s.regen, CarApiHelper.REGEN_HIGH)
-
-        val muted = s.avas?.let { it == 0 }
-        btnAvasToggle.setBackgroundResource(if (muted == true) R.drawable.bg_btn_active else R.drawable.bg_btn_inactive)
-        tintIcons(btnAvasToggle, if (muted == true) Color.WHITE else getColor(R.color.text_secondary))
-        btnAvasToggle.alpha = if (muted == null) 0.6f else 1f
-        tvAvasLabel.setTextColor(if (muted == true) Color.WHITE else getColor(R.color.text_secondary))
-        tvAvasLabel.setTextIfChanged(when (muted) {
-            null -> "AVAS: --"
-            true -> "AVAS: Đã tắt âm"
-            false -> "AVAS: Đang bật"
-        })
-
-        renderCompound(btnAmbientLight, s.ambient)
-        tvAmbientLabel.setTextIfChanged(when (s.ambient) {
-            null -> "Đèn viền: --"
-            true -> "Đèn viền: Bật"
-            false -> "Đèn viền: Tắt"
-        })
-
-        renderCompound(btnAutoHold, s.autoHold)
-        tvAutoHoldLabel.setTextIfChanged(when (s.autoHold) {
-            null -> "Auto Hold: --"
-            true -> "Auto Hold: Bật"
-            false -> "Auto Hold: Tắt"
-        })
-
-        renderCompound(btnWirelessCharge, s.wireless)
-        tvWirelessLabel.setTextIfChanged(when (s.wireless) {
-            null -> "Sạc không dây: --"
-            true -> "Sạc không dây: Bật"
-            false -> "Sạc không dây: Tắt"
-        })
-
-        // "Sending" state: a control whose command is still awaiting the car's confirmation
-        // is shown slightly dimmed, so the driver can tell requested from confirmed.
-        fun sending(view: View, key: String) {
-            if (pending.isPending(key)) view.alpha = 0.7f
+            else -> f.toString()
         }
-        sending(btnAcCompressor, K_AC)
-        sending(btnRecirc, K_RECIRC)
-        sending(btnDefrostFront, K_DEFROST_FRONT)
-        sending(btnDefrostRear, K_DEFROST_REAR)
-        sending(btnVentFace, K_VENT)
-        sending(btnVentFloor, K_VENT)
-        sending(btnAvasToggle, K_AVAS)
-        sending(btnAmbientLight, K_AMBIENT)
-        sending(btnAutoHold, K_AUTO_HOLD)
-        sending(btnWirelessCharge, K_WIRELESS)
-        listOf(btnDriveEco, btnDriveComfort, btnDriveSport).forEach { sending(it, K_DRIVE) }
-        listOf(btnRegenLow, btnRegenMid, btnRegenHigh).forEach { sending(it, K_REGEN) }
-        tvClimateTargetTemp.alpha = if (pending.isPending(K_TEMP)) 0.7f else 1f
-        tvClimateFanSpeed.alpha = if (pending.isPending(K_FAN)) 0.7f else 1f
+        tvClimateTargetTemp.forEach {
+            it.setTextIfChanged(tempText)
+            it.alpha = if (pending.isPending(K_TEMP)) 0.7f else 1f
+        }
+        tvClimateFanSpeed.forEach {
+            it.setTextIfChanged(fanText)
+            it.alpha = if (pending.isPending(K_FAN)) 0.7f else 1f
+        }
+        levelTemp.forEach { it.value = s.tempC?.let { t -> (t - TEMP_MIN).coerceIn(0, TEMP_MAX - TEMP_MIN) } }
+        levelFan.forEach { it.value = s.fan?.coerceIn(0, FAN_MAX) }
+
+        btnAc.forEach { renderButton(it, s.acOn, K_AC) }
+        btnRecirc.forEach { renderButton(it, s.recircOn, K_RECIRC) }
+        btnFresh.forEach { renderButton(it, s.recircOn?.let { r -> !r }, K_RECIRC) }
+        btnVentFace.forEach { renderSegment(it, s.vent?.let { v -> v == VENT_FACE }, K_VENT) }
+        btnVentFaceFloor.forEach { renderSegment(it, s.vent?.let { v -> v == VENT_FACE_FLOOR }, K_VENT) }
+        btnVentFloor.forEach { renderSegment(it, s.vent?.let { v -> v == VENT_FLOOR }, K_VENT) }
+        btnDefrostFront.forEach { renderButton(it, s.defrostFront, K_DEFROST_FRONT) }
+        btnDefrostRear.forEach { renderButton(it, s.defrostRear, K_DEFROST_REAR) }
+        btnQuickCool.forEach { renderButton(it, false) }
+
+        for ((view, mode) in driveButtons) renderSegment(view, s.drive?.let { it == mode }, K_DRIVE)
+        for ((view, mode) in regenButtons) renderSegment(view, s.regen?.let { it == mode }, K_REGEN)
+
+        btnAvas.forEach { renderButton(it, s.avas?.let { a -> a == 0 }, K_AVAS) } // lit = AVAS sound muted
+        btnAutoHold.forEach { renderButton(it, s.autoHold, K_AUTO_HOLD) }
+        btnAmbient.forEach { renderButton(it, s.ambient, K_AMBIENT) }
+        btnWireless.forEach { renderButton(it, s.wireless, K_WIRELESS) }
+        renderTiles()
     }
 
-    /** null = unknown → neutral + dimmed, so the driver never sees a guessed state. */
-    private fun renderToggle(view: TextView, active: Boolean?) {
-        view.setBackgroundResource(if (active == true) R.drawable.bg_btn_active else R.drawable.bg_btn_inactive)
-        view.setTextColor(if (active == true) Color.WHITE else getColor(R.color.text_secondary))
-        view.alpha = if (active == null) 0.6f else 1f
+    /** 1×1 tiles: whole card lit when on, a plain word for the state underneath. */
+    private fun renderTiles() {
+        val s = shown
+        for (t in tiles) {
+            val (on, stateText, key) = when (t.kind) {
+                TileKind.BLACKOUT -> Triple(false, "Chạm để tắt màn hình", null)
+                TileKind.AMBIENT -> Triple(s.ambient, onOff(s.ambient), K_AMBIENT)
+                TileKind.DEFROST -> Triple(s.defrostFront, onOff(s.defrostFront), K_DEFROST_FRONT)
+                TileKind.AUTO_HOLD -> Triple(s.autoHold, onOff(s.autoHold), K_AUTO_HOLD)
+                TileKind.AVAS -> Triple(s.avas?.let { it == 0 }, when (s.avas) {
+                    null -> "--"
+                    0 -> "Đã tắt âm"
+                    else -> "Đang phát âm"
+                }, K_AVAS)
+                TileKind.WIRELESS -> Triple(s.wireless, onOff(s.wireless), K_WIRELESS)
+                TileKind.VALET -> prefs.getBoolean(CarAutomationService.KEY_VALET_MODE, false)
+                    .let { Triple(it, if (it) "Đang bật" else "Tắt", null) }
+                TileKind.FRONT_TRUNK -> (lastGear == CarApiHelper.GEAR_PARK)
+                    .let { Triple(false, if (it) "Cần xác nhận" else "Chỉ khi ở số P", null) }
+            }
+            val fg = if (on == true) cOnAccent else cText
+            setBackgroundIfChanged(t.root, if (on == true) R.drawable.dash_btn_on else R.drawable.dash_chip)
+            t.icon.imageTintList = ColorStateList.valueOf(fg)
+            t.title.setTextColor(fg)
+            t.state.setTextColor(if (on == true) cOnAccent else cMuted)
+            t.state.setTextIfChanged(stateText)
+            t.root.alpha = when {
+                key != null && pending.isPending(key) -> 0.7f
+                key != null && on == null -> 0.6f
+                else -> 1f
+            }
+        }
     }
 
-    /** Air intake is a mode, not on/off: the button always names the current one. */
-    private fun renderAirIntake(recirc: Boolean?) {
-        tvRecircLabel.setTextIfChanged(when (recirc) {
-            true -> "Gió trong"
-            false -> "Gió ngoài"
-            null -> "Gió: --"
-        })
-        ivRecircIcon.setImageResource(if (recirc == false) R.drawable.ic_air_fresh else R.drawable.ic_air_recirc)
-        renderCompound(btnRecirc, recirc) // emerald = recirculating (cabin closed off)
+    private fun onOff(v: Boolean?) = when (v) {
+        null -> "--"
+        true -> "Bật"
+        false -> "Tắt"
     }
 
-    private fun renderCompound(view: LinearLayout, active: Boolean?) {
-        updateCompoundButtonStyle(view, active == true)
-        view.alpha = if (active == null) 0.6f else 1f
+    /**
+     * On = accent fill; off = recessed well; unknown (null) = off and dimmed, so a guessed state is
+     * never shown. A command still waiting for the car's confirmation is slightly dimmed.
+     */
+    private fun renderButton(view: View, on: Boolean?, key: String? = null) {
+        setBackgroundIfChanged(view, if (on == true) R.drawable.dash_btn_on else R.drawable.dash_btn)
+        styleState(view, on, key)
     }
 
-    private fun renderChoice(view: TextView, current: Int?, value: Int) {
-        renderToggle(view, current?.let { it == value })
-        if (current != null) view.alpha = 1f
+    private fun renderSegment(view: View, on: Boolean?, key: String? = null) {
+        setBackgroundIfChanged(view, if (on == true) R.drawable.dash_seg_item_on else R.drawable.dash_seg_item)
+        styleState(view, on, key)
+    }
+
+    /**
+     * setBackgroundResource() inflates a new drawable and may request a layout pass even for the
+     * same resource; on every 3 s car update that made one slow frame. Only swap when it changes.
+     */
+    private fun setBackgroundIfChanged(view: View, res: Int) {
+        if (view.getTag(R.id.tag_background) == res) return
+        view.setTag(R.id.tag_background, res)
+        view.setBackgroundResource(res)
+    }
+
+    /** Start icon + tint, only when they change (setCompoundDrawables… always relays the view out). */
+    private fun setStartIcon(view: TextView, res: Int, tint: Int) {
+        val key = res.toLong() shl 32 or (tint.toLong() and 0xFFFFFFFFL)
+        if (view.getTag(R.id.tag_start_icon) == key) return
+        view.setTag(R.id.tag_start_icon, key)
+        view.setCompoundDrawablesWithIntrinsicBounds(res, 0, 0, 0)
+        view.compoundDrawableTintList = ColorStateList.valueOf(tint)
+    }
+
+    private fun styleState(view: View, on: Boolean?, key: String?) {
+        val fg = if (on == true) cOnAccent else cText
+        when (view) {
+            is TextView -> if (view.currentTextColor != fg) {
+                view.setTextColor(fg)
+                view.compoundDrawableTintList = ColorStateList.valueOf(fg)
+            }
+            is ImageView -> if (view.imageTintList?.defaultColor != fg) view.imageTintList = ColorStateList.valueOf(fg)
+        }
+        view.alpha = when {
+            key != null && pending.isPending(key) -> 0.7f
+            on == null -> 0.6f
+            else -> 1f
+        }
     }
 
     /**
      * Shows [wanted] immediately (tracked by [pending] so polls don't flicker it back),
-     * writes on [climateExecutor], and reconciles with the car shortly after.
+     * writes through [CarCommands], and reconciles with the car shortly after.
      */
     private fun commandControl(key: String, wanted: Any, label: String, write: () -> Boolean) {
         pending.mark(key, wanted)
         renderControls()
-        climateExecutor.execute {
-            val accepted = try { write() } catch (_: Throwable) { false }
-            if (!accepted) {
-                runOnUiThread {
-                    pending.clear(key)
-                    renderControls()
-                    rejectToast(label)(wanted)
-                }
-            }
-            scheduleTelemetryRefresh(POST_WRITE_REFRESH_MS)
-        }
-    }
-
-    private fun updateGearUI(gear: Int) {
-        val activeBg = R.drawable.bg_gear_active
-        val inactiveBg = Color.TRANSPARENT
-
-        tvGearP.setBackgroundResource(if (gear == CarApiHelper.GEAR_PARK) activeBg else inactiveBg)
-        tvGearP.setTextColor(if (gear == CarApiHelper.GEAR_PARK) Color.WHITE else getColor(R.color.text_secondary))
-
-        tvGearR.setBackgroundResource(if (gear == CarApiHelper.GEAR_REVERSE) activeBg else inactiveBg)
-        tvGearR.setTextColor(if (gear == CarApiHelper.GEAR_REVERSE) Color.WHITE else getColor(R.color.text_secondary))
-
-        tvGearN.setBackgroundResource(if (gear == CarApiHelper.GEAR_NEUTRAL) activeBg else inactiveBg)
-        tvGearN.setTextColor(if (gear == CarApiHelper.GEAR_NEUTRAL) Color.WHITE else getColor(R.color.text_secondary))
-
-        tvGearD.setBackgroundResource(if (gear == CarApiHelper.GEAR_DRIVE) activeBg else inactiveBg)
-        tvGearD.setTextColor(if (gear == CarApiHelper.GEAR_DRIVE) Color.WHITE else getColor(R.color.text_secondary))
-    }
-
-    private fun updateAutomationPillUI() {
-        val isGuardHalted = prefs.getBoolean(CarAutomationService.KEY_GUARD_HALTED, false)
-        val isValet = prefs.getBoolean(CarAutomationService.KEY_VALET_MODE, false)
-
-        if (isGuardHalted) {
-            layoutAutomationPill.setBackgroundResource(R.drawable.bg_btn_active_amber)
-            tvAutomationStatus.setTextIfChanged("Crash Guard: Đã ngắt (Bấm để đặt lại)")
-            ivAutomationIcon.setImageResource(R.drawable.ic_warning)
-            tvAutomationStatus.setTextColor(Color.WHITE)
-            ivAutomationIcon.setColorFilter(Color.WHITE)
-            btnValetMode.setBackgroundResource(R.drawable.bg_btn_inactive)
-            tintIcons(btnValetMode, getColor(R.color.text_secondary))
-            tvValetLabel.setTextColor(getColor(R.color.text_secondary))
-        } else if (isValet) {
-            layoutAutomationPill.setBackgroundResource(R.drawable.bg_pill_valet)
-            tvAutomationStatus.setTextIfChanged("Chế độ Bảo dưỡng: Đang bật")
-            ivAutomationIcon.setImageResource(R.drawable.ic_wrench)
-            tvAutomationStatus.setTextColor(getColor(R.color.text_amber))
-            ivAutomationIcon.setColorFilter(getColor(R.color.text_amber))
-            btnValetMode.setBackgroundResource(R.drawable.bg_btn_active_amber)
-            tintIcons(btnValetMode, Color.WHITE)
-            tvValetLabel.setTextColor(Color.WHITE)
-        } else {
-            layoutAutomationPill.setBackgroundResource(R.drawable.bg_pill_automation)
-            tvAutomationStatus.setTextIfChanged("Tự động hóa: Đang bật")
-            ivAutomationIcon.setImageResource(R.drawable.ic_lightning)
-            tvAutomationStatus.setTextColor(getColor(R.color.text_emerald))
-            ivAutomationIcon.setColorFilter(getColor(R.color.text_emerald))
-            btnValetMode.setBackgroundResource(R.drawable.bg_btn_inactive)
-            tintIcons(btnValetMode, getColor(R.color.text_secondary))
-            tvValetLabel.setTextColor(getColor(R.color.text_secondary))
-        }
-    }
-
-    private fun updateWindowPositionUI(pos: Array<Int?>) {
-        val views = arrayOf(tvWindowFl, tvWindowFr, tvWindowRl, tvWindowRr)
-        for (i in views.indices) {
-            val percent = pos.getOrNull(i)
-            when {
-                percent == null -> {
-                    views[i].setTextIfChanged("Kính: --")
-                    views[i].setTextColor(getColor(R.color.text_muted))
-                }
-                percent == 0 -> {
-                    views[i].setTextIfChanged("Kính: 0%")
-                    views[i].setTextColor(getColor(R.color.accent_primary))
-                }
-                else -> {
-                    views[i].setTextIfChanged("Kính: $percent%")
-                    views[i].setTextColor(getColor(R.color.accent_secondary))
-                }
+        CarCommands.run(write, longArrayOf(POST_WRITE_REFRESH_MS)) { accepted ->
+            if (!accepted && !isDestroyed) {
+                pending.clear(key)
+                renderControls()
+                rejectToast(label)(wanted)
             }
         }
     }
 
-    /** Re-reads telemetry shortly after a write so the UI shows the car's real state. */
-    private fun scheduleTelemetryRefresh(delayMs: Long = 1500L) {
-        try {
-            telemetryExecutor.schedule({ pollTelemetryBackground() }, delayMs, TimeUnit.MILLISECONDS)
-        } catch (_: Throwable) {}
-    }
+    // -------------------------------------------------------------------------------------------
+    // ACTIONS
+    // -------------------------------------------------------------------------------------------
 
     private fun setupListeners() {
-        // ---------------------------------------------------------
-        // Top Header Actions
-        // ---------------------------------------------------------
-        btnOpenCatalogHeader.setOnClickListener {
-            com.mipago.ex2center.utils.StoreLauncher.open(this)
+        // Status strip
+        btnWifi.setOnClickListener { openWifiSettings() }
+        findViewById<View>(R.id.btnNightBlackout).setOnClickListener { triggerBlackout() }
+        findViewById<View>(R.id.btnSettings).setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+        tvStatusChip.setOnClickListener {
+            if (prefs.getBoolean(CarAutomationService.KEY_GUARD_HALTED, false)) showCrashGuardResetDialog()
+            else toggleValetMode()
+        }
+        btnEditLayout.setOnClickListener { enterEdit() }
+        findViewById<View>(R.id.btnEditDone).setOnClickListener { exitEdit(save = true) }
+        findViewById<View>(R.id.btnEditUndo).setOnClickListener { undo() }
+        findViewById<View>(R.id.btnEditAdd).setOnClickListener { showTray(editTray.visibility != View.VISIBLE) }
+        findViewById<View>(R.id.btnTrayClose).setOnClickListener { showTray(false) }
+        findViewById<View>(R.id.btnEditReset).setOnClickListener { applyEdit(DashPreset.DAILY.placements) }
+        buildPresetChips()
+    }
+
+    /** Click handlers of the widgets on the grid (re-run after every rebuild). */
+    private fun bindWidgetListeners() {
+
+        // Lái xe
+        btnSpeedLimitSign.forEach { v ->
+            v.setOnClickListener {
+                packageManager.getLaunchIntentForPackage("vn.vietmap.live")?.let { startActivity(it) }
+            }
         }
 
-        btnNightBlackout.setOnClickListener {
-            // Blackout is owned by FloatingControlService (one overlay owner, survives this
-            // Activity, and auto-dismisses when the car shifts into R).
-            startService(Intent(this, FloatingControlService::class.java).apply {
-                action = FloatingControlService.ACTION_TRIGGER_BLACKOUT
+        // Điều hòa — every button starts from the car's real state.
+        all<View>(R.id.btnTempMinus).forEach { it.setOnClickListener { nudgeTemperature(-1) } }
+        all<View>(R.id.btnTempPlus).forEach { it.setOnClickListener { nudgeTemperature(+1) } }
+        all<View>(R.id.btnFanMinus).forEach { it.setOnClickListener { nudgeFan(-1) } }
+        all<View>(R.id.btnFanPlus).forEach { it.setOnClickListener { nudgeFan(+1) } }
+        btnAc.forEach { it.setOnClickListener { toggleAc() } }
+        btnRecirc.forEach { it.setOnClickListener { setRecirc(true) } }
+        btnFresh.forEach { it.setOnClickListener { setRecirc(false) } }
+        btnVentFace.forEach { it.setOnClickListener { selectVent(VENT_FACE) } }
+        btnVentFaceFloor.forEach { it.setOnClickListener { selectVent(VENT_FACE_FLOOR) } }
+        btnVentFloor.forEach { it.setOnClickListener { selectVent(VENT_FLOOR) } }
+        btnQuickCool.forEach { it.setOnClickListener { quickCool() } }
+        btnDefrostFront.forEach { it.setOnClickListener { toggleDefrostFront() } }
+        btnDefrostRear.forEach {
+            it.setOnClickListener {
+                val target = shown.defrostRear != true
+                commandControl(K_DEFROST_REAR, target, "Sấy kính sau") { carHelper.setDefrostRear(target) }
+            }
+        }
+
+        // Xe · Cốp · Kính
+        for ((view, percent) in windowButtons) {
+            view.setOnClickListener {
+                if (percent >= 50) {
+                    // Opening half or fully is only allowed at low speed (mis-tap on the highway);
+                    // the speed must be readable, otherwise the command is blocked (fail-closed).
+                    ParkGate.runIfAllowed(this, check = { ctx -> ParkGate.checkSlowerThan(ctx, WINDOW_OPEN_MAX_KMH) }) {
+                        sendWindowCommand(percent)
+                    }
+                } else {
+                    sendWindowCommand(percent)
+                }
+            }
+        }
+        btnFrontTrunk.forEach { it.setOnClickListener { confirmFrontTrunk() } }
+
+        // Nhạc (title / icon follow the real playback state on the next refresh)
+        btnMediaPlayPause.forEach {
+            it.setOnClickListener {
+                dispatchMediaKeyEvent(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
+                refreshMedia(600L)
+            }
+        }
+        all<View>(R.id.btnMediaPrev).forEach {
+            it.setOnClickListener {
+                dispatchMediaKeyEvent(KeyEvent.KEYCODE_MEDIA_PREVIOUS)
+                refreshMedia(800L)
+            }
+        }
+        all<View>(R.id.btnMediaNext).forEach {
+            it.setOnClickListener {
+                dispatchMediaKeyEvent(KeyEvent.KEYCODE_MEDIA_NEXT)
+                refreshMedia(800L)
+            }
+        }
+
+        // Chế độ lái
+        for ((view, mode) in driveButtons) view.setOnClickListener { selectDriveMode(mode) }
+        for ((view, mode) in regenButtons) view.setOnClickListener { selectRegenMode(mode) }
+
+        // Phím tắt
+        btnAvas.forEach { it.setOnClickListener { toggleAvas() } }
+        btnAutoHold.forEach { it.setOnClickListener { toggleAutoHold() } }
+        btnAmbient.forEach { it.setOnClickListener { toggleAmbient() } }
+        btnWireless.forEach { it.setOnClickListener { toggleWireless() } }
+        all<View>(R.id.btnSplitScreen).forEach { it.setOnClickListener { SplitScreenLauncher.launchSplitScreen(this) } }
+        btnValet.forEach { it.setOnClickListener { toggleValetMode() } }
+
+        // Ô 1×1
+        for (t in tiles) {
+            t.root.setOnClickListener {
+                when (t.kind) {
+                    TileKind.BLACKOUT -> triggerBlackout()
+                    TileKind.AMBIENT -> toggleAmbient()
+                    TileKind.DEFROST -> toggleDefrostFront()
+                    TileKind.AUTO_HOLD -> toggleAutoHold()
+                    TileKind.VALET -> toggleValetMode()
+                    TileKind.AVAS -> toggleAvas()
+                    TileKind.WIRELESS -> toggleWireless()
+                    TileKind.FRONT_TRUNK -> confirmFrontTrunk()
+                }
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------------------------
+    // EDIT MODE (only in P)
+    // -------------------------------------------------------------------------------------------
+
+    private val editHost = object : EditOverlay.Host {
+        override fun items() = layoutItems
+        override fun viewFor(p: Placement) = viewsByKey[p.key]
+        override fun onRemove(p: Placement) = applyEdit(layoutItems - p)
+        override fun onResize(p: Placement) = resizeWidget(p)
+        override fun onMove(p: Placement, col: Int, row: Int) = moveWidget(p, col, row)
+        override fun onEmptyTap() = showTray(true)
+    }
+
+    /** Header button: unlocked only in P; elsewhere it shows a lock and explains why. */
+    private fun renderEditButton(gear: Int?) {
+        val parked = gear == CarApiHelper.GEAR_PARK
+        setStartIcon(btnEditLayout, if (parked) R.drawable.ic_edit else R.drawable.ic_lock, if (parked) cText else cMuted)
+        btnEditLayout.setTextColor(if (parked) cText else cMuted)
+    }
+
+    private fun enterEdit() {
+        if (lastSnap.gear != CarApiHelper.GEAR_PARK) {
+            Toast.makeText(this, "Chỉ chỉnh bố cục khi xe ở số P", Toast.LENGTH_SHORT).show()
+            return
+        }
+        editing = true
+        undoStack.clear()
+        normalStrip.visibility = View.GONE
+        editStrip.visibility = View.VISIBLE
+        editOverlay.visibility = View.VISIBLE
+        for (v in viewsByKey.values) v.animate().scaleX(0.97f).scaleY(0.97f).setDuration(120).start()
+        renderPresetChips()
+        renderTray()
+        editOverlay.invalidate()
+    }
+
+    private fun exitEdit(save: Boolean) {
+        if (!editing) return
+        editing = false
+        if (save) {
+            DashLayout.save(this, layoutItems)
+            builtRevision = DashLayout.revision(this)
+            if (isNightLayout(this) != nightLook) {
+                mainHandler.post { recreate() } // switch to / from the night look
+                return
+            }
+        }
+        normalStrip.visibility = View.VISIBLE
+        editStrip.visibility = View.GONE
+        editTray.visibility = View.GONE
+        editOverlay.visibility = View.GONE
+        for (v in viewsByKey.values) v.animate().scaleX(1f).scaleY(1f).setDuration(120).start()
+    }
+
+    /** Applies a new layout while editing (with undo); invalid layouts are refused. */
+    private fun applyEdit(items: List<Placement>) {
+        if (!DashLayout.isValid(items)) {
+            Toast.makeText(this, "Không đủ chỗ cho thay đổi này", Toast.LENGTH_SHORT).show()
+            editOverlay.invalidate()
+            return
+        }
+        if (items.toSet() == layoutItems.toSet()) return
+        undoStack += layoutItems
+        if (undoStack.size > 30) undoStack.removeAt(0)
+        buildGrid(items)
+        renderPresetChips()
+    }
+
+    private fun undo() {
+        val prev = undoStack.removeLastOrNull() ?: return
+        buildGrid(prev)
+        renderPresetChips()
+    }
+
+    /**
+     * Drop of [p] at (col, row): free spot → move; the widgets under it fit into the spot [p]
+     * leaves → they swap in; otherwise they are pushed to the first free spots; if that is not
+     * possible the widget bounces back.
+     */
+    private fun moveWidget(p: Placement, col: Int, row: Int) {
+        val moved = p.copy(col = col, row = row)
+        val others = layoutItems - p
+        val hit = others.filter { it.overlaps(moved) }
+        if (hit.isEmpty()) return applyEdit(others + moved)
+
+        // Swap: shift the covered widgets by the opposite offset, into the spot p left.
+        val dc = p.col - col
+        val dr = p.row - row
+        val shifted = hit.map { it.copy(col = it.col + dc, row = it.row + dr) }
+        val swapped = (others - hit) + moved + shifted
+        if (DashLayout.isValid(swapped)) return applyEdit(swapped)
+
+        // Push aside: place the covered widgets in the first free spots that remain.
+        val result = ArrayList((others - hit) + moved)
+        for (h in hit.sortedByDescending { it.colSpan * it.rowSpan }) {
+            val spot = DashLayout.firstFree(result, h) ?: return applyEdit(layoutItems + p) // refused → bounce
+            result += spot
+        }
+        applyEdit(result)
+    }
+
+    /** "⇲": next size of the same widget, in place if it fits, else in the first free spot. */
+    private fun resizeWidget(p: Placement) {
+        val variants = p.type.variants
+        if (variants.size < 2) return
+        val next = variants[(variants.indexOf(p.type) + 1) % variants.size]
+        val resized = p.copy(type = next)
+        val others = layoutItems - p
+        if (DashLayout.fits(resized) && others.none { it.overlaps(resized) }) return applyEdit(others + resized)
+        val spot = DashLayout.firstFree(others, resized)
+        if (spot == null) {
+            Toast.makeText(this, "Không đủ chỗ để đổi sang ${next.sizeLabel}. Ẩn bớt widget rồi thử lại.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        applyEdit(others + spot)
+    }
+
+    private fun showTray(show: Boolean) {
+        if (show) renderTray()
+        editTray.visibility = if (show) View.VISIBLE else View.GONE
+    }
+
+    /** Tray: every widget that is not on the grid; tap = add it to the first free spot. */
+    private fun renderTray() {
+        trayItems.removeAllViews()
+        val shown = layoutItems.map { it.key }.toSet()
+        val hidden = DashLayout.catalog.filter { it.key !in shown }
+        if (hidden.isEmpty()) {
+            trayItems.addView(TextView(this).apply {
+                setTextAppearance(R.style.DashMuted)
+                text = "Tất cả widget đang hiển thị"
+            })
+            return
+        }
+        val d = resources.displayMetrics.density
+        for (item in hidden) {
+            val chip = TextView(this).apply {
+                setTextAppearance(R.style.DashText)
+                textSize = 20f
+                typeface = resources.getFont(R.font.be_vietnam_pro_semibold)
+                text = "${item.label}  ·  ${item.type.sizeLabel}"
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setPadding((20 * d).toInt(), 0, (20 * d).toInt(), 0)
+                setBackgroundResource(R.drawable.dash_btn)
+                stateListAnimator = android.animation.AnimatorInflater.loadStateListAnimator(context, R.animator.dash_press)
+                contentDescription = "Thêm ${item.label}"
+                setOnClickListener { addWidget(item) }
+            }
+            trayItems.addView(chip, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, (76 * d).toInt()).apply {
+                marginEnd = (12 * d).toInt()
             })
         }
+    }
 
-        btnSettings.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
+    private fun addWidget(item: Placement) {
+        val spot = DashLayout.firstFree(layoutItems, item)
+        if (spot == null) {
+            Toast.makeText(this, "Không còn ô trống ${item.type.sizeLabel}. Ẩn bớt widget (nút −) rồi thêm.", Toast.LENGTH_SHORT).show()
+            return
         }
-        layoutCarProfile.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
-        }
+        applyEdit(layoutItems + spot)
+        showTray(false)
+    }
 
-        layoutAutomationPill.setOnClickListener {
-            val isGuardHalted = prefs.getBoolean(CarAutomationService.KEY_GUARD_HALTED, false)
-            if (isGuardHalted) {
-                showCrashGuardResetDialog()
-            } else {
-                toggleValetMode()
-            }
+    private fun buildPresetChips() {
+        presetChips.removeAllViews()
+        val d = resources.displayMetrics.density
+        DashPreset.values().forEachIndexed { i, preset ->
+            presetChips.addView(TextView(this).apply {
+                tag = preset
+                text = preset.label
+                textSize = 18f
+                typeface = resources.getFont(R.font.be_vietnam_pro_semibold)
+                gravity = android.view.Gravity.CENTER
+                setPadding((18 * d).toInt(), 0, (18 * d).toInt(), 0)
+                setOnClickListener { applyEdit(preset.placements) }
+            }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT).apply {
+                if (i > 0) marginStart = (5 * d).toInt()
+            })
         }
+    }
 
-        // ---------------------------------------------------------
-        // Column 1: Driver Zone Actions
-        // ---------------------------------------------------------
-        btnDriveEco.setOnClickListener { selectDriveMode(CarApiHelper.DRIVE_ECO) }
-        btnDriveComfort.setOnClickListener { selectDriveMode(CarApiHelper.DRIVE_COMFORT) }
-        btnDriveSport.setOnClickListener { selectDriveMode(CarApiHelper.DRIVE_SPORT) }
-
-        btnRegenLow.setOnClickListener { selectRegenMode(CarApiHelper.REGEN_LOW) }
-        btnRegenMid.setOnClickListener { selectRegenMode(CarApiHelper.REGEN_MID) }
-        btnRegenHigh.setOnClickListener { selectRegenMode(CarApiHelper.REGEN_HIGH) }
-
-        btnAvasToggle.setOnClickListener {
-            // The button expresses the wanted AVAS state; the automation service then holds it.
-            val mute = shown.avas != 0
-            prefs.edit().putBoolean(CarAutomationService.KEY_AUTO_AVAS, mute).apply()
-            commandControl(K_AVAS, if (mute) 0 else 1, "AVAS") { carHelper.setAvasMode(if (mute) 0 else 1) }
+    private fun renderPresetChips() {
+        val current = layoutItems.toSet()
+        for (i in 0 until presetChips.childCount) {
+            val v = presetChips.getChildAt(i) as TextView
+            val on = (v.tag as DashPreset).placements.toSet() == current
+            v.setBackgroundResource(if (on) R.drawable.dash_seg_item_on else R.drawable.dash_seg_item)
+            v.setTextColor(if (on) cOnAccent else cText)
         }
+    }
 
-        // Auto Hold: same switch as the car's own Settings (DRIVE_AUTO_HOLD 1 = ON / 2 = OFF).
-        // Unknown state (powertrain not READY) -> the tap asks for ON.
-        btnAutoHold.setOnClickListener {
-            val target = shown.autoHold != true
-            commandControl(K_AUTO_HOLD, target, "Auto Hold") { carHelper.setAutoHold(target) }
-        }
-
-        btnWirelessCharge.setOnClickListener {
-            val target = shown.wireless != true
-            commandControl(K_WIRELESS, target, "Sạc không dây") { carHelper.setWirelessCharging(target) }
-        }
-
-        btnAmbientLight.setOnClickListener {
-            val target = shown.ambient != true
-            commandControl(K_AMBIENT, target, "Đèn viền") { carHelper.setAmbientLight(target) }
-        }
-
-        // The car's own surround-view (360/540°) app on IHU629G: com.ecarx.parking/.MainAvmActivity.
-        btnCamera360.setOnClickListener {
-            val launchIntent = packageManager.getLaunchIntentForPackage(PKG_SURROUND_CAMERA)
-            if (launchIntent != null) {
-                startActivity(launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-            } else {
-                Toast.makeText(this, "Không tìm thấy ứng dụng camera của xe ($PKG_SURROUND_CAMERA).", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        btnValetMode.setOnClickListener {
-            toggleValetMode()
-        }
-
-        // ---------------------------------------------------------
-        // Column 2: Multitasking & Climate Actions
-        // ---------------------------------------------------------
-        btnSplitScreenHero.setOnClickListener {
-            SplitScreenLauncher.launchSplitScreen(this)
-        }
-
-        // Media Controls (icon/title follow the real playback state on the next refresh)
-        btnMediaPlayPause.setOnClickListener {
-            dispatchMediaKeyEvent(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
-            scheduleTelemetryRefresh(600L)
-        }
-        btnMediaPrev.setOnClickListener {
-            dispatchMediaKeyEvent(KeyEvent.KEYCODE_MEDIA_PREVIOUS)
-            scheduleTelemetryRefresh(800L)
-        }
-        btnMediaNext.setOnClickListener {
-            dispatchMediaKeyEvent(KeyEvent.KEYCODE_MEDIA_NEXT)
-            scheduleTelemetryRefresh(800L)
-        }
-
-        // Climate Controls — every button starts from the car's real state.
-        btnAcCompressor.setOnClickListener {
-            val target = shown.acOn != true
-            commandControl(K_AC, target, "A/C") { carHelper.setAcCompressorOn(target) }
-        }
-
-        btnRecirc.setOnClickListener {
-            // One tap switches mode: Gió trong <-> Gió ngoài (unknown state -> Gió trong).
-            val target = shown.recircOn != true
-            commandControl(K_RECIRC, target, if (target) "Gió trong" else "Gió ngoài") { carHelper.setRecirculation(target) }
-        }
-
-        btnQuickCool.setOnClickListener {
-            Toast.makeText(this, "Đang kích hoạt Làm mát nhanh (A/C, 17°C, Gió 7)...", Toast.LENGTH_SHORT).show()
-            pending.mark(K_AC, true)
-            pending.mark(K_TEMP, TEMP_MIN)
-            pending.mark(K_FAN, 7)
-            pending.mark(K_VENT, 1)
-            pending.mark(K_RECIRC, true)
-            renderControls()
-            carHelper.triggerQuickCool {
-                scheduleTelemetryRefresh(POST_WRITE_REFRESH_MS)
-            }
-        }
-
-        btnTempMinus.setOnClickListener { nudgeTemperature(-1) }
-        btnTempPlus.setOnClickListener { nudgeTemperature(+1) }
-        sbTempGradient.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (!fromUser) return
-                val target = TEMP_MIN + progress
-                sbTempGradient.hasValue = true
-                tvClimateTargetTemp.setTextIfChanged("$target°C")
-                tempDebounceRunnable?.let { mainHandler.removeCallbacks(it) }
-                val runnable = Runnable { setTemperature(target) }
-                tempDebounceRunnable = runnable
-                mainHandler.postDelayed(runnable, SLIDER_WRITE_DEBOUNCE_MS)
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) { isTrackingTempSlider = true }
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                isTrackingTempSlider = false
-                tempDebounceRunnable?.let { mainHandler.removeCallbacks(it) }
-                setTemperature(TEMP_MIN + (seekBar?.progress ?: 0))
-            }
+    private fun triggerBlackout() {
+        // Blackout is owned by FloatingControlService (one overlay owner, survives this
+        // Activity, and auto-dismisses when the car shifts into R).
+        startService(Intent(this, FloatingControlService::class.java).apply {
+            action = FloatingControlService.ACTION_TRIGGER_BLACKOUT
         })
-
-        btnFanMinus.setOnClickListener { nudgeFan(-1) }
-        btnFanPlus.setOnClickListener { nudgeFan(+1) }
-        sbFanSpeed.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (!fromUser) return
-                val target = progress.coerceIn(FAN_MIN, FAN_MAX)
-                sbFanSpeed.hasValue = true
-                tvClimateFanSpeed.setTextIfChanged("Mức $target")
-                fanDebounceRunnable?.let { mainHandler.removeCallbacks(it) }
-                val runnable = Runnable { setFan(target) }
-                fanDebounceRunnable = runnable
-                mainHandler.postDelayed(runnable, SLIDER_WRITE_DEBOUNCE_MS)
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) { isTrackingFanSlider = true }
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                isTrackingFanSlider = false
-                fanDebounceRunnable?.let { mainHandler.removeCallbacks(it) }
-                setFan((seekBar?.progress ?: FAN_MIN).coerceIn(FAN_MIN, FAN_MAX))
-            }
-        })
-
-        // Vents
-        btnVentFace.setOnClickListener { selectVent(1) }
-        btnVentFloor.setOnClickListener { selectVent(2) }
-
-        btnDefrostFront.setOnClickListener {
-            val target = shown.defrostFront != true
-            commandControl(K_DEFROST_FRONT, target, "Sấy kính trước") { carHelper.setDefrostFront(target) }
-        }
-
-        btnDefrostRear.setOnClickListener {
-            val target = shown.defrostRear != true
-            commandControl(K_DEFROST_REAR, target, "Sấy kính sau") { carHelper.setDefrostRear(target) }
-        }
-
-        // ---------------------------------------------------------
-        // Column 3: TPMS & Windows Actions
-        // ---------------------------------------------------------
-        btnWindowsClose.setOnClickListener {
-            sendWindowCommand(0, "Đã gửi lệnh đóng kín 4 kính")
-        }
-
-        btnWindowsVent.setOnClickListener {
-            sendWindowCommand(10, "Đã gửi lệnh hé 4 kính (10%) để thoát nhiệt")
-        }
-
-        // Opening every pane half or fully is only allowed at low speed (mis-tap on the highway);
-        // the speed must be readable, otherwise the command is blocked (fail-closed).
-        btnWindowsHalf.setOnClickListener {
-            ParkGate.runIfAllowed(this, check = { ctx -> ParkGate.checkSlowerThan(ctx, WINDOW_OPEN_MAX_KMH) }) {
-                sendWindowCommand(50, "Đã gửi lệnh mở 4 kính một nửa (50%)")
-            }
-        }
-
-        btnWindowsOpen.setOnClickListener {
-            ParkGate.runIfAllowed(this, check = { ctx -> ParkGate.checkSlowerThan(ctx, WINDOW_OPEN_MAX_KMH) }) {
-                sendWindowCommand(100, "Đã gửi lệnh hạ hết 4 kính")
-            }
-        }
-
-        btnSpeedLimitSign.setOnClickListener {
-            val vietmapIntent = packageManager.getLaunchIntentForPackage("vn.vietmap.live")
-            if (vietmapIntent != null) {
-                startActivity(vietmapIntent)
-            } else {
-                Toast.makeText(this, "Mở Vietmap Live từ Kho ứng dụng.", Toast.LENGTH_SHORT).show()
-            }
-        }
     }
 
-    private fun sendWindowCommand(percent: Int, sentMessage: String) {
-        climateExecutor.execute {
-            val ok = carHelper.setAllWindowsPosition(percent)
-            runOnUiThread {
-                Toast.makeText(
-                    this,
-                    if (ok) sentMessage else "Xe không nhận lệnh kính.",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            // UI is never updated optimistically: show what the glass really reports.
-            scheduleTelemetryRefresh(1500L)
-            scheduleTelemetryRefresh(5000L)
-        }
+    private fun toggleAc() {
+        val target = shown.acOn != true
+        commandControl(K_AC, target, "A/C") { carHelper.setAcCompressorOn(target) }
     }
 
-    private fun showCrashGuardResetDialog() {
-        AppDialog(this)
-            .setTitle("Cảnh báo Crash Guard")
-            .setMessage("Hệ thống tự động hóa đã tự động ngắt bảo vệ do phát hiện lỗi liên tiếp để tránh treo hệ thống.\n\nBạn có muốn đặt lại (Reset) để tiếp tục chạy tự động hóa?")
-            .setPositiveButton("Đặt lại (Reset)") { _, _ ->
-                val resetIntent = Intent(this, CarAutomationService::class.java).apply {
-                    action = CarAutomationService.ACTION_RESET_GUARD
-                }
-                startService(resetIntent)
-                prefs.edit().putBoolean(CarAutomationService.KEY_GUARD_HALTED, false).apply()
-                updateAutomationPillUI()
-                Toast.makeText(this, "Đã đặt lại Crash Guard. Tự động hóa tiếp tục hoạt động.", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Hủy", null)
-            .show()
+    private fun toggleDefrostFront() {
+        val target = shown.defrostFront != true
+        commandControl(K_DEFROST_FRONT, target, "Sấy kính trước") { carHelper.setDefrostFront(target) }
     }
 
-    private fun toggleValetMode() {
-        val current = prefs.getBoolean(CarAutomationService.KEY_VALET_MODE, false)
-        val nextState = !current
-        prefs.edit().putBoolean(CarAutomationService.KEY_VALET_MODE, nextState).apply()
-        updateAutomationPillUI()
+    private fun quickCool() {
+        Toast.makeText(this, "Làm mát nhanh: A/C, 17°C, quạt 7, gió trong", Toast.LENGTH_SHORT).show()
+        pending.mark(K_AC, true)
+        pending.mark(K_TEMP, TEMP_MIN)
+        pending.mark(K_FAN, 7)
+        pending.mark(K_VENT, VENT_FACE)
+        pending.mark(K_RECIRC, true)
+        renderControls()
+        carHelper.triggerQuickCool { scheduleRefresh(POST_WRITE_REFRESH_MS) }
+    }
 
-        if (nextState) {
-            Toast.makeText(this, "Chế độ Bảo dưỡng: ĐÃ BẬT. Tạm dừng mọi tự động hóa VHAL.", Toast.LENGTH_LONG).show()
-        } else {
-            Toast.makeText(this, "Chế độ Bảo dưỡng: ĐÃ TẮT. Tự động hóa đã hoạt động trở lại.", Toast.LENGTH_SHORT).show()
-        }
+    private fun toggleAvas() {
+        // The button expresses the wanted AVAS state; the automation service then holds it.
+        val mute = shown.avas != 0
+        prefs.edit().putBoolean(CarAutomationService.KEY_AUTO_AVAS, mute).apply()
+        commandControl(K_AVAS, if (mute) 0 else 1, "AVAS") { carHelper.setAvasMode(if (mute) 0 else 1) }
+    }
+
+    /** Same switch as the car's own Settings. Unknown state -> the tap asks for ON. */
+    private fun toggleAutoHold() {
+        val target = shown.autoHold != true
+        commandControl(K_AUTO_HOLD, target, "Auto Hold") { carHelper.setAutoHold(target) }
+    }
+
+    private fun toggleAmbient() {
+        val target = shown.ambient != true
+        commandControl(K_AMBIENT, target, "Đèn nội thất") { carHelper.setAmbientLight(target) }
+    }
+
+    private fun toggleWireless() {
+        val target = shown.wireless != true
+        commandControl(K_WIRELESS, target, "Sạc không dây") { carHelper.setWirelessCharging(target) }
     }
 
     private fun nudgeTemperature(delta: Int) {
@@ -1295,11 +1082,8 @@ class MainActivity : Activity() {
             Toast.makeText(this, "Chưa đọc được nhiệt độ cài đặt từ xe.", Toast.LENGTH_SHORT).show()
             return
         }
-        setTemperature((current + delta).coerceIn(TEMP_MIN, TEMP_MAX))
-    }
-
-    private fun setTemperature(target: Int) {
-        if (target == shown.tempC && !pending.isPending(K_TEMP)) return
+        val target = (current + delta).coerceIn(TEMP_MIN, TEMP_MAX)
+        if (target == current) return
         commandControl(K_TEMP, target, "Nhiệt độ") { carHelper.writeTargetTemperature(target.toFloat()) }
     }
 
@@ -1309,32 +1093,20 @@ class MainActivity : Activity() {
             Toast.makeText(this, "Chưa đọc được mức quạt từ xe.", Toast.LENGTH_SHORT).show()
             return
         }
-        setFan((current + delta).coerceIn(FAN_MIN, FAN_MAX))
-    }
-
-    private fun setFan(target: Int) {
-        if (target == shown.fan && !pending.isPending(K_FAN)) return
+        if (current == 0 && delta < 0) return // fan off: "−" must not switch it on
+        val target = (current + delta).coerceIn(FAN_MIN, FAN_MAX)
+        if (target == current) return
         commandControl(K_FAN, target, "Quạt gió") { carHelper.writeFanSpeed(target) }
     }
 
+    private fun setRecirc(on: Boolean) {
+        if (shown.recircOn == on && !pending.isPending(K_RECIRC)) return
+        commandControl(K_RECIRC, on, if (on) "Gió trong" else "Gió ngoài") { carHelper.setRecirculation(on) }
+    }
+
     private fun selectVent(mask: Int) {
+        if (shown.vent == mask && !pending.isPending(K_VENT)) return
         commandControl(K_VENT, mask, "Hướng gió") { carHelper.setAirflowDirection(mask) }
-    }
-
-    /** Icons inside a button follow its state: white on accent backgrounds, themed grey otherwise. */
-    private fun tintIcons(group: android.view.ViewGroup, color: Int) {
-        for (i in 0 until group.childCount) (group.getChildAt(i) as? ImageView)?.setColorFilter(color)
-    }
-
-    private fun updateCompoundButtonStyle(button: LinearLayout, isActive: Boolean) {
-        button.setBackgroundResource(if (isActive) R.drawable.bg_btn_active else R.drawable.bg_btn_inactive)
-        val fg = if (isActive) Color.WHITE else getColor(R.color.text_secondary)
-        for (i in 0 until button.childCount) {
-            when (val child = button.getChildAt(i)) {
-                is TextView -> child.setTextColor(fg)
-                is ImageView -> child.setColorFilter(fg) // icons stay readable on emerald and in light mode
-            }
-        }
     }
 
     private fun selectDriveMode(mode: Int) {
@@ -1349,12 +1121,223 @@ class MainActivity : Activity() {
         commandControl(K_REGEN, mode, "Phanh tái sinh") { carHelper.writeRegenMode(mode) }
     }
 
+    private fun sendWindowCommand(percent: Int) {
+        // Never optimistic: the re-reads show what the glass really reports.
+        CarCommands.run({ carHelper.setAllWindowsPosition(percent) }, longArrayOf(1500L, 5000L)) { ok ->
+            if (!ok && !isDestroyed) Toast.makeText(this, "Xe không nhận lệnh kính.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun confirmFrontTrunk() {
+        ParkGate.runIfAllowed(this) {
+            AppDialog(this)
+                .setTitle("Mở cốp trước?")
+                .setMessage("Kiểm tra phía trước xe trống, không có người. Cốp cần đóng lại bằng tay.")
+                .setPositiveButton("Mở cốp") { _, _ ->
+                    ParkGate.runIfAllowed(this) {
+                        CarCommands.run({ carHelper.openFrontTrunk() }, longArrayOf()) { ok ->
+                            if (!isDestroyed) Toast.makeText(
+                                this, if (ok) "Đã gửi lệnh mở cốp trước" else "Xe không nhận lệnh: Mở cốp trước",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+                .setNegativeButton("Hủy", null)
+                .show()
+        }
+    }
+
+    /** The car's own Wi-Fi screen (Flyme connectivity settings) — no hidden menu needed. */
+    private fun openWifiSettings() {
+        val intents = listOf(
+            Intent("com.flyme.auto.intent.action.ACTION_WIFI_SETTINGS"),
+            Intent(Settings.ACTION_WIFI_SETTINGS)
+        )
+        for (intent in intents) {
+            try {
+                startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                return
+            } catch (_: Throwable) {}
+        }
+        Toast.makeText(this, "Không mở được màn hình Wi-Fi của xe.", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun refreshWifi() {
+        btnWifi.setTextIfChanged(WifiStatus.read(this).ssidLabel)
+    }
+
+    // -------------------------------------------------------------------------------------------
+    // AUTOMATION STATUS (Crash Guard / Valet)
+    // -------------------------------------------------------------------------------------------
+
+    /** Header chip only when something needs the driver's attention. */
+    private fun renderStatusChip() {
+        val halted = prefs.getBoolean(CarAutomationService.KEY_GUARD_HALTED, false)
+        val valet = prefs.getBoolean(CarAutomationService.KEY_VALET_MODE, false)
+        when {
+            halted -> {
+                tvStatusChip.visibility = View.VISIBLE
+                tvStatusChip.setTextIfChanged("Crash Guard đã ngắt")
+                tvStatusChip.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_warning, 0, 0, 0)
+            }
+            valet -> {
+                tvStatusChip.visibility = View.VISIBLE
+                tvStatusChip.setTextIfChanged("Valet đang bật")
+                tvStatusChip.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_wrench, 0, 0, 0)
+            }
+            else -> tvStatusChip.visibility = View.GONE
+        }
+        tvStatusChip.compoundDrawableTintList = ColorStateList.valueOf(getColor(R.color.dash_accent_text))
+    }
+
+    private fun renderValet() {
+        val on = prefs.getBoolean(CarAutomationService.KEY_VALET_MODE, false)
+        btnValet.forEach { renderButton(it, on) }
+        renderTiles()
+    }
+
+    private fun showCrashGuardResetDialog() {
+        AppDialog(this)
+            .setTitle("Cảnh báo Crash Guard")
+            .setMessage("Hệ thống tự động hóa đã tự ngắt do phát hiện lỗi liên tiếp, để tránh treo hệ thống.\n\nĐặt lại để tự động hóa chạy tiếp?")
+            .setPositiveButton("Đặt lại") { _, _ ->
+                startService(Intent(this, CarAutomationService::class.java).apply {
+                    action = CarAutomationService.ACTION_RESET_GUARD
+                })
+                prefs.edit().putBoolean(CarAutomationService.KEY_GUARD_HALTED, false).apply()
+                renderStatusChip()
+                Toast.makeText(this, "Đã đặt lại Crash Guard.", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Hủy", null)
+            .show()
+    }
+
+    private fun toggleValetMode() {
+        val next = !prefs.getBoolean(CarAutomationService.KEY_VALET_MODE, false)
+        prefs.edit().putBoolean(CarAutomationService.KEY_VALET_MODE, next).apply()
+        renderValet()
+        renderStatusChip()
+        Toast.makeText(
+            this,
+            if (next) "Valet: ĐÃ BẬT. Tạm dừng mọi tự động hóa." else "Valet: ĐÃ TẮT. Tự động hóa hoạt động trở lại.",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    // -------------------------------------------------------------------------------------------
+    // MEDIA & VOLUME
+    // -------------------------------------------------------------------------------------------
+
+    private var isTrackingVolume = false
+
+    /** Volume changed elsewhere (wheel keys, the car's volume bar, another app): follow at once. */
+    private val volumeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val stream = intent?.getIntExtra("android.media.EXTRA_VOLUME_STREAM_TYPE", -1) ?: -1
+            if (stream == -1 || stream == AudioManager.STREAM_MUSIC) syncVolumeFromSystem()
+        }
+    }
+
+    /** Reflects the real media volume on the slider (never while the driver is dragging it). */
+    private fun syncVolumeFromSystem() {
+        if (isTrackingVolume) return
+        val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        val current = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+        sbVolume.forEach {
+            if (it.max != max) it.max = max
+            if (it.progress != current) it.progress = current
+        }
+        tvVolumeValue.forEach { it.setTextIfChanged(current.toString()) }
+    }
+
+    private fun setupVolumeControl() {
+        syncVolumeFromSystem()
+        val listener = object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0)
+                    tvVolumeValue.forEach { it.setTextIfChanged(progress.toString()) }
+                }
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) { isTrackingVolume = true }
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                isTrackingVolume = false
+                syncVolumeFromSystem()
+            }
+        }
+        sbVolume.forEach { it.setOnSeekBarChangeListener(listener) }
+    }
+
+    /** Re-reads the car and now-playing info shortly after an action. */
+    private fun scheduleRefresh(delayMs: Long) {
+        CarStateHub.refresh(delayMs)
+        refreshMedia(delayMs)
+    }
+
+    /** Now-playing title / state off the main thread (binder calls), then volume. */
+    private fun refreshMedia(delayMs: Long = 0L) {
+        try {
+            mediaExecutor.schedule({
+                val media = readMediaInfo()
+                runOnUiThread { if (!isDestroyed) applyMedia(media) }
+            }, delayMs, TimeUnit.MILLISECONDS)
+        } catch (_: Throwable) {}
+    }
+
+    /** Runs on [mediaExecutor]. Real now-playing info; nulls when unknown. */
+    private fun readMediaInfo(): MediaInfo {
+        var playing = try { audioManager.isMusicActive } catch (_: Throwable) { false }
+        var track: String? = null
+        var app: String? = null
+        try {
+            // Needs MEDIA_CONTENT_CONTROL (granted to the system uid on the head unit).
+            val msm = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
+            val controllers = msm.getActiveSessions(null)
+            val active = controllers.firstOrNull { it.playbackState?.state == PlaybackState.STATE_PLAYING }
+                ?: controllers.firstOrNull()
+            if (active != null) {
+                app = try {
+                    packageManager.getApplicationLabel(packageManager.getApplicationInfo(active.packageName, 0)).toString()
+                } catch (_: Throwable) {
+                    active.packageName
+                }
+                track = active.metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)?.takeIf { it.isNotBlank() }
+                playing = active.playbackState?.state == PlaybackState.STATE_PLAYING
+            }
+        } catch (_: Throwable) {
+            // No permission (e.g. emulator, not system uid) — keep isMusicActive only.
+        }
+        return MediaInfo(track, app, playing)
+    }
+
+    private fun applyMedia(info: MediaInfo) {
+        val source = info.app?.let { "· $it" } ?: ""
+        val title = when {
+            info.track != null -> info.track
+            info.isPlaying -> "Đang phát"
+            else -> "Chưa có nội dung đang phát"
+        }
+        tvMediaSource.forEach { it.setTextIfChanged(source) }
+        tvMediaTitle.forEach {
+            it.setTextIfChanged(title)
+            it.setTextColor(if (info.track != null || info.isPlaying) cText else cMuted)
+        }
+        val icon = if (info.isPlaying) R.drawable.ic_pause else R.drawable.ic_play
+        btnMediaPlayPause.forEach {
+            if (it.tag != icon) {
+                it.setImageResource(icon)
+                it.tag = icon
+            }
+        }
+        syncVolumeFromSystem()
+    }
+
     private fun dispatchMediaKeyEvent(keyCode: Int) {
         try {
-            val eventDown = KeyEvent(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), KeyEvent.ACTION_DOWN, keyCode, 0)
-            val eventUp = KeyEvent(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), KeyEvent.ACTION_UP, keyCode, 0)
-            audioManager.dispatchMediaKeyEvent(eventDown)
-            audioManager.dispatchMediaKeyEvent(eventUp)
+            val now = SystemClock.uptimeMillis()
+            audioManager.dispatchMediaKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, keyCode, 0))
+            audioManager.dispatchMediaKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_UP, keyCode, 0))
         } catch (_: Throwable) {
             val intent = Intent(Intent.ACTION_MEDIA_BUTTON)
             intent.putExtra(Intent.EXTRA_KEY_EVENT, KeyEvent(KeyEvent.ACTION_DOWN, keyCode))
@@ -1363,9 +1346,8 @@ class MainActivity : Activity() {
     }
 
     private fun startCoreServices() {
-        val autoServiceIntent = Intent(this, CarAutomationService::class.java)
-        startForegroundService(autoServiceIntent)
-        // Floating bubble and/or the dock climate label (both hosted by FloatingControlService).
+        startForegroundService(Intent(this, CarAutomationService::class.java))
+        // Floating bubble and/or the bottom-bar climate panel (both hosted by FloatingControlService).
         if (FloatingControlService.isWanted(this)) startService(Intent(this, FloatingControlService::class.java))
     }
 }

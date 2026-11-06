@@ -28,6 +28,8 @@ import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import com.mipago.ex2center.R
+import com.mipago.ex2center.ui.dash.DashLayout
+import com.mipago.ex2center.ui.dash.DashPreset
 import com.mipago.ex2center.service.CarAutomationService
 import com.mipago.ex2center.service.FloatingControlService
 import com.mipago.ex2center.utils.CarApiHelper
@@ -229,7 +231,7 @@ class SettingsActivity : Activity() {
         }
         val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         texts.addView(text(title, 20f, R.color.text_primary, bold = true))
-        val sub = text(subtitle ?: "", 16f, R.color.text_secondary).apply {
+        val sub = text(subtitle ?: "", 18f, R.color.text_secondary).apply {
             visibility = if (subtitle == null) View.GONE else View.VISIBLE
             setPadding(0, dp(4), 0, 0)
         }
@@ -300,7 +302,7 @@ class SettingsActivity : Activity() {
         val names = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         tvCarName = text(CarProfile.DEFAULT_NAME, 26f, R.color.text_primary, bold = true)
         names.addView(tvCarName)
-        names.addView(text("Tên và ảnh hiển thị trên Dashboard", 16f, R.color.text_secondary))
+        names.addView(text("Tên và ảnh hiển thị trên Dashboard", 18f, R.color.text_secondary))
         head.addView(names)
         card.addView(head)
 
@@ -316,7 +318,7 @@ class SettingsActivity : Activity() {
 
     private fun appearanceSection(): View {
         val card = section("Giao diện", R.drawable.ic_brightness)
-        card.addView(text("Chế độ hiển thị", 16f, R.color.text_secondary).apply { setPadding(0, dp(8), 0, dp(8)) })
+        card.addView(text("Chế độ hiển thị", 18f, R.color.text_secondary).apply { setPadding(0, dp(8), 0, dp(8)) })
         val seg = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(0, 0, 0, dp(16))
@@ -327,12 +329,40 @@ class SettingsActivity : Activity() {
             seg.addView(text(ThemeManager.label(mode), 18f, if (active) R.color.text_primary else R.color.text_secondary, bold = true).apply {
                 gravity = Gravity.CENTER
                 setBackgroundResource(if (active) R.drawable.bg_btn_active else R.drawable.bg_btn_inactive)
-                if (active) setTextColor(0xFFFFFFFF.toInt())
+                if (active) setTextColor(getColor(R.color.text_on_accent))
                 layoutParams = LinearLayout.LayoutParams(0, dp(64), 1f).apply { if (i > 0) marginStart = dp(12) }
                 setOnClickListener { applyTheme(mode) }
             })
         }
         card.addView(seg)
+
+        // Dashboard layout: one of the ready-made Bento presets (the Dashboard rebuilds on return).
+        card.addView(text("Bố cục Dashboard", 18f, R.color.text_secondary).apply { setPadding(0, dp(8), 0, dp(8)) })
+        val presetSeg = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, 0, 0, dp(16))
+        }
+        val currentPreset = DashLayout.currentPreset(this) // null = the driver's own layout
+        DashPreset.values().forEachIndexed { i, preset ->
+            val active = preset == currentPreset
+            presetSeg.addView(text(preset.label, 18f, if (active) R.color.text_primary else R.color.text_secondary, bold = true).apply {
+                gravity = Gravity.CENTER
+                setBackgroundResource(if (active) R.drawable.bg_btn_active else R.drawable.bg_btn_inactive)
+                if (active) setTextColor(getColor(R.color.text_on_accent))
+                layoutParams = LinearLayout.LayoutParams(0, dp(64), 1f).apply { if (i > 0) marginStart = dp(12) }
+                setOnClickListener {
+                    if (preset != DashLayout.currentPreset(this@SettingsActivity)) {
+                        DashLayout.applyPreset(this@SettingsActivity, preset)
+                        recreate()
+                    }
+                }
+            })
+        }
+        card.addView(presetSeg)
+        if (currentPreset == null) {
+            card.addView(text("Đang dùng bố cục bạn tự chỉnh. Chọn một mục ở trên để thay bằng bố cục có sẵn.", 18f, R.color.text_muted)
+                .apply { setPadding(0, 0, 0, dp(16)) })
+        }
         return card
     }
 

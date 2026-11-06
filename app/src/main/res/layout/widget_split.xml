@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CHẠY ĐÔI MÀN HÌNH 2×1: Vietmap Live (trái) + SmartTube (phải). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/DashCard"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView style="@style/DashLabel" android:text="Chạy đôi màn hình" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:importantForAccessibility="no"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_app_vietmap" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView style="@style/DashText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Vietmap" android:textSize="22sp" />
+            <TextView style="@style/DashMuted" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Trái" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:importantForAccessibility="no"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_app_smarttube" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView style="@style/DashText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SmartTube" android:textSize="22sp" />
+            <TextView style="@style/DashMuted" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Phải" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnSplitScreen"
+            style="@style/DashBtn"
+            android:layout_width="104dp"
+            android:layout_height="76dp"
+            android:background="@drawable/dash_btn_on"
+            android:text="Mở"
+            android:textColor="@color/dash_on_accent" />
+    </LinearLayout>
+</LinearLayout>

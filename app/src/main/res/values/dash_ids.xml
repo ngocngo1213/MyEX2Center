@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- View tags used to skip redundant background / icon updates on the Dashboard. -->
+<resources>
+    <item name="tag_background" type="id" />
+    <item name="tag_start_icon" type="id" />
+</resources>

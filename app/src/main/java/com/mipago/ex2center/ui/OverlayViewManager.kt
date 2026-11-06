@@ -138,8 +138,8 @@ class OverlayViewManager(private val context: Context) {
         val bubble = FrameLayout(context).apply {
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                // Emerald disc with a white ring: same accent as the dashboard, readable on any app.
-                colors = intArrayOf(Color.parseColor("#34D399"), Color.parseColor("#059669"))
+                // Amber disc with a white ring: same accent as the dashboard, readable on any app.
+                colors = intArrayOf(Color.parseColor("#F7BE5E"), Color.parseColor("#E0921F"))
                 gradientType = GradientDrawable.LINEAR_GRADIENT
                 orientation = GradientDrawable.Orientation.TL_BR
                 setStroke(dpToPx(2), Color.WHITE)
@@ -151,6 +151,7 @@ class OverlayViewManager(private val context: Context) {
         // transparent corners) looked like a misplaced tile inside the round bubble.
         val icon = ImageView(context).apply {
             setImageResource(R.drawable.ic_bubble_ex2)
+            setColorFilter(Color.parseColor("#1B1205")) // dark glyph: white on amber is too faint
             scaleType = ImageView.ScaleType.FIT_CENTER
             val pad = dpToPx(16)
             setPadding(pad, pad, pad, pad)
@@ -348,7 +349,7 @@ class OverlayViewManager(private val context: Context) {
         val title = TextView(context).apply {
             text = context.getString(R.string.app_name) + " - Bảng điều khiển"
             setTextColor(context.getColor(R.color.text_primary))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             setTypeface(null, android.graphics.Typeface.BOLD)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
@@ -374,7 +375,7 @@ class OverlayViewManager(private val context: Context) {
                 "Ngoài trời: --°C"
             }
             setTextColor(context.getColor(R.color.text_secondary))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             setPadding(0, dpToPx(4), 0, dpToPx(12))
         }
         root.addView(outsideText)
@@ -422,7 +423,7 @@ class OverlayViewManager(private val context: Context) {
         val lblTemp = TextView(context).apply {
             text = context.getString(R.string.overlay_temp_label)
             setTextColor(context.getColor(R.color.text_primary))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
         val btnTempMinus = createRoundButton("-")
@@ -472,7 +473,7 @@ class OverlayViewManager(private val context: Context) {
         val lblFan = TextView(context).apply {
             text = context.getString(R.string.overlay_fan_label)
             setTextColor(context.getColor(R.color.text_primary))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
         val btnFanMinus = createRoundButton("-")
@@ -563,7 +564,7 @@ class OverlayViewManager(private val context: Context) {
     private fun updateAcButtonAppearance(btn: Button, active: Boolean) {
         if (active) {
             btn.text = "Điều hòa A/C: ĐANG BẬT"
-            btn.setTextColor(Color.WHITE)
+            btn.setTextColor(context.getColor(R.color.text_on_accent))
             btn.background = GradientDrawable().apply {
                 setColor(context.getColor(R.color.accent_primary))
                 cornerRadius = dpToPx(8).toFloat()

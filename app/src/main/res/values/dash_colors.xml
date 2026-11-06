@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dashboard palette (light). Matte instrument surfaces, one warm accent for "on". -->
+<resources>
+    <color name="dash_bg">#E6EAEE</color>
+    <color name="dash_card">#F7F8FA</color>
+    <color name="dash_well">#E1E5E9</color>
+    <color name="dash_hi">#F2FFFFFF</color>
+    <color name="dash_lo">#1F101820</color>
+    <color name="dash_text">#12161A</color>
+    <color name="dash_muted">#56606A</color>
+    <color name="dash_line">#C9D0D7</color>
+    <color name="dash_stage">#D1D9E4</color>
+    <color name="dash_cool">#1F6FC2</color>
+    <color name="dash_accent">#F2A93B</color>
+    <color name="dash_on_accent">#1B1205</color>
+    <color name="dash_accent_text">#9A5B00</color>
+    <color name="dash_ripple">#1F000000</color>
+    <color name="dash_danger">#C62828</color>
+</resources>

@@ -5,10 +5,7 @@ import android.car.hardware.property.CarPropertyManager
 import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.content.ServiceConnection
-import android.os.BatteryManager
 import android.os.IBinder
 import android.os.SystemClock
 import android.util.Log
@@ -390,19 +387,6 @@ class CarApiHelper private constructor() {
                 if (range >= 0f) return range
             } catch (ignored: Throwable) {}
         }
-        return null
-    }
-
-    fun read12vBatteryVoltage(context: Context): Float? {
-        // First try reading through Android BatteryManager / Intent
-        try {
-            val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-            val batteryStatus = context.registerReceiver(null, filter)
-            val voltageMv = batteryStatus?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1) ?: -1
-            if (voltageMv > 1000) {
-                return voltageMv / 1000.0f
-            }
-        } catch (ignored: Throwable) {}
         return null
     }
 

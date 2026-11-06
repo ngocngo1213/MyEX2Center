@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Slider thumb sized for in-car use: 28dp disc, emerald ring, readable in light and dark. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
-    <solid android:color="#FFFFFF" />
-    <stroke android:width="4dp" android:color="@color/accent_primary" />
-    <size android:width="28dp" android:height="28dp" />
-</shape>

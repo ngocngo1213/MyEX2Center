@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ĐIỀU HÒA 2×2: big numbers for temperature / fan, then two rows of large icon-only buttons
+  (the car's own climate glyphs) instead of text labels. Every button keeps a contentDescription.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/DashCard"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView style="@style/DashLabel" android:text="Điều hòa" />
+
+    <!-- Nhiệt độ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_marginTop="6dp"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView android:id="@+id/btnTempMinus" style="@style/DashBtn.Step" android:contentDescription="Giảm nhiệt độ" android:text="−" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvClimateTargetTemp"
+                style="@style/DashText"
+                android:layout_width="match_parent"
+                android:layout_height="66dp"
+                android:gravity="center"
+                android:textSize="60sp"
+                tools:text="24°C" />
+
+            <com.mipago.ex2center.ui.dash.LevelIndicator
+                android:id="@+id/levelTemp"
+                android:layout_width="match_parent"
+                android:layout_height="26dp"
+                android:layout_marginTop="6dp" />
+        </LinearLayout>
+
+        <TextView android:id="@+id/btnTempPlus" style="@style/DashBtn.Step" android:contentDescription="Tăng nhiệt độ" android:text="+" />
+    </LinearLayout>
+
+    <!-- Quạt -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="76dp"
+        android:layout_marginTop="12dp"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView android:id="@+id/btnFanMinus" style="@style/DashBtn.Step" android:contentDescription="Giảm quạt" android:text="−" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_hvac_fan"
+                android:tint="@color/dash_cool" />
+
+            <TextView
+                android:id="@+id/tvClimateFanSpeed"
+                style="@style/DashText"
+                android:layout_width="64dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:gravity="center"
+                android:textSize="40sp"
+                tools:text="3" />
+
+            <com.mipago.ex2center.ui.dash.LevelIndicator
+                android:id="@+id/levelFan"
+                android:layout_width="150dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
+
+        <TextView android:id="@+id/btnFanPlus" style="@style/DashBtn.Step" android:contentDescription="Tăng quạt" android:text="+" />
+    </LinearLayout>
+
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- A/C · gió trong · gió ngoài · làm mát nhanh -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="84dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/btnAcCompressor"
+            style="@style/DashBtn"
+            android:layout_width="0dp"
+            android:layout_height="84dp"
+            android:layout_weight="1"
+            android:contentDescription="Máy nén A/C"
+            android:fontFamily="@font/be_vietnam_pro_bold"
+            android:text="A/C"
+            android:textSize="28sp" />
+
+        <ImageView android:id="@+id/btnRecirc" style="@style/DashIconBtn" android:layout_marginStart="12dp" android:contentDescription="Gió trong" android:src="@drawable/ic_hvac_recirc" />
+        <ImageView android:id="@+id/btnFresh" style="@style/DashIconBtn" android:layout_marginStart="12dp" android:contentDescription="Gió ngoài" android:src="@drawable/ic_hvac_fresh" />
+        <ImageView android:id="@+id/btnQuickCool" style="@style/DashIconBtn" android:layout_marginStart="12dp" android:contentDescription="Làm mát nhanh" android:padding="22dp" android:src="@drawable/ic_ac" />
+    </LinearLayout>
+
+    <!-- Hướng gió (một lựa chọn) · sấy kính trước · sấy kính sau -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="84dp"
+        android:layout_marginTop="12dp"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            style="@style/DashSeg"
+            android:layout_width="0dp"
+            android:layout_height="84dp"
+            android:layout_weight="3"
+            android:contentDescription="Hướng gió">
+
+            <ImageView android:id="@+id/btnVentFace" style="@style/DashIconSeg" android:contentDescription="Gió vào mặt" android:src="@drawable/ic_hvac_face" />
+            <ImageView android:id="@+id/btnVentFaceFloor" style="@style/DashIconSeg" android:layout_marginStart="5dp" android:contentDescription="Gió vào mặt và chân" android:src="@drawable/ic_hvac_face_feet" />
+            <ImageView android:id="@+id/btnVentFloor" style="@style/DashIconSeg" android:layout_marginStart="5dp" android:contentDescription="Gió vào chân" android:src="@drawable/ic_hvac_feet" />
+        </LinearLayout>
+
+        <ImageView android:id="@+id/btnDefrostFront" style="@style/DashIconBtn" android:layout_marginStart="12dp" android:contentDescription="Sấy kính trước" android:padding="22dp" android:src="@drawable/ic_defrost_front" />
+        <ImageView android:id="@+id/btnDefrostRear" style="@style/DashIconBtn" android:layout_marginStart="12dp" android:contentDescription="Sấy kính sau" android:src="@drawable/ic_hvac_defrost_rear" />
+    </LinearLayout>
+</LinearLayout>

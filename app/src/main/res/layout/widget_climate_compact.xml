@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ĐIỀU HÒA GỌN 2×1: nhiệt độ −/+ và quạt −/+ trên một hàng, A/C · gió trong · gió ngoài · làm mát nhanh. Same ids as widget_climate. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/DashCard"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView style="@style/DashLabel" android:text="Điều hòa" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="76dp"
+        android:layout_marginTop="10dp"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView android:id="@+id/btnTempMinus" style="@style/DashBtn.Step" android:layout_width="76dp" android:contentDescription="Giảm nhiệt độ" android:text="−" />
+
+        <TextView
+            android:id="@+id/tvClimateTargetTemp"
+            style="@style/DashText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textSize="36sp"
+            tools:text="24°C" />
+
+        <TextView android:id="@+id/btnTempPlus" style="@style/DashBtn.Step" android:layout_width="76dp" android:contentDescription="Tăng nhiệt độ" android:text="+" />
+
+        <TextView android:id="@+id/btnFanMinus" style="@style/DashBtn.Step" android:layout_width="76dp" android:layout_marginStart="16dp" android:contentDescription="Giảm quạt" android:text="−" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_hvac_fan"
+                android:tint="@color/dash_cool" />
+
+            <TextView
+                android:id="@+id/tvClimateFanSpeed"
+                style="@style/DashText"
+                android:layout_width="44dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:gravity="center"
+                android:textSize="36sp"
+                tools:text="3" />
+        </LinearLayout>
+
+        <TextView android:id="@+id/btnFanPlus" style="@style/DashBtn.Step" android:layout_width="76dp" android:contentDescription="Tăng quạt" android:text="+" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="76dp"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/btnAcCompressor"
+            style="@style/DashBtn"
+            android:layout_width="0dp"
+            android:layout_height="76dp"
+            android:layout_weight="1"
+            android:contentDescription="Máy nén A/C"
+            android:fontFamily="@font/be_vietnam_pro_bold"
+            android:text="A/C"
+            android:textSize="26sp" />
+
+        <ImageView android:id="@+id/btnRecirc" style="@style/DashIconBtn" android:layout_height="76dp" android:layout_marginStart="12dp" android:padding="18dp" android:contentDescription="Gió trong" android:src="@drawable/ic_hvac_recirc" />
+        <ImageView android:id="@+id/btnFresh" style="@style/DashIconBtn" android:layout_height="76dp" android:layout_marginStart="12dp" android:padding="18dp" android:contentDescription="Gió ngoài" android:src="@drawable/ic_hvac_fresh" />
+        <ImageView android:id="@+id/btnQuickCool" style="@style/DashIconBtn" android:layout_height="76dp" android:layout_marginStart="12dp" android:contentDescription="Làm mát nhanh" android:src="@drawable/ic_ac" />
+    </LinearLayout>
+</LinearLayout>

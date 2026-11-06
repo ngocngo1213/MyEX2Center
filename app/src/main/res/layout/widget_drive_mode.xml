@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CHẾ ĐỘ LÁI 2×1 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    style="@style/DashCard">
+
+    <TextView style="@style/DashLabel" android:text="Chế độ lái" />
+
+    <LinearLayout
+        style="@style/DashSeg"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_marginTop="4dp">
+
+        <TextView android:id="@+id/btnDriveEco" style="@style/DashSegItem" android:text="Eco" />
+        <TextView android:id="@+id/btnDriveComfort" style="@style/DashSegItem" android:layout_marginStart="6dp" android:text="Comfort" />
+        <TextView android:id="@+id/btnDriveSport" style="@style/DashSegItem" android:layout_marginStart="6dp" android:text="Sport" />
+    </LinearLayout>
+
+    <TextView style="@style/DashLabel" android:layout_marginTop="8dp" android:text="Phanh tái sinh" />
+
+    <LinearLayout
+        style="@style/DashSeg"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_marginTop="4dp">
+
+        <TextView android:id="@+id/btnRegenLow" style="@style/DashSegItem" android:text="Thấp" />
+        <TextView android:id="@+id/btnRegenMid" style="@style/DashSegItem" android:layout_marginStart="6dp" android:text="Vừa" />
+        <TextView android:id="@+id/btnRegenHigh" style="@style/DashSegItem" android:layout_marginStart="6dp" android:text="Cao" />
+    </LinearLayout>
+</LinearLayout>

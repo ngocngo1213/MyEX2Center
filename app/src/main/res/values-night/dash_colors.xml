@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dashboard palette (dark). -->
+<resources>
+    <color name="dash_bg">#0E1114</color>
+    <color name="dash_card">#161B20</color>
+    <color name="dash_well">#0C1013</color>
+    <color name="dash_hi">#12FFFFFF</color>
+    <color name="dash_lo">#8C000000</color>
+    <color name="dash_text">#ECEFF2</color>
+    <color name="dash_muted">#9AA4AE</color>
+    <color name="dash_line">#2A323A</color>
+    <color name="dash_stage">#1E262E</color>
+    <color name="dash_cool">#6CB6FF</color>
+    <color name="dash_accent">#F2A93B</color>
+    <color name="dash_on_accent">#1B1205</color>
+    <color name="dash_accent_text">#F2A93B</color>
+    <color name="dash_ripple">#26FFFFFF</color>
+    <color name="dash_danger">#FF6B6B</color>
+</resources>

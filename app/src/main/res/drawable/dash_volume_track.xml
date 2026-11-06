@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background" android:gravity="center_vertical|fill_horizontal" android:height="8dp">
+        <shape><solid android:color="@color/dash_line" /><corners android:radius="4dp" /></shape>
+    </item>
+    <item android:id="@android:id/progress" android:gravity="center_vertical|fill_horizontal" android:height="8dp">
+        <clip>
+            <shape><solid android:color="@color/dash_text" /><corners android:radius="4dp" /></shape>
+        </clip>
+    </item>
+</layer-list>

@@ -8,8 +8,6 @@ import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
-import android.os.Handler
-import android.os.Looper
 import android.os.SystemClock
 import android.util.DisplayMetrics
 import android.util.Log
@@ -19,8 +17,10 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.mipago.ex2center.car.CarCommands
+import com.mipago.ex2center.car.CarStateHub
+import com.mipago.ex2center.car.Signal
 import com.mipago.ex2center.utils.CarApiHelper
-import java.util.concurrent.Executors
 import kotlin.math.roundToInt
 
 /**
@@ -32,8 +32,9 @@ import kotlin.math.roundToInt
  * - Window NAVIGATION_BAR_PANEL (2024, above the nav bar, allowed for android.uid.system),
  *   NOT_FOCUSABLE + NOT_TOUCH_MODAL: touches outside this panel go to the car's bar.
  * - Opaque in the bar's own colour (#12161A) so it reads as part of the bar.
- * - Tap: the value changes immediately, the write goes to the car off the main thread, then the
- *   2 s poll shows what the car confirmed (polling pauses briefly after a tap).
+ * - Values come from CarStateHub (shared with the Dashboard, 2 s poll + change events).
+ * - Tap: the value changes immediately, the write goes through CarCommands, then the next read
+ *   shows what the car confirmed (reads are ignored briefly after a tap).
  * - Tapping a value (temperature or fan) opens the car's climate screen, as the car's own scale did.
  * - Hidden while the system hides the nav bar (full-screen apps) and during Blackout.
  * - Geometry tuned for the IHU629G (1920x1080, bar 968..1080, car scale at x 971..1180) and
@@ -63,8 +64,7 @@ class DockClimateOverlay(private val context: Context) {
 
     private val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val car = CarApiHelper.getInstance()
-    private val main = Handler(Looper.getMainLooper())
-    private val io = Executors.newSingleThreadExecutor()
+    private var carSub: CarStateHub.Subscription? = null
 
     private var panel: View? = null
     private var tvTemp: TextView? = null
@@ -74,13 +74,6 @@ class DockClimateOverlay(private val context: Context) {
     private var temp: Int? = null
     private var fan: Int? = null
     private var lastTapAt = 0L
-
-    private val poll = object : Runnable {
-        override fun run() {
-            refresh()
-            main.postDelayed(this, POLL_MS)
-        }
-    }
 
     private fun dp(v: Int) = (v * context.resources.displayMetrics.density).roundToInt()
 
@@ -124,7 +117,9 @@ class DockClimateOverlay(private val context: Context) {
         try {
             wm.addView(row, params)
             panel = row
-            main.post(poll)
+            carSub = CarStateHub.subscribe(context, setOf(Signal.CLIMATE), POLL_MS) { state, _ ->
+                onClimate(state.climate?.tempC, state.climate?.fan)
+            }
             Log.i(TAG, "Dock climate controls shown at $left..${left + width}, y=${params.y}")
         } catch (t: Throwable) {
             Log.w(TAG, "Cannot add dock controls: ${t.message}")
@@ -132,7 +127,8 @@ class DockClimateOverlay(private val context: Context) {
     }
 
     fun hide() {
-        main.removeCallbacks(poll)
+        CarStateHub.unsubscribe(carSub)
+        carSub = null
         panel?.let { try { wm.removeView(it) } catch (_: Throwable) {} }
         panel = null
         tvTemp = null
@@ -141,7 +137,6 @@ class DockClimateOverlay(private val context: Context) {
 
     fun release() {
         hide()
-        io.shutdownNow()
     }
 
     /** Blackout covers the screen: the panel (above it in z-order) must not show on black. */
@@ -221,7 +216,7 @@ class DockClimateOverlay(private val context: Context) {
         temp = target
         lastTapAt = SystemClock.elapsedRealtime()
         render()
-        io.execute { car.writeTargetTemperature(target.toFloat()) }
+        CarCommands.run({ car.writeTargetTemperature(target.toFloat()) }, longArrayOf(HOLD_AFTER_TAP_MS + 100))
     }
 
     private fun stepFan(delta: Int) {
@@ -232,25 +227,16 @@ class DockClimateOverlay(private val context: Context) {
         fan = target
         lastTapAt = SystemClock.elapsedRealtime()
         render()
-        io.execute { car.writeFanSpeed(target) }
+        CarCommands.run({ car.writeFanSpeed(target) }, longArrayOf(HOLD_AFTER_TAP_MS + 100))
     }
 
-    private fun refresh() {
+    /** Main thread, from CarStateHub. Right after a tap the car may still report the old value. */
+    private fun onClimate(t: Int?, f: Int?) {
         if (panel == null) return
-        // Right after a tap the car may still report the old value: keep showing the request.
         if (SystemClock.elapsedRealtime() - lastTapAt < HOLD_AFTER_TAP_MS) return
-        try {
-            io.execute {
-                val t = car.readTargetTemperature()?.roundToInt()
-                val f = car.readFanSpeed()
-                main.post {
-                    if (SystemClock.elapsedRealtime() - lastTapAt < HOLD_AFTER_TAP_MS) return@post
-                    temp = t
-                    fan = f
-                    render()
-                    applyVisibility()
-                }
-            }
-        } catch (_: Throwable) {}
+        temp = t
+        fan = f
+        render()
+        applyVisibility()
     }
 }

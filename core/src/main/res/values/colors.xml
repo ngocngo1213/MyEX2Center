@@ -23,19 +23,19 @@
     <color name="btn_inactive_stroke">#D4DCE6</color>
 
     <!-- Primary Accent (Emerald) -->
-    <color name="accent_primary">#10B981</color>
-    <color name="primary_accent">#10B981</color>
-    <color name="accent_emerald">#10B981</color>
-    <color name="accent_emerald_light">#059669</color>
-    <color name="accent_emerald_bg">#D1FAE5</color>
-    <color name="accent_blue">#10B981</color>
-    <color name="accent_blue_light">#059669</color>
+    <color name="accent_primary">#F2A93B</color>
+    <color name="primary_accent">#F2A93B</color>
+    <color name="accent_emerald">#F2A93B</color>
+    <color name="accent_emerald_light">#9A5B00</color>
+    <color name="accent_emerald_bg">#FDF0DA</color>
+    <color name="accent_blue">#F2A93B</color>
+    <color name="accent_blue_light">#9A5B00</color>
 
     <!-- Secondary Accent (Amber) -->
-    <color name="accent_secondary">#F59E0B</color>
-    <color name="accent_amber">#F59E0B</color>
-    <color name="accent_amber_light">#D97706</color>
-    <color name="accent_amber_bg">#FEF3C7</color>
+    <color name="accent_secondary">#E8590C</color>
+    <color name="accent_amber">#E8590C</color>
+    <color name="accent_amber_light">#C2410C</color>
+    <color name="accent_amber_bg">#FFE8D9</color>
     <color name="status_orange">#F59E0B</color>
     <color name="status_orange_bg">#FEF3C7</color>
     <color name="status_orange_text">#B45309</color>
@@ -56,13 +56,13 @@
 
     <!-- Typography -->
     <color name="text_primary">#0F172A</color>
-    <!-- Text/icons on emerald or other accent fills: white in both themes. -->
-    <color name="text_on_accent">#FFFFFF</color>
+    <!-- Text/icons on the amber accent fill: near-black in both themes (white on amber fails contrast). -->
+    <color name="text_on_accent">#1B1205</color>
     <color name="text_secondary">#475569</color>
     <color name="text_muted">#64748B</color>
-    <color name="text_emerald">#047857</color>
+    <color name="text_emerald">#9A5B00</color>
     <color name="text_amber">#B45309</color>
     <!-- Button press ripples -->
-    <color name="ripple_on_accent">#40FFFFFF</color>
+    <color name="ripple_on_accent">#33000000</color>
     <color name="ripple_neutral">#1F0F172A</color>
 </resources>
