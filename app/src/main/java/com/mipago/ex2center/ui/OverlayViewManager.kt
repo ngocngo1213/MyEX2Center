@@ -55,10 +55,10 @@ class OverlayViewManager(private val context: Context) {
     private var bubbleView: View? = null
     private var panelView: View? = null
     private var blackoutView: View? = null
-    private var splitControlView: View? = null
+    private var mapReturnView: View? = null
+    private val mapReturnTimeout = Runnable { hideMapReturnChip() }
 
     private var bubbleLayoutParams: WindowManager.LayoutParams? = null
-    private var splitControlLayoutParams: WindowManager.LayoutParams? = null
     private var isPanelOpen = false
     private var isBlackoutActive = false
 
@@ -647,23 +647,23 @@ class OverlayViewManager(private val context: Context) {
     }
 
     /**
-     * Called after the Blackout layer or the split bar is closed, so the owning service can stop
+     * Called after the Blackout layer or the "Về bản đồ" chip is closed, so the owning service can stop
      * itself when nothing is left on screen (e.g. the bubble is disabled in Settings).
      */
     var onOverlayClosed: (() -> Unit)? = null
 
     val isBlackoutShowing: Boolean get() = blackoutView != null
 
-    /** True while any overlay window (bubble, panel, Blackout, split bar) is attached. */
+    /** True while any overlay window (bubble, panel, Blackout, "Về bản đồ") is attached. */
     val hasVisibleOverlay: Boolean
-        get() = bubbleView != null || panelView != null || blackoutView != null || splitControlView != null
+        get() = bubbleView != null || panelView != null || blackoutView != null || mapReturnView != null
 
     /** Removes every overlay window and stops background work. Call from the owner's onDestroy. */
     fun release() {
         onOverlayClosed = null
         hideBubble()
         hidePanel()
-        hideSplitControlBar()
+        hideMapReturnChip()
         deactivateBlackoutMode()
         mainHandler.removeCallbacksAndMessages(null)
         gearWatchExecutor.shutdownNow()
@@ -685,148 +685,63 @@ class OverlayViewManager(private val context: Context) {
     }
 
     // -------------------------------------------------------------
-    // FEATURE 3: VERTICAL PIP SPLIT-SCREEN CONTROL BAR
+    // "VỀ BẢN ĐỒ" CHIP (Chạy cùng Vietmap, video apps)
     // -------------------------------------------------------------
-    @SuppressLint("ClickableViewAccessibility")
-    fun showSplitControlBar() {
-        if (splitControlView != null) return
 
-        // 4 icon buttons of 56dp + 12dp gaps + 8dp padding (8pt grid)
-        val barW = dpToPx(72)
-        val barH = dpToPx(288)
-
+    /**
+     * One-tap way back to VIETMAP LIVE while the driver picks a video. Video apps are not switched
+     * away automatically: they first play in their own screen (PipePipe also needs a tap on
+     * "Popup"), and leaving earlier could stop the video. Tap = open the map and hide the chip;
+     * it also hides itself after [timeoutMs].
+     */
+    fun showMapReturnChip(mapPackage: String, timeoutMs: Long) {
+        mainHandler.removeCallbacks(mapReturnTimeout)
+        mainHandler.postDelayed(mapReturnTimeout, timeoutMs)
+        if (mapReturnView != null) return
         val params = WindowManager.LayoutParams(
-            barW, barH,
+            WindowManager.LayoutParams.WRAP_CONTENT, dpToPx(76),
             getOverlayWindowType(),
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT
         ).apply {
-            gravity = Gravity.CENTER_VERTICAL or Gravity.CENTER_HORIZONTAL
-            x = 0
-            y = 0
+            gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+            y = dpToPx(16)
         }
-        splitControlLayoutParams = params
-
-        val bar = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_HORIZONTAL
+        val chip = TextView(context).apply {
+            text = "Về bản đồ"
+            contentDescription = "Mở lại Vietmap"
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 22f)
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setTextColor(context.getColor(R.color.text_on_accent))
+            gravity = Gravity.CENTER
+            setPadding(dpToPx(36), 0, dpToPx(36), 0)
             background = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = dpToPx(24).toFloat()
-                setColor(context.getColor(R.color.overlay_bg)) // Obsidian semi-transparent
-                setStroke(dpToPx(1), context.getColor(R.color.accent_primary)) // Emerald border
+                cornerRadius = dpToPx(38).toFloat()
+                setColor(context.getColor(R.color.accent_primary))
+                setStroke(dpToPx(2), Color.WHITE)
             }
-            val pad = dpToPx(8)
-            setPadding(pad, dpToPx(8), pad, dpToPx(0))
             elevation = dpToPx(8).toFloat()
-        }
-
-        fun createPillButton(iconRes: Int, colorRes: Int, label: String, onClick: () -> Unit): ImageView {
-            return ImageView(context).apply {
-                setImageResource(iconRes)
-                setColorFilter(context.getColor(colorRes))
-                contentDescription = label
-                val pad = dpToPx(16)
-                setPadding(pad, pad, pad, pad)
-                val btnSize = dpToPx(56)
-                layoutParams = LinearLayout.LayoutParams(btnSize, btnSize).apply { bottomMargin = dpToPx(12) }
-                background = GradientDrawable().apply {
-                    shape = GradientDrawable.OVAL
-                    setColor(context.getColor(R.color.btn_inactive))
-                    setStroke(dpToPx(1), context.getColor(R.color.btn_inactive_stroke))
-                }
-                setOnClickListener { onClick() }
-            }
-        }
-
-        // 1. Swap Apps
-        val btnSwap = createPillButton(R.drawable.ic_swap, R.color.accent_primary, "Đổi vị trí 2 ứng dụng") {
-            com.mipago.ex2center.launcher.SplitScreenLauncher.swapSplitApps(context)
-        }
-
-        // 2. Quick Climate Adjust
-        val btnClimate = createPillButton(R.drawable.ic_ac, R.color.text_primary, "Bật/tắt A/C") {
-            // Quick toggle AC compressor or trigger Quick Cool
-            runIo {
-                val curAc = carHelper.isAcCompressorOn()
-                val ok = curAc != null && carHelper.setAcCompressorOn(!curAc)
-                mainHandler.post {
-                    toast(
-                        when {
-                            curAc == null -> "Chưa đọc được trạng thái A/C từ xe."
-                            !ok -> "Xe không nhận lệnh: A/C"
-                            !curAc -> "A/C: BẬT"
-                            else -> "A/C: TẮT"
-                        }
-                    )
+            setOnClickListener {
+                hideMapReturnChip()
+                context.packageManager.getLaunchIntentForPackage(mapPackage)?.let {
+                    try { context.startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (_: Throwable) {}
                 }
             }
         }
-
-        // 3. Blackout Night Mode
-        val btnNight = createPillButton(R.drawable.ic_night, R.color.accent_secondary, "Màn hình đêm") {
-            activateBlackoutMode()
-        }
-
-        // 4. Close Split & Return to Dashboard
-        val btnClose = createPillButton(R.drawable.ic_close, R.color.accent_danger, "Đóng chia đôi màn hình") {
-            hideSplitControlBar()
-            val dashIntent = Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            }
-            context.startActivity(dashIntent)
-        }
-
-        bar.addView(btnSwap)
-        bar.addView(btnClimate)
-        bar.addView(btnNight)
-        bar.addView(btnClose)
-
-        // Allow vertical dragging along screen boundary
-        bar.setOnTouchListener(object : View.OnTouchListener {
-            private var initY = 0
-            private var touchY = 0f
-            private var isDrag = false
-
-            override fun onTouch(v: View, event: MotionEvent): Boolean {
-                val p = splitControlLayoutParams ?: return false
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        initY = p.y
-                        touchY = event.rawY
-                        isDrag = false
-                        return false
-                    }
-                    MotionEvent.ACTION_MOVE -> {
-                        val dy = (event.rawY - touchY).toInt()
-                        if (Math.abs(dy) > 10) isDrag = true
-                        p.y = initY + dy
-                        windowManager.updateViewLayout(bar, p)
-                        return true
-                    }
-                }
-                return false
-            }
-        })
-
         try {
-            windowManager.addView(bar, params)
-            splitControlView = bar
-            Log.i(TAG, "Split-Screen PiP control bar displayed.")
+            windowManager.addView(chip, params)
+            mapReturnView = chip
         } catch (t: Throwable) {
-            Log.e(TAG, "Error displaying split control bar: ${t.message}", t)
+            Log.w(TAG, "Cannot show map-return chip: ${t.message}")
         }
     }
 
-    fun hideSplitControlBar() {
-        val wasShown = splitControlView != null
-        splitControlView?.let {
-            try {
-                windowManager.removeView(it)
-            } catch (ignored: Throwable) {}
-        }
-        splitControlView = null
-        if (wasShown) onOverlayClosed?.invoke()
+    fun hideMapReturnChip() {
+        mainHandler.removeCallbacks(mapReturnTimeout)
+        val view = mapReturnView ?: return
+        try { windowManager.removeView(view) } catch (_: Throwable) {}
+        mapReturnView = null
+        onOverlayClosed?.invoke()
     }
 
     /**

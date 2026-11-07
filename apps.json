@@ -70,27 +70,6 @@
     "sha256": "0a3d3f024eae66b8468f75fe85ab421169177f5ea1223a5d097d1dc9e1c84cf3"
   },
   {
-    "name": "NewPipe",
-    "packageName": "org.schabi.newpipe",
-    "versionCode": 1015,
-    "versionName": "0.29.1",
-    "sizeMb": 11.0,
-    "type": "apk",
-    "abis": [
-      "arm64-v8a",
-      "armeabi-v7a",
-      "x86",
-      "x86_64"
-    ],
-    "minSdk": 23,
-    "requiresPark": true,
-    "apkUrl": "https://github.com/TeamNewPipe/NewPipe/releases/download/v0.29.1/NewPipe_v0.29.1.apk",
-    "browserUrl": "https://github.com/TeamNewPipe/NewPipe/releases",
-    "iconResName": "ic_app_newpipe",
-    "description": "Xem YouTube giao diện máy tính bảng siêu nhẹ, hỗ trợ phát nền và cửa sổ nổi (Popup Player) khi đang mở toàn màn hình Vietmap Live.",
-    "sha256": "18447bfb1e06d113edc88df93f471827280de06f6f3d4dc42f56f28b9c1bab79"
-  },
-  {
     "name": "PipePipe",
     "packageName": "InfinityLoop1309.NewPipeEnhanced",
     "versionCode": 111004,
@@ -106,7 +85,8 @@
     "browserUrl": "https://github.com/InfinityLoop1308/PipePipe/releases",
     "iconResName": "ic_app_pipepipe",
     "description": "Bản nâng cấp của NewPipe (64-bit arm64-v8a): tích hợp sẵn SponsorBlock tự bỏ qua đoạn tài trợ, phát nhạc nền và cửa sổ nổi.",
-    "sha256": "dfac608d4802b461252550a0485f779a12fd198f18dce77afa90cd441568f06f"
+    "sha256": "dfac608d4802b461252550a0485f779a12fd198f18dce77afa90cd441568f06f",
+    "overlayPermission": true
   },
   {
     "name": "OuterTune",

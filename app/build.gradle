@@ -11,8 +11,8 @@ android {
         applicationId 'com.mipago.ex2center'
         minSdk 28
         targetSdk 28
-        versionCode 3
-        versionName "1.1.0"
+        versionCode 4
+        versionName "1.2.0"
 
         ndk {
             abiFilters 'arm64-v8a'
@@ -63,6 +63,8 @@ android {
 }
 
 dependencies {
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20231013' // real org.json on the JVM (Android's is a stub in unit tests)
     // Car API compilation stubs (real classes provided at runtime by Geely IHU OS)
     compileOnly files("${rootProject.projectDir}/core/libs/car-stubs.jar")
     implementation project(':core')

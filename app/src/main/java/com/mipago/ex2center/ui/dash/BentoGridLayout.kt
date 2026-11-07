@@ -1,10 +1,15 @@
 package com.mipago.ex2center.ui.dash
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
+import android.view.HapticFeedbackConstants
+import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.ViewGroup
 import com.mipago.ex2center.R
+import kotlin.math.hypot
 import kotlin.math.roundToInt
 
 /**
@@ -15,6 +20,9 @@ import kotlin.math.roundToInt
  * Every child is measured exactly once with EXACTLY specs, so a widget's internal text updates
  * never make its neighbours measure again — the cost that made the old Dashboard slow.
  */
+/** Longer than the system default (500 ms) so a firm tap on a button never opens edit mode. */
+private const val LONG_PRESS_MS = 600L
+
 class BentoGridLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
@@ -110,6 +118,62 @@ class BentoGridLayout @JvmOverloads constructor(
             val top = edge(paddingTop, ch, lp.row)
             child.layout(left, top, left + child.measuredWidth, top + child.measuredHeight)
         }
+    }
+
+    // --- Long press anywhere on the grid (also over a widget's buttons) -----------------------
+
+    /**
+     * Called after a still long press ([LONG_PRESS_MS]) anywhere on the grid. Return true to take
+     * the gesture: the widget under the finger then receives ACTION_CANCEL, so its button does not
+     * fire on release. Return false (e.g. not in P) to leave the touch to the widget untouched.
+     */
+    var onLongPress: (() -> Boolean)? = null
+
+    private val slop = ViewConfiguration.get(context).scaledTouchSlop
+    private var downX = 0f
+    private var downY = 0f
+    private var stealGesture = false
+    private val longPressRunnable = Runnable {
+        if (onLongPress?.invoke() == true) {
+            stealGesture = true
+            performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+        }
+    }
+
+    /** Shared by intercept (touches over widgets) and onTouchEvent (touches on the gaps). */
+    private fun trackLongPress(ev: MotionEvent) {
+        when (ev.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                stealGesture = false
+                downX = ev.x
+                downY = ev.y
+                if (onLongPress != null) postDelayed(longPressRunnable, LONG_PRESS_MS)
+            }
+            MotionEvent.ACTION_MOVE ->
+                if (hypot(ev.x - downX, ev.y - downY) > slop) removeCallbacks(longPressRunnable)
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_POINTER_DOWN ->
+                removeCallbacks(longPressRunnable)
+        }
+    }
+
+    /**
+     * A child that takes the gesture (SeekBar drag, scroll) stops intercept calls for the rest of
+     * it, so the pending long press must be dropped here or it would fire mid-drag.
+     */
+    override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
+        if (disallowIntercept) removeCallbacks(longPressRunnable)
+        super.requestDisallowInterceptTouchEvent(disallowIntercept)
+    }
+
+    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        trackLongPress(ev)
+        return stealGesture
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        trackLongPress(event)
+        return event.actionMasked != MotionEvent.ACTION_DOWN || onLongPress != null
     }
 
     override fun shouldDelayChildPressedState() = false

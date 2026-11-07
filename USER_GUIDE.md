@@ -420,8 +420,7 @@ Cài đè **giữ nguyên** cài đặt của bạn: tên xe, ảnh xe, giao di�
    | **MyEX2Center** | **Cài đặt** / **Cập nhật** |
    | **EX2 Store** | **Cập nhật hệ thống** khi có bản mới |
    | **SmartTube** (YouTube không quảng cáo, cho màn hình ngang) | **Cài đặt** |
-   | **NewPipe** (YouTube nhẹ, phát nền, cửa sổ nổi) | **Cài đặt** |
-   | **PipePipe** (NewPipe có SponsorBlock) | **Cài đặt** |
+   | **PipePipe** (YouTube nhẹ, phát nền, cửa sổ nổi, có SponsorBlock) | **Cài đặt** |
    | **OuterTune** (YouTube Music) | **Cài đặt** |
    | **Kreate** (YouTube Music, kế nhiệm RiMusic) | **Cài đặt** |
    | **Trình duyệt Web** | **Cài đặt** |
@@ -438,48 +437,67 @@ Cài đè **giữ nguyên** cài đặt của bạn: tên xe, ảnh xe, giao di�
 ## 10. Sử dụng MyEX2Center
 
 > [!NOTE]
-> Nút **Kho ứng dụng** (hình cửa hàng) mở app **EX2 Store**. Nếu xe chưa có Store (ví dụ MyEX2Center được cài thẳng bằng adb), app hiện hộp thoại **Cài EX2 Store**: **Tải và cài** (tự tải bản chính thức, đã kiểm tra chữ ký và SHA-256) hoặc **Cài từ USB** (file `EX2Store-<phiên bản>.apk`, Phần 3).
+> EX2 Store mở từ danh sách ứng dụng của xe, hoặc **Cài đặt › Hệ thống › Kho ứng dụng**. Nếu xe chưa có Store (ví dụ MyEX2Center được cài thẳng bằng adb), app hiện hộp thoại **Cài EX2 Store**: **Tải và cài** (tự tải bản chính thức, đã kiểm tra chữ ký và SHA-256) hoặc **Cài từ USB** (file `EX2Store-<phiên bản>.apk`, Phần 3).
 
 ### Thanh trên cùng
-- **Hồ sơ xe** (ảnh + tên): chạm vào để mở Cài đặt.
-- Giờ, nhiệt độ ngoài trời, điện áp 12V.
-- **Ô trạng thái**:
-  - Xanh *"Tự động hóa: Đang bật"*.
-  - Cam *"Chế độ Bảo dưỡng"*.
-  - *"Crash Guard: Đã ngắt"*: tự động hóa đã tạm dừng vì gặp lỗi liên tiếp. Bấm vào để **Đặt lại**.
-- Wi-Fi (tên mạng và IP), **Kho ứng dụng** (mở EX2 Store), **Màn hình đêm** (chạm bất kỳ đâu để thoát; tự tắt khi vào số R), **Cài đặt**.
+- Giờ, nhiệt độ ngoài trời, cần số **P R N D**.
+- **Ô cảnh báo** (chỉ hiện khi cần): *"Crash Guard đã ngắt"* (tự động hóa tạm dừng vì lỗi liên tiếp, bấm để **Đặt lại**) hoặc *"Valet đang bật"*.
+- **Wi-Fi**: chạm để mở thẳng màn hình Wi-Fi của xe.
+- **Chỉnh bố cục** (chỉ ở số P), **Màn hình đêm** (chạm bất kỳ đâu để thoát; tự tắt khi vào số R), **Cài đặt**.
 
-### Cột trái: lái xe
-- Cần số **P R N D**, **biển giới hạn tốc độ** cạnh tốc độ (chạm để mở Vietmap), % pin, km còn lại.
-- **Chế độ lái** và **Phanh tái sinh**. Mỗi nhóm có công tắc **"Ghi nhớ"**: app nhớ lựa chọn cuối cùng (kể cả khi bạn chọn trên màn hình gốc của xe) và **tự đặt lại sau khi tắt rồi mở xe**.
-- Phím tắt: **AVAS** (âm cảnh báo người đi bộ), **Camera 360**, **Bảo dưỡng** (Valet: tạm dừng mọi tự động hóa khi gửi xe hoặc rửa xe).
+### Dashboard dạng lưới (từ 1.1.0)
+Màn hình chính là lưới 6×3 ô, luôn lấp kín màn hình. Các widget:
 
-### Cột giữa
-- **Chạy đôi: Vietmap + YouTube** (chia đôi màn hình, có thanh điều khiển nổi để đổi chỗ hai app, bật/tắt A/C, Màn hình đêm, đóng chia đôi).
-- **Nhạc**: bài đang phát, lùi / phát–dừng / tiếp, âm lượng.
-- **Điều hòa**: A/C, Gió trong, **Làm mát nhanh** (A/C + 17°C + quạt 7 + gió mặt + gió trong), nhiệt độ (17–32°C), quạt gió (1–8), gió mặt, gió chân, sấy kính trước, sấy kính sau.
+| Widget | Nội dung |
+|---|---|
+| **Lái xe** | Tốc độ lớn, **biển giới hạn tốc độ** (chỉ hiện khi xe có dữ liệu; chạm để mở Vietmap), % pin, km còn lại |
+| **Điều hòa** (2×2 hoặc gọn 2×1) | Nhiệt độ −/+ (17–32°C), quạt −/+ (1–8); nút icon to: **A/C**, **Gió trong**, **Gió ngoài**, **Làm mát nhanh**, 3 hướng gió (mặt / mặt + chân / chân), sấy kính trước / sau |
+| **Xe · Cốp · Kính** | Ảnh xe nhìn từ trên xuống, độ mở từng kính (**TT** trước trái, **TP** trước phải, **ST** sau trái, **SP** sau phải), **Cốp trước** (chỉ ở P, có hỏi xác nhận), kính **Đóng / 10% / 50% / 100%** (50% và 100% chỉ khi dưới 30 km/h) |
+| **Nhạc** (2×1 hoặc lớn 2×2) | Bài và app đang phát, lùi / phát–dừng / tiếp, âm lượng (theo kịp nút trên vô lăng) |
+| **Chế độ lái** | Eco / Comfort / Sport và Phanh tái sinh Thấp / Vừa / Cao |
+| **Phím tắt** | Tắt âm AVAS, Auto Hold, Đèn nội thất, Sạc không dây, Chạy cùng Vietmap, Valet |
+| **Pin & quãng đường**, **Chạy cùng Vietmap**, các **ô 1×1** | Tắt màn hình, Đèn nội thất, Sấy kính, Auto Hold, Valet, AVAS, Sạc không dây, Mở cốp trước |
 
-### Cột phải
-- Hình xe nhìn từ trên xuống: **áp suất và nhiệt độ từng lốp** (vạch bánh xe xanh là bình thường, vàng là lệch khoảng, đỏ là nguy hiểm, xám là chưa có dữ liệu) và **độ mở từng kính**.
-- **Kính (cả 4 cửa): 0% Đóng kín / 10% Hé thoáng / 50% Mở một nửa / 100% Hạ hết**. *50%* và *100%* chỉ dùng được khi xe chạy dưới 30 km/h.
+Nút đang **bật** có nền màu hổ phách. Nút mờ nghĩa là xe chưa báo trạng thái (hiện `--`), không phải tắt.
 
-### Nút nổi (hình tròn xanh)
+### Bố cục có sẵn và tự chỉnh
+- **Cài đặt › Giao diện › Bố cục Dashboard**: **Lái xe hàng ngày**, **Đi đêm tối giản** (luôn nền tối, dịu hơn), **Đỗ xe / Cắm trại** (Nhạc lớn, Pin, Valet…).
+- **Tự chỉnh** (chỉ khi xe ở **P**): bấm **Chỉnh bố cục** hoặc **nhấn giữ** bất kỳ đâu trên Dashboard.
+  - **Kéo** widget để đổi chỗ (thả lên widget cùng cỡ là đổi chỗ cho nhau).
+  - Nút đỏ **−**: ẩn widget. Nút **⇲**: đổi cỡ (Điều hòa, Nhạc).
+  - **+ Thêm widget** hoặc chạm ô trống: chọn widget đang ẩn để thêm.
+  - **Hoàn tác**, **Về mặc định**, **Xong**. Xe rời số P thì bố cục **tự lưu và khóa**.
+
+### Chạy cùng Vietmap
+Mở **VIETMAP LIVE** cùng một app video/nhạc: YouTube ReVanced, SmartTube, PipePipe, OuterTune, Kreate. Chọn app trong **Cài đặt › Chạy cùng Vietmap**.
+- Bấm **Chạy đôi** (widget Phím tắt hoặc Chạy cùng Vietmap): app video/nhạc mở ra để bạn chọn nội dung.
+  - **Video**: chọn video rồi chạm nút **Về bản đồ** phía trên màn hình. YouTube ReVanced tiếp tục **phát tiếng** cùng bản đồ. PipePipe: bấm **Popup** trước để video nằm trong cửa sổ nổi trên bản đồ.
+  - **Nhạc** (OuterTune/Kreate): chọn bài, bản đồ tự mở lại, nhạc phát nền. Điều khiển ở widget **Nhạc**.
+- Không có chia đôi màn hình: trên xe này chia đôi làm Vietmap bị thoát và tải lại. NewPipe không chạy được trên xe (bị thoát ngay khi mở).
+
+### Thanh dưới của xe
+Giữa thanh dưới có **[−] nhiệt độ [+]** và **[−] Quạt [+]** để chỉnh nhanh từ mọi màn hình. Chạm vào số để mở màn hình điều hòa của xe. Tắt trong **Cài đặt › Hệ thống**.
+
+### Nút nổi (hình tròn màu hổ phách)
 Kéo để di chuyển (app nhớ vị trí). Chạm để mở bảng nhanh gồm: A/C, nhiệt độ, quạt, **Màn hình đêm**, **Khởi động lại** màn hình (chỉ khi xe ở P, có hỏi xác nhận).
 
 ### Cài đặt
 | Mục | Nội dung |
 |---|---|
 | **Hồ sơ xe** | Đổi tên xe, chọn ảnh xe từ USB/máy, dùng lại ảnh mặc định |
-| **Giao diện** | **Theo hệ thống / Sáng / Tối** |
-| **Kết nối** | Bật/tắt **Wi-Fi** (hiện tên mạng ● IP; tắt Wi-Fi phải xác nhận), **Đèn viền nội thất** |
-| **Lái xe & Tự động hóa** | Ghi nhớ chế độ lái, Ghi nhớ phanh tái sinh, Tự động tắt âm AVAS, Chế độ Bảo dưỡng, Crash Guard |
-| **Hệ thống** | Nút nổi, Kho ứng dụng (mở EX2 Store), phiên bản app |
+| **Giao diện** | **Theo hệ thống / Sáng / Tối**, **Bố cục Dashboard** |
+| **Kết nối** | Bật/tắt **Wi-Fi** (tắt phải xác nhận), **Đèn viền nội thất** |
+| **Xe & tiện nghi** | Đèn chào khi mở cửa, camera khi vào số D, đèn dẫn đường về nhà, tự khóa theo tốc độ, tự đóng kính khi khóa, giảm tốc gạt mưa khi đỗ, mở cốp trước |
+| **Lái xe & Tự động hóa** | Ghi nhớ chế độ lái, ghi nhớ phanh tái sinh, tự động tắt âm AVAS, chế độ Bảo dưỡng (Valet), giới hạn âm lượng khi bật xe, Crash Guard |
+| **Chạy cùng Vietmap** | App video/nhạc đi kèm |
+| **Chẩn đoán phanh & ESC** | Chỉ đọc: ABS, ESP, TCS, EBD, EPB, đèn cảnh báo ESC |
+| **Hệ thống** | Nút nổi, nhiệt độ & quạt trên thanh dưới, Kho ứng dụng, phiên bản app |
 
 ### Các cơ chế an toàn có sẵn
-- **Chặn khi không ở số P:** khởi động lại màn hình, cài/gỡ ứng dụng.
-- **Chặn khi chạy nhanh:** "Hạ hết kính" chỉ dùng được dưới 30 km/h.
+- **Chỉ ở số P:** khởi động lại màn hình, cài/gỡ ứng dụng, mở cốp trước, chỉnh bố cục Dashboard.
+- **Chặn khi chạy nhanh:** kính 50% và 100% chỉ dùng được dưới 30 km/h (không đọc được tốc độ cũng bị chặn).
 - **Màn hình đêm** tự tắt khi vào số R, để không che camera lùi.
-- **Không có nút ESC, HDC, Auto Hold, mở cốp:** các chức năng này **chưa có mã điều khiển đã kiểm chứng** cho EX2, nên app không hiện để tránh gửi lệnh sai.
+- Chức năng chưa có mã điều khiển đã kiểm chứng (cốp sau, ESC, HDC) **không có nút**, để tránh gửi lệnh sai cho xe.
 
 > [!CAUTION]
 > Tắt âm AVAS ảnh hưởng đến an toàn của người đi bộ. Chỉ dùng khi hiểu rõ và đúng quy định nơi bạn lái. **Không thao tác trên màn hình khi xe đang chạy.**

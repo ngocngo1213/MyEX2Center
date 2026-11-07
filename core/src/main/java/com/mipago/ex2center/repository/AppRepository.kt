@@ -136,15 +136,17 @@ class AppRepository(private val context: Context) {
             val r = remoteByPkg[b.packageName]
             val bundledWins = r == null ||
                 (b.versionCode > r.versionCode && b.sha256.matches(SHA256_HEX))
-            // batteryWhitelist only widens what the Store does for an installed app, so either
-            // source may set it (lets a new build fix apps before the signed catalog is pushed).
-            val chosen = when {
-                bundledWins -> b
-                b.batteryWhitelist && !r!!.batteryWhitelist -> r.copy(batteryWhitelist = true).also {
+            // batteryWhitelist / overlayPermission only widen what the Store does for an installed
+            // app, so either source may set them (a new build fixes apps before the signed catalog
+            // is pushed).
+            val chosen = if (bundledWins || r == null) b else {
+                val battery = r.batteryWhitelist || b.batteryWhitelist
+                val overlay = r.overlayPermission || b.overlayPermission
+                if (battery == r.batteryWhitelist && overlay == r.overlayPermission) r
+                else r.copy(batteryWhitelist = battery, overlayPermission = overlay).also {
                     it.status = r.status // copy() does not carry the mutable install state
                     it.downloadProgress = r.downloadProgress
                 }
-                else -> r!!
             }
             result.add(chosen)
             seen.add(b.packageName)
@@ -199,6 +201,7 @@ class AppRepository(private val context: Context) {
                     minSdk = obj.optInt("minSdk", 0),
                     requiresPark = obj.optBoolean("requiresPark", true),
                     batteryWhitelist = obj.optBoolean("batteryWhitelist", false),
+                    overlayPermission = obj.optBoolean("overlayPermission", false),
                     // "self" = the app showing this catalog (EX2 Store, or MyEX2Center's built-in fallback).
                     isSelf = pkg == context.packageName
                 )

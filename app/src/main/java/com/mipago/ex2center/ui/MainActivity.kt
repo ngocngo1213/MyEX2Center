@@ -9,7 +9,6 @@ import android.content.SharedPreferences
 import android.content.res.ColorStateList
 import android.media.AudioManager
 import android.media.MediaMetadata
-import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.os.Bundle
 import android.os.Handler
@@ -33,7 +32,8 @@ import com.mipago.ex2center.car.CarStateHub
 import com.mipago.ex2center.car.ClimateState
 import com.mipago.ex2center.car.ControlsState
 import com.mipago.ex2center.car.Signal
-import com.mipago.ex2center.launcher.SplitScreenLauncher
+import com.mipago.ex2center.launcher.MediaCompanions
+import com.mipago.ex2center.launcher.CompanionLauncher
 import com.mipago.ex2center.service.CarAutomationService
 import com.mipago.ex2center.service.FloatingControlService
 import com.mipago.ex2center.ui.dash.BentoGridLayout
@@ -46,6 +46,7 @@ import com.mipago.ex2center.ui.dash.TileKind
 import com.mipago.ex2center.ui.dash.WidgetType
 import com.mipago.ex2center.utils.AppDialog
 import com.mipago.ex2center.utils.CarApiHelper
+import com.mipago.ex2center.utils.MediaSessions
 import com.mipago.ex2center.utils.ParkGate
 import com.mipago.ex2center.utils.PendingWrites
 import com.mipago.ex2center.utils.ThemeManager
@@ -210,6 +211,11 @@ class MainActivity : Activity() {
     private var btnWireless = listOf<TextView>()
     private var btnValet = listOf<TextView>()
 
+    // Chạy cùng Vietmap
+    private var companionIcons = listOf<ImageView>()
+    private var companionNames = listOf<TextView>()
+    private var companionModes = listOf<TextView>()
+
     /** 1×1 tiles of the preset. */
     private class Tile(val kind: TileKind, val root: View, val icon: ImageView, val title: TextView, val state: TextView)
     private var tiles = listOf<Tile>()
@@ -284,6 +290,7 @@ class MainActivity : Activity() {
         refreshWifi()
         renderStatusChip()
         renderValet()
+        renderCompanion() // may have been changed in Cài đặt / installed from the Store
         syncVolumeFromSystem() // may have changed while another screen was in front
         registerReceiver(volumeReceiver, IntentFilter("android.media.VOLUME_CHANGED_ACTION"))
         carSub = CarStateHub.subscribe(this, SIGNALS, POLL_INTERVAL_MS) { state, _ -> onCarState(state) }
@@ -416,6 +423,9 @@ class MainActivity : Activity() {
         btnAmbient = all(R.id.btnAmbientLight)
         btnWireless = all(R.id.btnWirelessCharge)
         btnValet = all(R.id.btnValetMode)
+        companionIcons = all(R.id.ivCompanionIcon)
+        companionNames = all(R.id.tvCompanionName)
+        companionModes = all(R.id.tvCompanionMode)
 
         // Shortcut icons at 32dp (the 24dp glyphs read too small from the driver's seat).
         val icon = (32 * resources.displayMetrics.density).toInt()
@@ -439,6 +449,27 @@ class MainActivity : Activity() {
         if (lastSnap.connected) onCarState(lastSnap) else applyDisconnected()
         refreshMedia()
         renderValet()
+        renderCompanion()
+    }
+
+    /** "Chạy cùng Vietmap" widget: the media app chosen in Cài đặt and how it will be shown. */
+    private fun renderCompanion() {
+        if (companionIcons.isEmpty() && companionNames.isEmpty()) return // widget not on the grid
+        val c = MediaCompanions.current(this)
+        companionIcons.forEach { iv ->
+            if (iv.tag == c?.pkg) return@forEach // same app: keep the decoded icon
+            iv.tag = c?.pkg
+            val icon = c?.let { try { packageManager.getApplicationIcon(it.pkg) } catch (_: Throwable) { null } }
+            if (icon != null) iv.setImageDrawable(icon) else iv.setImageResource(R.drawable.ic_app_placeholder)
+        }
+        companionNames.forEach { it.setTextIfChanged(c?.label ?: "Chưa cài app video/nhạc") }
+        val modeText = when {
+            c == null -> "Tải ${MediaCompanions.namesForMessage} từ EX2 Store"
+            c.hasPopupPlayer -> "Video nổi trên bản đồ"
+            c.isVideo -> "Tiếng phát nền cùng bản đồ"
+            else -> "Nhạc nền cùng bản đồ"
+        }
+        companionModes.forEach { it.setTextIfChanged(modeText) }
     }
 
     /** Every view with [id] inside the grid (a value may appear in more than one widget). */
@@ -729,6 +760,14 @@ class MainActivity : Activity() {
             else toggleValetMode()
         }
         btnEditLayout.setOnClickListener { enterEdit() }
+        // Long press anywhere on the Dashboard = edit the layout, but only in P: elsewhere the
+        // press is left to the widget (a held button keeps working while driving).
+        grid.onLongPress = {
+            if (!editing && lastSnap.gear == CarApiHelper.GEAR_PARK) {
+                enterEdit()
+                true
+            } else false
+        }
         findViewById<View>(R.id.btnEditDone).setOnClickListener { exitEdit(save = true) }
         findViewById<View>(R.id.btnEditUndo).setOnClickListener { undo() }
         findViewById<View>(R.id.btnEditAdd).setOnClickListener { showTray(editTray.visibility != View.VISIBLE) }
@@ -796,6 +835,8 @@ class MainActivity : Activity() {
                 refreshMedia(800L)
             }
         }
+        all<View>(R.id.btnVolumeMinus).forEach { it.setOnClickListener { nudgeVolume(-1) } }
+        all<View>(R.id.btnVolumePlus).forEach { it.setOnClickListener { nudgeVolume(+1) } }
         all<View>(R.id.btnMediaNext).forEach {
             it.setOnClickListener {
                 dispatchMediaKeyEvent(KeyEvent.KEYCODE_MEDIA_NEXT)
@@ -812,7 +853,7 @@ class MainActivity : Activity() {
         btnAutoHold.forEach { it.setOnClickListener { toggleAutoHold() } }
         btnAmbient.forEach { it.setOnClickListener { toggleAmbient() } }
         btnWireless.forEach { it.setOnClickListener { toggleWireless() } }
-        all<View>(R.id.btnSplitScreen).forEach { it.setOnClickListener { SplitScreenLauncher.launchSplitScreen(this) } }
+        all<View>(R.id.btnSplitScreen).forEach { it.setOnClickListener { CompanionLauncher.launch(this) } }
         btnValet.forEach { it.setOnClickListener { toggleValetMode() } }
 
         // Ô 1×1
@@ -906,47 +947,25 @@ class MainActivity : Activity() {
         renderPresetChips()
     }
 
-    /**
-     * Drop of [p] at (col, row): free spot → move; the widgets under it fit into the spot [p]
-     * leaves → they swap in; otherwise they are pushed to the first free spots; if that is not
-     * possible the widget bounces back.
-     */
+    /** Drop of [p] at (col, row); see [DashLayout.move]. Refused → the widget bounces back. */
     private fun moveWidget(p: Placement, col: Int, row: Int) {
-        val moved = p.copy(col = col, row = row)
-        val others = layoutItems - p
-        val hit = others.filter { it.overlaps(moved) }
-        if (hit.isEmpty()) return applyEdit(others + moved)
-
-        // Swap: shift the covered widgets by the opposite offset, into the spot p left.
-        val dc = p.col - col
-        val dr = p.row - row
-        val shifted = hit.map { it.copy(col = it.col + dc, row = it.row + dr) }
-        val swapped = (others - hit) + moved + shifted
-        if (DashLayout.isValid(swapped)) return applyEdit(swapped)
-
-        // Push aside: place the covered widgets in the first free spots that remain.
-        val result = ArrayList((others - hit) + moved)
-        for (h in hit.sortedByDescending { it.colSpan * it.rowSpan }) {
-            val spot = DashLayout.firstFree(result, h) ?: return applyEdit(layoutItems + p) // refused → bounce
-            result += spot
+        val result = DashLayout.move(layoutItems, p, col, row)
+        if (result == null) {
+            Toast.makeText(this, "Không đủ chỗ cho thay đổi này", Toast.LENGTH_SHORT).show()
+            editOverlay.invalidate()
+        } else {
+            applyEdit(result)
         }
-        applyEdit(result)
     }
 
-    /** "⇲": next size of the same widget, in place if it fits, else in the first free spot. */
+    /** "⇲": next size of the same widget; see [DashLayout.resize]. */
     private fun resizeWidget(p: Placement) {
-        val variants = p.type.variants
-        if (variants.size < 2) return
-        val next = variants[(variants.indexOf(p.type) + 1) % variants.size]
-        val resized = p.copy(type = next)
-        val others = layoutItems - p
-        if (DashLayout.fits(resized) && others.none { it.overlaps(resized) }) return applyEdit(others + resized)
-        val spot = DashLayout.firstFree(others, resized)
-        if (spot == null) {
-            Toast.makeText(this, "Không đủ chỗ để đổi sang ${next.sizeLabel}. Ẩn bớt widget rồi thử lại.", Toast.LENGTH_SHORT).show()
+        val result = DashLayout.resize(layoutItems, p)
+        if (result == null) {
+            Toast.makeText(this, "Không đủ chỗ để đổi sang ${p.type.nextVariant.sizeLabel}. Ẩn bớt widget rồi thử lại.", Toast.LENGTH_SHORT).show()
             return
         }
-        applyEdit(others + spot)
+        applyEdit(result)
     }
 
     private fun showTray(show: Boolean) {
@@ -1251,6 +1270,14 @@ class MainActivity : Activity() {
         tvVolumeValue.forEach { it.setTextIfChanged(current.toString()) }
     }
 
+    /** −/+ one step on the media volume (same stream as the slider and the wheel keys). */
+    private fun nudgeVolume(delta: Int) {
+        val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        val target = (audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) + delta).coerceIn(0, max)
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, target, 0)
+        syncVolumeFromSystem()
+    }
+
     private fun setupVolumeControl() {
         syncVolumeFromSystem()
         val listener = object : SeekBar.OnSeekBarChangeListener {
@@ -1290,12 +1317,10 @@ class MainActivity : Activity() {
         var playing = try { audioManager.isMusicActive } catch (_: Throwable) { false }
         var track: String? = null
         var app: String? = null
+        // No session readable (emulator, not system uid) or the player just died (binder
+        // exception) → keep isMusicActive only.
         try {
-            // Needs MEDIA_CONTENT_CONTROL (granted to the system uid on the head unit).
-            val msm = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
-            val controllers = msm.getActiveSessions(null)
-            val active = controllers.firstOrNull { it.playbackState?.state == PlaybackState.STATE_PLAYING }
-                ?: controllers.firstOrNull()
+            val active = MediaSessions.current(this)
             if (active != null) {
                 app = try {
                     packageManager.getApplicationLabel(packageManager.getApplicationInfo(active.packageName, 0)).toString()
@@ -1305,9 +1330,7 @@ class MainActivity : Activity() {
                 track = active.metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)?.takeIf { it.isNotBlank() }
                 playing = active.playbackState?.state == PlaybackState.STATE_PLAYING
             }
-        } catch (_: Throwable) {
-            // No permission (e.g. emulator, not system uid) — keep isMusicActive only.
-        }
+        } catch (_: Throwable) {}
         return MediaInfo(track, app, playing)
     }
 

@@ -32,6 +32,9 @@ enum class WidgetType(
 
     /** The other sizes of the same widget, in the order "⇲" cycles through them. */
     val variants: List<WidgetType> get() = if (this == TILE) listOf(TILE) else values().filter { it.family == family }
+
+    /** The size "⇲" switches to (itself when the widget has only one size). */
+    val nextVariant: WidgetType get() = variants.let { it[(it.indexOf(this) + 1) % it.size] }
 }
 
 /** What a 1×1 tile does. */
@@ -202,6 +205,41 @@ object DashLayout {
     }
 
     fun fits(p: Placement) = p.col >= 0 && p.row >= 0 && p.col + p.colSpan <= COLUMNS && p.row + p.rowSpan <= ROWS
+
+    /**
+     * Drop of [p] at (col, row). Free spot → move; the widgets under it fit into the spot [p]
+     * leaves → swap; otherwise they are pushed to the first free spots. Null = not possible
+     * (the widget bounces back).
+     */
+    fun move(items: List<Placement>, p: Placement, col: Int, row: Int): List<Placement>? {
+        val moved = p.copy(col = col, row = row)
+        if (!fits(moved)) return null
+        val others = items - p
+        val hit = others.filter { it.overlaps(moved) }
+        if (hit.isEmpty()) return others + moved
+
+        // Swap: shift the covered widgets by the opposite offset, into the spot p left.
+        val dc = p.col - col
+        val dr = p.row - row
+        val swapped = (others - hit) + moved + hit.map { it.copy(col = it.col + dc, row = it.row + dr) }
+        if (isValid(swapped)) return swapped
+
+        // Push aside: biggest covered widget first, each into the first free spot left.
+        val result = ArrayList((others - hit) + moved)
+        for (h in hit.sortedByDescending { it.colSpan * it.rowSpan }) {
+            result += firstFree(result, h) ?: return null
+        }
+        return result
+    }
+
+    /** "⇲": next size of [p], in place if it fits, else in the first free spot. Null = no room. */
+    fun resize(items: List<Placement>, p: Placement): List<Placement>? {
+        if (p.type.variants.size < 2) return null
+        val resized = p.copy(type = p.type.nextVariant)
+        val others = items - p
+        if (fits(resized) && others.none { it.overlaps(resized) }) return others + resized
+        return firstFree(others, resized)?.let { others + it }
+    }
 
     /** First free spot (row by row) where [p]'s size fits among [items], or null when full. */
     fun firstFree(items: List<Placement>, p: Placement): Placement? {

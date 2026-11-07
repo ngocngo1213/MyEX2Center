@@ -29,8 +29,10 @@ class FloatingControlService : Service() {
         const val ACTION_START_OVERLAY = "com.mipago.ex2center.action.START_OVERLAY"
         const val ACTION_STOP_OVERLAY = "com.mipago.ex2center.action.STOP_OVERLAY"
         const val ACTION_TRIGGER_BLACKOUT = "com.mipago.ex2center.action.TRIGGER_BLACKOUT"
-        const val ACTION_SHOW_SPLIT_CONTROL = "com.mipago.ex2center.action.SHOW_SPLIT_CONTROL"
-        const val ACTION_HIDE_SPLIT_CONTROL = "com.mipago.ex2center.action.HIDE_SPLIT_CONTROL"
+        /** Extras: [EXTRA_PACKAGE] (map app), [EXTRA_TIMEOUT_MS]. */
+        const val ACTION_SHOW_MAP_RETURN = "com.mipago.ex2center.action.SHOW_MAP_RETURN"
+        const val EXTRA_PACKAGE = "pkg"
+        const val EXTRA_TIMEOUT_MS = "timeout_ms"
 
         const val KEY_FLOATING_BUBBLE_ENABLED = "key_floating_bubble_enabled"
         /** "Nhiệt độ & quạt trên thanh dưới" (DockClimateOverlay), on by default. */
@@ -99,7 +101,7 @@ class FloatingControlService : Service() {
             ACTION_STOP_OVERLAY -> {
                 overlayViewManager?.hideBubble()
                 overlayViewManager?.hidePanel()
-                overlayViewManager?.hideSplitControlBar()
+                overlayViewManager?.hideMapReturnChip()
                 overlayViewManager?.deactivateBlackoutMode()
                 stopSelf()
             }
@@ -116,13 +118,11 @@ class FloatingControlService : Service() {
                 dockClimate?.setBlocked(overlayViewManager?.isBlackoutShowing == true)
                 stopIfIdle() // stops only if the window could not be added
             }
-            ACTION_SHOW_SPLIT_CONTROL -> {
-                overlayViewManager?.showSplitControlBar()
+            ACTION_SHOW_MAP_RETURN -> {
+                val pkg = intent?.getStringExtra(EXTRA_PACKAGE)
+                val timeout = intent?.getLongExtra(EXTRA_TIMEOUT_MS, 180_000L) ?: 180_000L
+                if (pkg != null) overlayViewManager?.showMapReturnChip(pkg, timeout)
                 stopIfIdle() // stops only if the window could not be added
-            }
-            ACTION_HIDE_SPLIT_CONTROL -> {
-                overlayViewManager?.hideSplitControlBar()
-                stopIfIdle()
             }
             else -> {
                 if (isBubbleEnabled()) overlayViewManager?.showBubble() else stopIfIdle()

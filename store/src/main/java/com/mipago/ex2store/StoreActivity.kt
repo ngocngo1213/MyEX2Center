@@ -29,6 +29,7 @@ import com.mipago.ex2center.repository.AppRepository
 import com.mipago.ex2center.utils.LocalApkFinder
 import com.mipago.ex2center.utils.PackageInstallerHelper
 import com.mipago.ex2center.utils.ParkGate
+import com.mipago.ex2center.utils.OverlayPermission
 import com.mipago.ex2center.utils.PowerWhitelist
 import com.mipago.ex2center.utils.WifiStatus
 import java.io.File
@@ -181,7 +182,7 @@ class StoreActivity : Activity() {
                 adapter.notifyDataSetChanged()
                 tvEmptyState.visibility = View.GONE
                 appRepo.cleanupDownloads(apps)
-                ensureBatteryWhitelist(apps)
+                ensureAppPermissions(apps)
             } else {
                 tvEmptyState.visibility = View.VISIBLE
                 tvEmptyState.text = error ?: "Không có ứng dụng nào trong danh mục."
@@ -190,18 +191,25 @@ class StoreActivity : Activity() {
     }
 
     /**
-     * Installed catalog apps flagged `batteryWhitelist` (e.g. VIETMAP LIVE) are added to the
-     * battery-optimisation whitelist. Runs after every catalog load, i.e. right after each install
-     * (both success paths reload the catalog) and whenever the Store opens, so an app installed
-     * earlier or from elsewhere is fixed too. Idempotent; off the main thread.
+     * What Flyme Auto has no screen for, granted to installed catalog apps that need it:
+     * `batteryWhitelist` (e.g. VIETMAP LIVE: battery-optimisation whitelist) and
+     * `overlayPermission` (PipePipe popup player: display over other apps).
+     * Runs after every catalog load, i.e. right after each install (both success paths reload the
+     * catalog) and whenever the Store opens, so an app installed earlier or from elsewhere is
+     * fixed too. Idempotent; off the main thread.
      */
-    private fun ensureBatteryWhitelist(apps: List<AppInfo>) {
+    private fun ensureAppPermissions(apps: List<AppInfo>) {
         val targets = apps.filter {
-            it.batteryWhitelist && PackageInstallerHelper.isPackageInstalled(this, it.packageName)
-        }.map { it.packageName }
+            (it.batteryWhitelist || it.overlayPermission) && PackageInstallerHelper.isPackageInstalled(this, it.packageName)
+        }
         if (targets.isEmpty()) return
         val appContext = applicationContext
-        scanExecutor.execute { targets.forEach { PowerWhitelist.ensure(appContext, it) } }
+        scanExecutor.execute {
+            targets.forEach {
+                if (it.batteryWhitelist) PowerWhitelist.ensure(appContext, it.packageName)
+                if (it.overlayPermission) OverlayPermission.ensure(appContext, it.packageName)
+            }
+        }
     }
 
     private fun indexOf(app: AppInfo) = appList.indexOfFirst { it.packageName == app.packageName }
@@ -662,7 +670,6 @@ class StoreActivity : Activity() {
                 "com.mipago.ex2store" -> R.drawable.ic_app_ex2store
                 "vn.vietmap.live" -> R.drawable.ic_app_vietmap
                 "org.smarttube.stable", "com.teamsmart.videomanager.tv", "com.liskovsoft.smartyoutubetv2.tv" -> R.drawable.ic_app_smarttube
-                "org.schabi.newpipe" -> R.drawable.ic_app_newpipe
                 "InfinityLoop1309.NewPipeEnhanced" -> R.drawable.ic_app_pipepipe
                 "com.dd3boh.outertune" -> R.drawable.ic_app_outertune
                 "me.knighthat.kreate", "it.fast4x.rimusic" -> R.drawable.ic_app_kreate

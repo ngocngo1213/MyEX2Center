@@ -9,6 +9,8 @@ package com.mipago.ex2center.model
  * [isSelf] marks MyEX2Center itself (self-update: no uninstall button, process restarts).
  * [batteryWhitelist]: EX2 Store adds the installed app to the battery-optimisation whitelist
  * (navigation apps that must run in the background; see PowerWhitelist).
+ * [overlayPermission]: EX2 Store grants "display over other apps" to the installed app (popup
+ * video players such as PipePipe; Flyme Auto has no screen for it; see OverlayPermission).
  */
 data class AppInfo(
     val name: String,
@@ -27,7 +29,8 @@ data class AppInfo(
     val minSdk: Int = 0,
     val requiresPark: Boolean = true,
     val isSelf: Boolean = false,
-    val batteryWhitelist: Boolean = false
+    val batteryWhitelist: Boolean = false,
+    val overlayPermission: Boolean = false
 ) {
     companion object {
         const val TYPE_APK = "apk"

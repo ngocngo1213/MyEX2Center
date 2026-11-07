@@ -28,6 +28,7 @@ import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import com.mipago.ex2center.R
+import com.mipago.ex2center.launcher.MediaCompanions
 import com.mipago.ex2center.ui.dash.DashLayout
 import com.mipago.ex2center.ui.dash.DashPreset
 import com.mipago.ex2center.service.CarAutomationService
@@ -175,6 +176,7 @@ class SettingsActivity : Activity() {
         left.addView(connectionSection())
         left.addView(comfortSection())
         right.addView(drivingSection())
+        right.addView(companionSection())
         right.addView(diagnosticsSection())
         right.addView(systemSection())
 
@@ -284,6 +286,38 @@ class SettingsActivity : Activity() {
     // ---------------------------------------------------------------------------------------
     // Sections
     // ---------------------------------------------------------------------------------------
+
+    /** "Chạy cùng Vietmap": which media app runs next to the map. */
+    private fun companionSection(): View {
+        val card = section("Chạy cùng Vietmap", R.drawable.ic_splitscreen)
+        lateinit var appSub: TextView
+        fun refresh() {
+            appSub.text = MediaCompanions.current(this)?.let { c ->
+                c.label + if (c.hasPopupPlayer) " · video nổi trên bản đồ" else if (c.isVideo) " · tiếng phát nền" else " · nhạc nền"
+            } ?: "Chưa cài app nào. Tải ${MediaCompanions.namesForMessage} từ EX2 Store"
+        }
+        appSub = actionRow(card, "Ứng dụng video / nhạc", null) {
+            val installed = MediaCompanions.installed(this)
+            if (installed.isEmpty()) {
+                toast("Chưa cài app video/nhạc nào. Tải từ EX2 Store.")
+                return@actionRow
+            }
+            AppDialog(this)
+                .setTitle("Ứng dụng chạy cùng Vietmap")
+                .setSingleChoiceItems(installed.map { it.label }.toTypedArray(),
+                    installed.indexOf(MediaCompanions.current(this))) { d, which ->
+                    MediaCompanions.setCurrent(this, installed[which].pkg)
+                    d.dismiss()
+                    refresh()
+                }
+                .setNegativeButton("Hủy", null)
+                .show()
+        }.second
+        card.addView(text("Không chia đôi màn hình: trên xe này chia đôi làm Vietmap bị thoát. App mở ra để bạn chọn nội dung, chạm \"Về bản đồ\" (hoặc nhạc bắt đầu phát) là quay lại bản đồ, tiếng vẫn phát.",
+            18f, R.color.text_muted).apply { setPadding(0, dp(8), 0, dp(4)) })
+        refresh()
+        return card
+    }
 
     private fun profileSection(): View {
         val card = section("Hồ sơ xe", R.drawable.ic_car)

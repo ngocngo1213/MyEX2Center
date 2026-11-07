@@ -69,13 +69,17 @@
         <item name="android:stateListAnimator">@animator/dash_press</item>
     </style>
 
-    <style name="DashBtn.Step">
+
+    <!-- −/+ step button with a drawn glyph (ic_minus / ic_plus), always centred in the 88×76 cell. -->
+    <style name="DashStepIcon">
         <item name="android:layout_width">88dp</item>
         <item name="android:layout_height">76dp</item>
-        <item name="android:textSize">36sp</item>
-        <item name="android:fontFamily">@font/be_vietnam_pro_bold</item>
-        <item name="android:paddingStart">0dp</item>
-        <item name="android:paddingEnd">0dp</item>
+        <item name="android:background">@drawable/dash_btn</item>
+        <item name="android:scaleType">center</item>
+        <item name="android:tint">@color/dash_text</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:stateListAnimator">@animator/dash_press</item>
     </style>
 
     <style name="DashBtn.Row">

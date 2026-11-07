@@ -16,7 +16,7 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <TextView android:id="@+id/btnTempMinus" style="@style/DashBtn.Step" android:layout_width="76dp" android:contentDescription="Giảm nhiệt độ" android:text="−" />
+        <ImageView android:id="@+id/btnTempMinus" style="@style/DashStepIcon" android:layout_width="76dp" android:contentDescription="Giảm nhiệt độ" android:src="@drawable/ic_minus" />
 
         <TextView
             android:id="@+id/tvClimateTargetTemp"
@@ -28,9 +28,9 @@
             android:textSize="36sp"
             tools:text="24°C" />
 
-        <TextView android:id="@+id/btnTempPlus" style="@style/DashBtn.Step" android:layout_width="76dp" android:contentDescription="Tăng nhiệt độ" android:text="+" />
+        <ImageView android:id="@+id/btnTempPlus" style="@style/DashStepIcon" android:layout_width="76dp" android:contentDescription="Tăng nhiệt độ" android:src="@drawable/ic_plus" />
 
-        <TextView android:id="@+id/btnFanMinus" style="@style/DashBtn.Step" android:layout_width="76dp" android:layout_marginStart="16dp" android:contentDescription="Giảm quạt" android:text="−" />
+        <ImageView android:id="@+id/btnFanMinus" style="@style/DashStepIcon" android:layout_width="76dp" android:layout_marginStart="16dp" android:contentDescription="Giảm quạt" android:src="@drawable/ic_minus" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -57,7 +57,7 @@
                 tools:text="3" />
         </LinearLayout>
 
-        <TextView android:id="@+id/btnFanPlus" style="@style/DashBtn.Step" android:layout_width="76dp" android:contentDescription="Tăng quạt" android:text="+" />
+        <ImageView android:id="@+id/btnFanPlus" style="@style/DashStepIcon" android:layout_width="76dp" android:contentDescription="Tăng quạt" android:src="@drawable/ic_plus" />
     </LinearLayout>
 
     <LinearLayout

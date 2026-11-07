@@ -48,19 +48,15 @@
         <ImageView android:id="@+id/btnMediaNext" style="@style/DashBtn" android:layout_width="0dp" android:layout_height="104dp" android:layout_marginStart="12dp" android:layout_weight="1" android:padding="34dp" android:contentDescription="Bài sau" android:src="@drawable/ic_next" android:tint="@color/dash_text" />
     </LinearLayout>
 
+    <!-- Âm lượng: −/+ like temperature and fan, slider in between for big jumps. -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="76dp"
         android:layout_marginTop="12dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <ImageView
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:importantForAccessibility="no"
-            android:src="@drawable/ic_volume_up"
-            android:tint="@color/dash_muted" />
+        <ImageView android:id="@+id/btnVolumeMinus" style="@style/DashStepIcon" android:layout_width="76dp" android:contentDescription="Giảm âm lượng" android:src="@drawable/ic_minus" />
 
         <SeekBar
             android:id="@+id/sbVolume"
@@ -68,8 +64,8 @@
             android:layout_height="56dp"
             android:layout_weight="1"
             android:contentDescription="Âm lượng"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
             android:progressDrawable="@drawable/dash_volume_track"
             android:splitTrack="false"
             android:thumb="@drawable/dash_volume_thumb" />
@@ -77,10 +73,12 @@
         <TextView
             android:id="@+id/tvVolumeValue"
             style="@style/DashText"
-            android:layout_width="40dp"
+            android:layout_width="48dp"
             android:layout_height="wrap_content"
-            android:gravity="end"
-            android:textSize="24sp"
+            android:gravity="center"
+            android:textSize="28sp"
             tools:text="8" />
+
+        <ImageView android:id="@+id/btnVolumePlus" style="@style/DashStepIcon" android:layout_width="76dp" android:layout_marginStart="12dp" android:contentDescription="Tăng âm lượng" android:src="@drawable/ic_plus" />
     </LinearLayout>
 </LinearLayout>

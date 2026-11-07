@@ -2,35 +2,35 @@
   {
     "name": "MyEX2Center",
     "packageName": "com.mipago.ex2center",
-    "versionCode": 1,
-    "versionName": "1.0.0",
-    "sizeMb": 6.2,
+    "versionCode": 3,
+    "versionName": "1.1.0",
+    "sizeMb": 6.6,
     "type": "apk",
     "abis": [],
     "minSdk": 28,
     "requiresPark": true,
     "self": true,
-    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/v1.0.0/MyEX2Center-1.0.0.apk",
+    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/v1.1.0/MyEX2Center-1.1.0.apk",
     "browserUrl": "https://github.com/ngocngo1213/MyEX2Center/releases",
     "iconResName": "img_my_ex2",
     "description": "Cập nhật hệ thống điều khiển trung tâm EX2 Center. Ứng dụng sẽ tự khởi động lại sau khi cập nhật.",
-    "sha256": "__SELF_SHA256__"
+    "sha256": "e948397c37bf7c7fce1ec120d4a3d456c7b61f7810f4f88757cd5a4d557ca92f"
   },
   {
     "name": "EX2 Store",
     "packageName": "com.mipago.ex2store",
-    "versionCode": 1,
-    "versionName": "1.0.0",
+    "versionCode": 4,
+    "versionName": "1.1.1",
     "sizeMb": 3.6,
     "type": "apk",
     "abis": [],
     "minSdk": 28,
     "requiresPark": true,
-    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/store-v1.0.0/EX2Store-1.0.0.apk",
+    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/store-v1.1.1/EX2Store-1.1.1.apk",
     "browserUrl": "https://github.com/ngocngo1213/MyEX2Center/releases",
     "iconResName": "ic_app_ex2store",
     "description": "Kho ứng dụng cho EX2: cài và cập nhật MyEX2Center cùng các ứng dụng khác. Tự báo khi có bản mới (chỉ khi xe ở số P).",
-    "sha256": "__STORE_SHA256__"
+    "sha256": "111ffbc2c37f879093c41e1eaa061a506fd47c758adc2840b4e2ca07ac7d83f8"
   },
   {
     "name": "VIETMAP LIVE",
@@ -70,27 +70,6 @@
     "sha256": "0a3d3f024eae66b8468f75fe85ab421169177f5ea1223a5d097d1dc9e1c84cf3"
   },
   {
-    "name": "NewPipe",
-    "packageName": "org.schabi.newpipe",
-    "versionCode": 1015,
-    "versionName": "0.29.1",
-    "sizeMb": 11.0,
-    "type": "apk",
-    "abis": [
-      "arm64-v8a",
-      "armeabi-v7a",
-      "x86",
-      "x86_64"
-    ],
-    "minSdk": 23,
-    "requiresPark": true,
-    "apkUrl": "https://github.com/TeamNewPipe/NewPipe/releases/download/v0.29.1/NewPipe_v0.29.1.apk",
-    "browserUrl": "https://github.com/TeamNewPipe/NewPipe/releases",
-    "iconResName": "ic_app_newpipe",
-    "description": "Xem YouTube giao diện máy tính bảng siêu nhẹ, hỗ trợ phát nền và cửa sổ nổi (Popup Player) khi đang mở toàn màn hình Vietmap Live.",
-    "sha256": "18447bfb1e06d113edc88df93f471827280de06f6f3d4dc42f56f28b9c1bab79"
-  },
-  {
     "name": "PipePipe",
     "packageName": "InfinityLoop1309.NewPipeEnhanced",
     "versionCode": 111004,
@@ -106,7 +85,8 @@
     "browserUrl": "https://github.com/InfinityLoop1308/PipePipe/releases",
     "iconResName": "ic_app_pipepipe",
     "description": "Bản nâng cấp của NewPipe (64-bit arm64-v8a): tích hợp sẵn SponsorBlock tự bỏ qua đoạn tài trợ, phát nhạc nền và cửa sổ nổi.",
-    "sha256": "dfac608d4802b461252550a0485f779a12fd198f18dce77afa90cd441568f06f"
+    "sha256": "dfac608d4802b461252550a0485f779a12fd198f18dce77afa90cd441568f06f",
+    "overlayPermission": true
   },
   {
     "name": "OuterTune",

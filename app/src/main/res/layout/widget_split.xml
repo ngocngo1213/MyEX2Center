@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- CHẠY ĐÔI MÀN HÌNH 2×1: Vietmap Live (trái) + SmartTube (phải). -->
+<!-- CHẠY CÙNG VIETMAP 2×1: Vietmap Live + the media app chosen in Cài đặt (icon / name / mode set from code). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/DashCard"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView style="@style/DashLabel" android:text="Chạy đôi màn hình" />
+    <TextView style="@style/DashLabel" android:text="Chạy cùng Vietmap" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -30,15 +30,16 @@
             android:orientation="vertical">
 
             <TextView style="@style/DashText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Vietmap" android:textSize="22sp" />
-            <TextView style="@style/DashMuted" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Trái" />
+            <TextView style="@style/DashMuted" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bản đồ" />
         </LinearLayout>
 
         <ImageView
+            android:id="@+id/ivCompanionIcon"
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:importantForAccessibility="no"
             android:scaleType="fitCenter"
-            android:src="@drawable/ic_app_smarttube" />
+            android:src="@drawable/ic_app_placeholder" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -47,8 +48,8 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <TextView style="@style/DashText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SmartTube" android:textSize="22sp" />
-            <TextView style="@style/DashMuted" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Phải" />
+            <TextView android:id="@+id/tvCompanionName" style="@style/DashText" android:layout_width="match_parent" android:layout_height="wrap_content" android:ellipsize="end" android:text="--" android:textSize="22sp" />
+            <TextView android:id="@+id/tvCompanionMode" style="@style/DashMuted" android:layout_width="match_parent" android:layout_height="wrap_content" android:ellipsize="end" android:text="--" />
         </LinearLayout>
 
         <TextView
