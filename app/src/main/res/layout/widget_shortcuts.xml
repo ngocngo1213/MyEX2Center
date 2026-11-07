@@ -29,7 +29,7 @@
         android:orientation="horizontal">
 
         <TextView android:id="@+id/btnWirelessCharge" style="@style/DashBtn.Row" android:layout_height="match_parent" android:minHeight="0dp" android:drawableStart="@drawable/ic_wireless_charge" android:gravity="center_vertical" android:text="Sạc không dây" />
-        <TextView android:id="@+id/btnSplitScreen" style="@style/DashBtn.Row" android:layout_height="match_parent" android:layout_marginStart="10dp" android:minHeight="0dp" android:drawableStart="@drawable/ic_splitscreen" android:gravity="center_vertical" android:text="Chạy đôi" />
+        <TextView android:id="@+id/btnSplitScreen" android:tag="toggle" style="@style/DashBtn.Row" android:layout_height="match_parent" android:layout_marginStart="10dp" android:minHeight="0dp" android:drawableStart="@drawable/ic_splitscreen" android:gravity="center_vertical" android:text="Chạy đôi" />
         <TextView android:id="@+id/btnValetMode" style="@style/DashBtn.Row" android:layout_height="match_parent" android:layout_marginStart="10dp" android:minHeight="0dp" android:drawableStart="@drawable/ic_wrench" android:gravity="center_vertical" android:text="Valet" />
     </LinearLayout>
 </LinearLayout>

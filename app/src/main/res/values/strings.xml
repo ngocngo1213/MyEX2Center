@@ -2,8 +2,8 @@
 <resources>
     <string name="app_name">EX2 Center</string>
 
-    <!-- Floating Bubble / Overlay Controls -->
-    <string name="desc_floating_bubble">Hiển thị nút nổi trên màn hình để truy cập nhanh Điều hòa, Chế độ đêm và Khởi động lại.</string>
+    <!-- Overlay service -->
+    <string name="desc_floating_bubble">Nhiệt độ trên thanh dưới, Màn hình đêm và nút Về bản đồ.</string>
     <string name="overlay_temp_label">Nhiệt độ</string>
     <string name="overlay_fan_label">Gió</string>
     <string name="overlay_outside_temp">Ngoài trời: %s°C</string>
@@ -17,6 +17,6 @@
     <!-- Notifications -->
     <string name="notif_service_title">EX2 Center đang chạy ngầm</string>
     <string name="notif_service_desc">Tự động giám sát trạng thái xe, cần số và chế độ lái.</string>
-    <string name="notif_overlay_title">EX2 Bảng điều khiển nổi</string>
+    <string name="notif_overlay_title">EX2 Lớp hiển thị</string>
 
 </resources>

@@ -28,14 +28,18 @@ import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import com.mipago.ex2center.R
+import com.mipago.ex2center.launcher.FreeformSplit
 import com.mipago.ex2center.launcher.MediaCompanions
 import com.mipago.ex2center.ui.dash.DashLayout
 import com.mipago.ex2center.ui.dash.DashPreset
 import com.mipago.ex2center.service.CarAutomationService
 import com.mipago.ex2center.service.FloatingControlService
+import com.mipago.ex2center.service.KeepAlive
 import com.mipago.ex2center.utils.CarApiHelper
 import com.mipago.ex2center.utils.CarProfile
 import com.mipago.ex2center.utils.ParkGate
+import com.mipago.ex2center.utils.SafeReboot
+import com.mipago.ex2center.utils.HomeMode
 import com.mipago.ex2center.utils.ThemeManager
 import com.mipago.ex2center.utils.UiStyle
 import com.mipago.ex2center.utils.WifiStatus
@@ -177,6 +181,7 @@ class SettingsActivity : Activity() {
         left.addView(comfortSection())
         right.addView(drivingSection())
         right.addView(companionSection())
+        right.addView(keepAliveSection())
         right.addView(diagnosticsSection())
         right.addView(systemSection())
 
@@ -313,10 +318,52 @@ class SettingsActivity : Activity() {
                 .setNegativeButton("Hủy", null)
                 .show()
         }.second
-        card.addView(text("Không chia đôi màn hình: trên xe này chia đôi làm Vietmap bị thoát. App mở ra để bạn chọn nội dung, chạm \"Về bản đồ\" (hoặc nhạc bắt đầu phát) là quay lại bản đồ, tiếng vẫn phát.",
+        card.addView(text(if (FreeformSplit.isAvailable(this))
+            "Chia đôi màn hình bằng cửa sổ: Vietmap bên trái, app bên phải. Bấm \"Thoát\" trên Dashboard để về toàn màn hình."
+        else "Chưa bật cửa sổ tự do nên không chia đôi: app mở ra để bạn chọn nội dung, chạm \"Về bản đồ\" (hoặc nhạc bắt đầu phát) là quay lại bản đồ, tiếng vẫn phát.",
             18f, R.color.text_muted).apply { setPadding(0, dp(8), 0, dp(4)) })
         refresh()
         return card
+    }
+
+    /** "Giữ app chạy nền": keeps Vietmap / media apps from being closed by the car's launcher. */
+    private fun keepAliveSection(): View {
+        val card = section("Giữ app chạy nền", R.drawable.ic_play)
+        val apps = KeepAlive.installed(this)
+        val appSwitches = ArrayList<Switch>()
+        toggleRow(card, "Giữ app chạy nền",
+            "Launcher của xe tự tắt app sau 30 giây chạy nền. Bật để giữ các app dưới đây; mỗi app được giữ có một thông báo với nút Dừng.",
+            KeepAlive.isEnabled(this)) { on ->
+            KeepAlive.setEnabled(this, on)
+            appSwitches.forEach { it.isEnabled = on }
+        }
+        apps.forEach { app ->
+            val (sw, _) = toggleRow(card, app.label, null, KeepAlive.isKept(this, app.pkg)) { keep ->
+                KeepAlive.setKept(this, app.pkg, keep)
+            }
+            sw.isEnabled = KeepAlive.isEnabled(this)
+            appSwitches.add(sw)
+        }
+        actionRow(card, "Dừng app đang chạy nền", "Tắt hẳn một app ngay (tiếng và bản đồ dừng)") { pickAppToStop() }
+        return card
+    }
+
+    private fun pickAppToStop() {
+        val running = KeepAlive.runningPackages(this)
+        val apps = KeepAlive.installed(this).filter { it.pkg in running }
+        if (apps.isEmpty()) {
+            toast("Không có app nào đang chạy nền.")
+            return
+        }
+        AppDialog(this)
+            .setTitle("Dừng app")
+            .setItems(apps.map { it.label }.toTypedArray()) { d, which ->
+                d.dismiss()
+                val app = apps[which]
+                toast(if (KeepAlive.stopApp(this, app.pkg)) "Đã dừng ${app.label}" else "Không dừng được ${app.label}")
+            }
+            .setNegativeButton("Hủy", null)
+            .show()
     }
 
     private fun profileSection(): View {
@@ -678,19 +725,19 @@ class SettingsActivity : Activity() {
     private fun systemSection(): View {
         val card = section("Hệ thống", R.drawable.ic_settings)
         toggleRow(
-            card, "Nút nổi điều khiển nhanh", "Điều hòa, Màn hình đêm, Khởi động lại",
-            prefs.getBoolean(FloatingControlService.KEY_FLOATING_BUBBLE_ENABLED, true)
-        ) { on ->
-            prefs.edit().putBoolean(FloatingControlService.KEY_FLOATING_BUBBLE_ENABLED, on).apply()
-            syncOverlayService()
-        }
-        toggleRow(
             card, "Nhiệt độ & quạt trên thanh dưới", "Chỉnh nhanh nhiệt độ và mức quạt ngay trên thanh dưới của xe",
             prefs.getBoolean(FloatingControlService.KEY_DOCK_CLIMATE_ENABLED, true)
         ) { on ->
             prefs.edit().putBoolean(FloatingControlService.KEY_DOCK_CLIMATE_ENABLED, on).apply()
             syncOverlayService()
         }
+        toggleRow(card, "Dùng MyEX2Center làm màn hình chính",
+            "Nút \"Quay lại Màn hình chính\" và khi khởi động xe sẽ mở Dashboard thay cho màn hình của xe",
+            HomeMode.isEnabled(this)) { on ->
+            if (!HomeMode.setEnabled(this, on)) toast("Không đổi được màn hình chính")
+        }
+        actionRow(card, "Mở màn hình chính của xe", "Màn hình gốc của Flyme") { HomeMode.openCarHome(this) }
+        actionRow(card, "Khởi động lại màn hình", "Chỉ khi xe ở số P") { SafeReboot.confirm(this) }
         actionRow(card, "Kho ứng dụng", "Cài đặt và cập nhật ứng dụng cho xe") {
             com.mipago.ex2center.utils.StoreLauncher.open(this)
         }
@@ -775,7 +822,7 @@ class SettingsActivity : Activity() {
         if (mode == ThemeManager.getMode(this)) return
         ThemeManager.setMode(this, mode)
         // The overlay lives in a service: restart it so it picks up the new colours.
-        if (prefs.getBoolean(FloatingControlService.KEY_FLOATING_BUBBLE_ENABLED, true)) {
+        if (FloatingControlService.isWanted(this)) {
             val intent = Intent(this, FloatingControlService::class.java)
             stopService(intent)
             startService(intent)

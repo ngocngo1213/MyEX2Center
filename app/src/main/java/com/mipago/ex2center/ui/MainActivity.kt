@@ -34,6 +34,8 @@ import com.mipago.ex2center.car.ControlsState
 import com.mipago.ex2center.car.Signal
 import com.mipago.ex2center.launcher.MediaCompanions
 import com.mipago.ex2center.launcher.CompanionLauncher
+import com.mipago.ex2center.launcher.FreeformSplit
+import com.mipago.ex2center.utils.HomeMode
 import com.mipago.ex2center.service.CarAutomationService
 import com.mipago.ex2center.service.FloatingControlService
 import com.mipago.ex2center.ui.dash.BentoGridLayout
@@ -68,6 +70,7 @@ import java.util.concurrent.TimeUnit
 class MainActivity : Activity() {
 
     companion object {
+        private const val TAG_TOGGLE = "toggle"
         private const val TAG = "MainActivity"
         private const val WINDOW_OPEN_MAX_KMH = 30f
         private const val VHAL_HOLDER = "dashboard"
@@ -454,7 +457,10 @@ class MainActivity : Activity() {
 
     /** "Chạy cùng Vietmap" widget: the media app chosen in Cài đặt and how it will be shown. */
     private fun renderCompanion() {
-        if (companionIcons.isEmpty() && companionNames.isEmpty()) return // widget not on the grid
+        if (companionIcons.isEmpty() && companionNames.isEmpty()) { // only Phím tắt may be on the grid
+            renderSplitState(CompanionLauncher.isSplitActive(this))
+            return
+        }
         val c = MediaCompanions.current(this)
         companionIcons.forEach { iv ->
             if (iv.tag == c?.pkg) return@forEach // same app: keep the decoded icon
@@ -465,11 +471,21 @@ class MainActivity : Activity() {
         companionNames.forEach { it.setTextIfChanged(c?.label ?: "Chưa cài app video/nhạc") }
         val modeText = when {
             c == null -> "Tải ${MediaCompanions.namesForMessage} từ EX2 Store"
+            FreeformSplit.isAvailable(this) -> "Chia đôi màn hình"
             c.hasPopupPlayer -> "Video nổi trên bản đồ"
             c.isVideo -> "Tiếng phát nền cùng bản đồ"
             else -> "Nhạc nền cùng bản đồ"
         }
         companionModes.forEach { it.setTextIfChanged(modeText) }
+        renderSplitState(CompanionLauncher.isSplitActive(this))
+    }
+
+    /** "Thoát" in the Chạy cùng Vietmap widget, "Chạy đôi" / "Thoát đôi" in Phím tắt. */
+    private fun renderSplitState(split: Boolean) {
+        all<View>(R.id.btnSplitExit).forEach { it.visibility = if (split) View.VISIBLE else View.GONE }
+        all<View>(R.id.vietmapLabel).forEach { it.visibility = if (split) View.GONE else View.VISIBLE }
+        all<TextView>(R.id.btnSplitScreen).filter { it.tag == TAG_TOGGLE }
+            .forEach { it.setTextIfChanged(if (split) "Thoát đôi" else "Chạy đôi") }
     }
 
     /** Every view with [id] inside the grid (a value may appear in more than one widget). */
@@ -853,7 +869,21 @@ class MainActivity : Activity() {
         btnAutoHold.forEach { it.setOnClickListener { toggleAutoHold() } }
         btnAmbient.forEach { it.setOnClickListener { toggleAmbient() } }
         btnWireless.forEach { it.setOnClickListener { toggleWireless() } }
-        all<View>(R.id.btnSplitScreen).forEach { it.setOnClickListener { CompanionLauncher.launch(this) } }
+        all<View>(R.id.btnSplitScreen).forEach { btn ->
+            btn.setOnClickListener {
+                // "Chạy đôi" in Phím tắt toggles; "Mở" in the Chạy cùng Vietmap widget always opens.
+                if (btn.tag == TAG_TOGGLE && CompanionLauncher.isSplitActive(this)) {
+                    CompanionLauncher.exitSplit(this)
+                    renderSplitState(false)
+                } else CompanionLauncher.launch(this)
+            }
+        }
+        all<View>(R.id.btnSplitExit).forEach { btn ->
+            btn.setOnClickListener {
+                CompanionLauncher.exitSplit(this)
+                renderSplitState(false)
+            }
+        }
         btnValet.forEach { it.setOnClickListener { toggleValetMode() } }
 
         // Ô 1×1
@@ -1368,9 +1398,17 @@ class MainActivity : Activity() {
         }
     }
 
+    /** As the car's home screen there is nothing behind the Dashboard: Back stays here. */
+    @Deprecated("Activity.onBackPressed")
+    override fun onBackPressed() {
+        if (HomeMode.isEnabled(this)) return
+        @Suppress("DEPRECATION")
+        super.onBackPressed()
+    }
+
     private fun startCoreServices() {
         startForegroundService(Intent(this, CarAutomationService::class.java))
-        // Floating bubble and/or the bottom-bar climate panel (both hosted by FloatingControlService).
+        // The bottom-bar climate label (hosted by FloatingControlService).
         if (FloatingControlService.isWanted(this)) startService(Intent(this, FloatingControlService::class.java))
     }
 }

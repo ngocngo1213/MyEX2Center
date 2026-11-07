@@ -3,7 +3,7 @@
 Tài liệu này hướng dẫn **từng bước, từ con số 0**, cách cài **EX2 Store** và **MyEX2Center** lên màn hình trung tâm của Geely EX2. Bạn không cần biết lập trình. Chỉ cần làm đúng thứ tự, đọc kỹ từng bước và chép lệnh chính xác.
 
 - **EX2 Store** là kho ứng dụng cho xe. Store dùng để cài và **tự cập nhật** MyEX2Center cùng các app khác (SmartTube, Trình duyệt, Vietmap…).
-- **MyEX2Center** là bảng điều khiển cho tài xế: chế độ lái, điều hòa, kính, áp suất lốp, nút nổi…
+- **MyEX2Center** là bảng điều khiển cho tài xế: chế độ lái, điều hòa, kính, chạy cùng Vietmap…
 
 Bạn chỉ cần dùng máy tính **một lần duy nhất** để cài EX2 Store. Từ đó, mọi thứ còn lại làm ngay trên màn hình xe.
 
@@ -357,8 +357,8 @@ Kết quả đúng có **`userId=1000`** và `versionName=1.0.0`.
 ## 6. Mở MyEX2Center lần đầu và kiểm tra
 
 1. Bấm **Mở** trong EX2 Store, hoặc mở **MyEX2Center** trong danh sách ứng dụng (biểu tượng xe EX2 màu trắng).
-2. App tự chạy **dịch vụ tự động hóa** (có thông báo thường trực hình chiếc xe) và **nút nổi** tròn màu xanh. Cả hai tự bật lại khi xe khởi động.
-3. Nếu **nút nổi** hoặc **Màn hình đêm** không hiện, cấp quyền hiển thị trên ứng dụng khác (cần máy tính, mục 4.4):
+2. App tự chạy **dịch vụ tự động hóa** (có thông báo thường trực hình chiếc xe) và **nhiệt độ & quạt trên thanh dưới**. Cả hai tự bật lại khi xe khởi động.
+3. Nếu nhiệt độ trên thanh dưới hoặc **Màn hình đêm** không hiện, cấp quyền hiển thị trên ứng dụng khác (cần máy tính, mục 4.4):
    ```bash
    adb shell appops set com.mipago.ex2center SYSTEM_ALERT_WINDOW allow
    ```
@@ -389,7 +389,7 @@ Kết quả đúng có **`userId=1000`** và `versionName=1.0.0`.
 >   ```
 > - Chỉ cài APK từ nguồn bạn tin tưởng.
 
-Nên tránh khởi động lại đầu xe bằng lệnh `adb reboot`, vì nó gây tiếng "bụp" lớn qua loa xe. Muốn khởi động lại màn hình, dùng nút **Khởi động lại** trong nút nổi. Nút này chỉ hoạt động khi xe ở **P** và đứng yên.
+Nên tránh khởi động lại đầu xe bằng lệnh `adb reboot`, vì nó gây tiếng "bụp" lớn qua loa xe. Muốn khởi động lại màn hình, dùng **Cài đặt › Hệ thống › Khởi động lại màn hình**. Nút này chỉ hoạt động khi xe ở **P** và đứng yên.
 
 ---
 
@@ -455,7 +455,7 @@ Màn hình chính là lưới 6×3 ô, luôn lấp kín màn hình. Các widget:
 | **Xe · Cốp · Kính** | Ảnh xe nhìn từ trên xuống, độ mở từng kính (**TT** trước trái, **TP** trước phải, **ST** sau trái, **SP** sau phải), **Cốp trước** (chỉ ở P, có hỏi xác nhận), kính **Đóng / 10% / 50% / 100%** (50% và 100% chỉ khi dưới 30 km/h) |
 | **Nhạc** (2×1 hoặc lớn 2×2) | Bài và app đang phát, lùi / phát–dừng / tiếp, âm lượng (theo kịp nút trên vô lăng) |
 | **Chế độ lái** | Eco / Comfort / Sport và Phanh tái sinh Thấp / Vừa / Cao |
-| **Phím tắt** | Tắt âm AVAS, Auto Hold, Đèn nội thất, Sạc không dây, Chạy cùng Vietmap, Valet |
+| **Phím tắt** | Tắt âm AVAS, Auto Hold, Đèn nội thất, Sạc không dây, **Chạy đôi / Thoát đôi**, Valet |
 | **Pin & quãng đường**, **Chạy cùng Vietmap**, các **ô 1×1** | Tắt màn hình, Đèn nội thất, Sấy kính, Auto Hold, Valet, AVAS, Sạc không dây, Mở cốp trước |
 
 Nút đang **bật** có nền màu hổ phách. Nút mờ nghĩa là xe chưa báo trạng thái (hiện `--`), không phải tắt.
@@ -470,16 +470,32 @@ Nút đang **bật** có nền màu hổ phách. Nút mờ nghĩa là xe chưa b
 
 ### Chạy cùng Vietmap
 Mở **VIETMAP LIVE** cùng một app video/nhạc: YouTube ReVanced, SmartTube, PipePipe, OuterTune, Kreate. Chọn app trong **Cài đặt › Chạy cùng Vietmap**.
-- Bấm **Chạy đôi** (widget Phím tắt hoặc Chạy cùng Vietmap): app video/nhạc mở ra để bạn chọn nội dung.
+- **Chia đôi màn hình (từ 1.2.1)**: bấm **Chạy đôi** (widget Phím tắt) hoặc **Mở** (widget Chạy cùng Vietmap). Vietmap mở ở **nửa trái**, app video/nhạc ở **nửa phải**, mỗi bên là một cửa sổ riêng.
+  - Thoát: **Thoát đôi** (Phím tắt) hoặc **Thoát** (widget). Cả hai về toàn màn hình, Vietmap ở trên, video/nhạc vẫn phát tiếng phía sau.
+  - **Đừng bấm nút X** trên thanh nhỏ phía trên mỗi cửa sổ: nút đó **đóng hẳn app** (Vietmap sẽ tắt).
+  - Cần bật **cửa sổ tự do** một lần bằng máy tính (mục 4.4), rồi khởi động lại màn hình:
+    ```bash
+    adb shell settings put global enable_freeform_support 1
+    ```
+    Muốn tắt: thay `1` bằng `0` rồi khởi động lại màn hình.
+- **Chưa bật cửa sổ tự do**: app video/nhạc mở toàn màn hình để bạn chọn nội dung.
   - **Video**: chọn video rồi chạm nút **Về bản đồ** phía trên màn hình. YouTube ReVanced tiếp tục **phát tiếng** cùng bản đồ. PipePipe: bấm **Popup** trước để video nằm trong cửa sổ nổi trên bản đồ.
   - **Nhạc** (OuterTune/Kreate): chọn bài, bản đồ tự mở lại, nhạc phát nền. Điều khiển ở widget **Nhạc**.
-- Không có chia đôi màn hình: trên xe này chia đôi làm Vietmap bị thoát và tải lại. NewPipe không chạy được trên xe (bị thoát ngay khi mở).
+- Chia đôi kiểu cũ của Android (có thanh chia ở giữa) không dùng được: trên xe này nó làm Vietmap bị thoát. NewPipe không chạy được trên xe (bị thoát ngay khi mở).
+
+### Giữ app chạy nền (từ 1.2.1)
+Launcher của xe tự đóng các app không có trong danh sách của nó khoảng **30 giây** sau khi app chạy nền (Vietmap, YouTube… bị tắt).
+- MyEX2Center giữ các app này lại bằng một thông báo nhỏ **"<app> đang chạy nền"** đứng tên app đó, kèm nút **Dừng**.
+- **Cài đặt › Giữ app chạy nền**: tắt cả tính năng, chọn từng app được giữ (Vietmap và các app video/nhạc), hoặc **Dừng app đang chạy nền** để tắt hẳn một app ngay.
+
+### MyEX2Center làm màn hình chính (từ 1.2.1)
+**Cài đặt › Hệ thống › Dùng MyEX2Center làm màn hình chính**: nút **Quay lại Màn hình chính** (góc dưới trái), lúc khởi động xe và khi đóng app đều mở Dashboard.
+- Màn hình gốc của xe: **Cài đặt › Hệ thống › Mở màn hình chính của xe**. Danh sách ứng dụng trên thanh dưới vẫn như cũ.
+- Khi đang là màn hình chính, nút **Back** không thoát Dashboard.
+- Tắt công tắc là trở về màn hình chính của xe.
 
 ### Thanh dưới của xe
 Giữa thanh dưới có **[−] nhiệt độ [+]** và **[−] Quạt [+]** để chỉnh nhanh từ mọi màn hình. Chạm vào số để mở màn hình điều hòa của xe. Tắt trong **Cài đặt › Hệ thống**.
-
-### Nút nổi (hình tròn màu hổ phách)
-Kéo để di chuyển (app nhớ vị trí). Chạm để mở bảng nhanh gồm: A/C, nhiệt độ, quạt, **Màn hình đêm**, **Khởi động lại** màn hình (chỉ khi xe ở P, có hỏi xác nhận).
 
 ### Cài đặt
 | Mục | Nội dung |
@@ -490,8 +506,9 @@ Kéo để di chuyển (app nhớ vị trí). Chạm để mở bảng nhanh g�
 | **Xe & tiện nghi** | Đèn chào khi mở cửa, camera khi vào số D, đèn dẫn đường về nhà, tự khóa theo tốc độ, tự đóng kính khi khóa, giảm tốc gạt mưa khi đỗ, mở cốp trước |
 | **Lái xe & Tự động hóa** | Ghi nhớ chế độ lái, ghi nhớ phanh tái sinh, tự động tắt âm AVAS, chế độ Bảo dưỡng (Valet), giới hạn âm lượng khi bật xe, Crash Guard |
 | **Chạy cùng Vietmap** | App video/nhạc đi kèm |
+| **Giữ app chạy nền** | Bật/tắt, chọn app được giữ, dừng app đang chạy nền |
 | **Chẩn đoán phanh & ESC** | Chỉ đọc: ABS, ESP, TCS, EBD, EPB, đèn cảnh báo ESC |
-| **Hệ thống** | Nút nổi, nhiệt độ & quạt trên thanh dưới, Kho ứng dụng, phiên bản app |
+| **Hệ thống** | Nhiệt độ & quạt trên thanh dưới, MyEX2Center làm màn hình chính, mở màn hình chính của xe, khởi động lại màn hình (chỉ ở P), Kho ứng dụng, phiên bản app |
 
 ### Các cơ chế an toàn có sẵn
 - **Chỉ ở số P:** khởi động lại màn hình, cài/gỡ ứng dụng, mở cốp trước, chỉnh bố cục Dashboard.
@@ -554,7 +571,9 @@ adb uninstall com.mipago.ex2store
 |---|---|
 | Dashboard toàn `--`, "Chưa kết nối xe" | Kiểm tra `userId=1000` (Phần 5). Mở lại app. Xem log: `adb logcat -s CarApiHelper CarAutomationService MainActivity` |
 | Bấm nút, báo "Xe không nhận lệnh" | Xe đang tắt / chưa sẵn sàng, hoặc chức năng không có trên xe bạn. Thử lại khi xe ON, số P. |
-| Không thấy nút nổi | Cài đặt → Hệ thống → bật **Nút nổi**; hoặc cấp quyền như mục 6, bước 3. |
+| Vietmap / YouTube tự tắt sau khi chạy nền | Cài đặt → **Giữ app chạy nền**: bật tính năng và bật app đó. |
+| Chạy đôi không chia màn hình (app mở toàn màn hình) | Chưa bật cửa sổ tự do: xem mục 10, **Chạy cùng Vietmap**. |
+| Cửa sổ bị kẹt nửa màn hình | Bấm **Thoát đôi** (Phím tắt) hoặc **Thoát** (widget Chạy cùng Vietmap). |
 | Pill báo "Crash Guard: Đã ngắt" | Bấm vào pill → Đặt lại; hoặc Cài đặt → Crash Guard. Nếu lặp lại, gửi log cho nhà phát triển. |
 | Chế độ lái không tự khôi phục sau khi mở xe | Kiểm tra công tắc **Ghi nhớ** đang bật và **Chế độ Bảo dưỡng** đang tắt. |
 | Vietmap báo "Không tương thích CPU" | Xem mục 9 (cần bản có `arm64-v8a`). |

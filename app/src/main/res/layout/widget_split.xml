@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- CHẠY CÙNG VIETMAP 2×1: Vietmap Live + the media app chosen in Cài đặt (icon / name / mode set from code). -->
+<!-- CHẠY CÙNG VIETMAP 2×1: Vietmap Live + the media app chosen in Cài đặt (icon / name / mode set from code).
+     "Thoát" shows while both are side by side (freeform). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/DashCard"
     android:layout_width="match_parent"
@@ -22,7 +23,9 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_app_vietmap" />
 
+        <!-- Hidden while split, to make room for "Thoát". -->
         <LinearLayout
+            android:id="@+id/vietmapLabel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
@@ -51,6 +54,16 @@
             <TextView android:id="@+id/tvCompanionName" style="@style/DashText" android:layout_width="match_parent" android:layout_height="wrap_content" android:ellipsize="end" android:text="--" android:textSize="22sp" />
             <TextView android:id="@+id/tvCompanionMode" style="@style/DashMuted" android:layout_width="match_parent" android:layout_height="wrap_content" android:ellipsize="end" android:text="--" />
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnSplitExit"
+            style="@style/DashBtn"
+            android:layout_width="104dp"
+            android:layout_height="76dp"
+            android:layout_marginEnd="12dp"
+            android:contentDescription="Thoát chia đôi màn hình"
+            android:text="Thoát"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/btnSplitScreen"

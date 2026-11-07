@@ -156,6 +156,7 @@ class CarAutomationService : Service() {
             resetEnforcers() // service start == car start (boot / app update)
             capStartVolume()
         }
+        KeepAlive.start(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -173,6 +174,7 @@ class CarAutomationService : Service() {
 
     override fun onDestroy() {
         isStarted = false
+        KeepAlive.stop()
         worker.removeCallbacksAndMessages(null)
         workerThread.quitSafely()
         try { unregisterReceiver(wakeReceiver) } catch (_: Throwable) {}

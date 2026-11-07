@@ -25,7 +25,7 @@ enum class WidgetType(
     DRIVE_MODE(R.layout.widget_drive_mode, 2, 1, "drive_mode", "Chế độ lái"),
     SHORTCUTS(R.layout.widget_shortcuts, 2, 1, "shortcuts", "Phím tắt"),
     BATTERY(R.layout.widget_battery, 2, 1, "battery", "Pin & quãng đường"),
-    SPLIT(R.layout.widget_split, 2, 1, "split", "Chạy đôi màn hình"),
+    SPLIT(R.layout.widget_split, 2, 1, "split", "Chạy cùng Vietmap"),
     TILE(R.layout.widget_tile, 1, 1, "tile", "Ô 1×1");
 
     val sizeLabel get() = "$colSpan×$rowSpan"

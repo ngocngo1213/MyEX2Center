@@ -17,7 +17,8 @@ import com.mipago.ex2center.utils.CarApiHelper
 /**
  * Module 2: Floating Control Foreground Service
  *
- * Runs continuously in foreground, managing the floating bubble and overlay window.
+ * Hosts the overlay windows: the climate label on the car's dock, Màn hình đêm and the
+ * "Về bản đồ" chip. Runs while the dock climate is enabled, otherwise only while one is shown.
  */
 class FloatingControlService : Service() {
 
@@ -34,24 +35,18 @@ class FloatingControlService : Service() {
         const val EXTRA_PACKAGE = "pkg"
         const val EXTRA_TIMEOUT_MS = "timeout_ms"
 
-        const val KEY_FLOATING_BUBBLE_ENABLED = "key_floating_bubble_enabled"
         /** "Nhiệt độ & quạt trên thanh dưới" (DockClimateOverlay), on by default. */
         const val KEY_DOCK_CLIMATE_ENABLED = "key_dock_climate_enabled"
-        /** Re-read the bubble / dock-label preferences and show or hide them accordingly. */
+        /** Re-read the dock-label preference and show or hide it accordingly. */
         const val ACTION_SYNC_PREFS = "com.mipago.ex2center.action.SYNC_OVERLAY_PREFS"
 
         /** True when some overlay preference needs this service running. */
         fun isWanted(context: Context): Boolean {
             val p = context.getSharedPreferences(CarAutomationService.PREFS_NAME, Context.MODE_PRIVATE)
-            return p.getBoolean(KEY_FLOATING_BUBBLE_ENABLED, true) || p.getBoolean(KEY_DOCK_CLIMATE_ENABLED, true)
+            return p.getBoolean(KEY_DOCK_CLIMATE_ENABLED, true)
         }
         private const val VHAL_HOLDER = "floating-service"
     }
-
-    /** The service also hosts Blackout / split bar, so it may run while the bubble is disabled. */
-    private fun isBubbleEnabled(): Boolean =
-        getSharedPreferences(CarAutomationService.PREFS_NAME, Context.MODE_PRIVATE)
-            .getBoolean(KEY_FLOATING_BUBBLE_ENABLED, true)
 
     private fun isDockClimateEnabled(): Boolean =
         getSharedPreferences(CarAutomationService.PREFS_NAME, Context.MODE_PRIVATE)
@@ -82,16 +77,15 @@ class FloatingControlService : Service() {
                 stopIfIdle()
             }
         }
-        if (isBubbleEnabled()) overlayViewManager?.showBubble()
         syncDockClimate()
     }
 
     /**
-     * With the bubble disabled the service only exists for Blackout / the split bar: once both
+     * With the dock climate disabled the service only exists for Blackout / "Về bản đồ": once both
      * are closed, stop so it does not keep a foreground notification and the VHAL link alive.
      */
     private fun stopIfIdle() {
-        if (isBubbleEnabled() || isDockClimateEnabled()) return
+        if (isDockClimateEnabled()) return
         if (overlayViewManager?.hasVisibleOverlay == true) return
         stopSelf()
     }
@@ -99,17 +93,11 @@ class FloatingControlService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_STOP_OVERLAY -> {
-                overlayViewManager?.hideBubble()
-                overlayViewManager?.hidePanel()
                 overlayViewManager?.hideMapReturnChip()
                 overlayViewManager?.deactivateBlackoutMode()
                 stopSelf()
             }
             ACTION_SYNC_PREFS -> {
-                if (isBubbleEnabled()) overlayViewManager?.showBubble() else {
-                    overlayViewManager?.hideBubble()
-                    overlayViewManager?.hidePanel()
-                }
                 syncDockClimate()
                 stopIfIdle()
             }
@@ -124,9 +112,7 @@ class FloatingControlService : Service() {
                 if (pkg != null) overlayViewManager?.showMapReturnChip(pkg, timeout)
                 stopIfIdle() // stops only if the window could not be added
             }
-            else -> {
-                if (isBubbleEnabled()) overlayViewManager?.showBubble() else stopIfIdle()
-            }
+            else -> stopIfIdle()
         }
         return START_STICKY
     }

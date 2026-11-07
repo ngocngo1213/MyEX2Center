@@ -75,7 +75,7 @@ class AppDialog(private val context: Context) {
     fun setCancelable(value: Boolean) = apply { cancelable = value }
     fun setOnCancelListener(listener: DialogInterface.OnCancelListener) = apply { onCancel = listener }
 
-    /** Show above other apps (TYPE_APPLICATION_OVERLAY), e.g. from the floating bubble service. */
+    /** Show above other apps (TYPE_APPLICATION_OVERLAY), e.g. from an overlay service. */
     fun asOverlay() = apply { overlay = true }
 
     fun show(): Dialog = create().also { it.show() }

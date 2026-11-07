@@ -28,6 +28,9 @@ import com.mipago.ex2center.utils.OverlayPermission
  * DockedStackDividerController.getTouchRegion on every focus change and crashes the apps on
  * screen — Vietmap included (seen on the car, 08/11/2026). Picture-in-picture has no SystemUI
  * support either (no PiP menu), so it is not relied on.
+ *
+ * When freeform windows are enabled on the car ([FreeformSplit]), both apps open side by side
+ * instead (map left, media right) and none of the above is needed.
  */
 object CompanionLauncher {
 
@@ -58,6 +61,11 @@ object CompanionLauncher {
             return
         }
         stopWatching()
+        if (FreeformSplit.isAvailable(app)) {
+            FreeformSplit.open(app, map, media)
+            toast(app, "Chia đôi màn hình. Thoát bằng nút \"Thoát\" trên Dashboard hoặc nút phóng to trên cửa sổ.")
+            return
+        }
         // EX2 Store grants it too; here only as a fallback, off the main thread (binder calls).
         if (companion.hasPopupPlayer) watcher.post { OverlayPermission.ensure(app, companion.pkg) }
         // Always open the media app (also when it is already playing): the driver may want to
@@ -117,6 +125,14 @@ object CompanionLauncher {
         watch?.let { watcher.removeCallbacks(it) }
         watch = null
     }
+
+    /** The map and media windows are side by side right now. */
+    fun isSplitActive(context: Context): Boolean = FreeformSplit.isAvailable(context) &&
+        FreeformSplit.isActive(context, MediaCompanions.all.map { it.pkg } + PKG_VIETMAP_LIVE)
+
+    /** Dashboard "Thoát": both apps back to full screen, the map on top. */
+    fun exitSplit(context: Context) =
+        FreeformSplit.exit(context, PKG_VIETMAP_LIVE, MediaCompanions.all.map { it.pkg })
 
     private fun toast(context: Context, msg: String) = Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
 }
