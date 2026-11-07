@@ -19,18 +19,18 @@
   {
     "name": "EX2 Store",
     "packageName": "com.mipago.ex2store",
-    "versionCode": 3,
-    "versionName": "1.1.0",
+    "versionCode": 4,
+    "versionName": "1.1.1",
     "sizeMb": 3.6,
     "type": "apk",
     "abis": [],
     "minSdk": 28,
     "requiresPark": true,
-    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/store-v1.1.0/EX2Store-1.1.0.apk",
+    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/store-v1.1.1/EX2Store-1.1.1.apk",
     "browserUrl": "https://github.com/ngocngo1213/MyEX2Center/releases",
     "iconResName": "ic_app_ex2store",
     "description": "Kho ứng dụng cho EX2: cài và cập nhật MyEX2Center cùng các ứng dụng khác. Tự báo khi có bản mới (chỉ khi xe ở số P).",
-    "sha256": "c014f967d7975efc1fc234a7b0484674fa64d166906d11e54fac012dc4210cef"
+    "sha256": "111ffbc2c37f879093c41e1eaa061a506fd47c758adc2840b4e2ca07ac7d83f8"
   },
   {
     "name": "VIETMAP LIVE",
