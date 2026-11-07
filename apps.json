@@ -2,19 +2,19 @@
   {
     "name": "MyEX2Center",
     "packageName": "com.mipago.ex2center",
-    "versionCode": 4,
-    "versionName": "1.2.0",
+    "versionCode": 5,
+    "versionName": "1.2.1",
     "sizeMb": 6.6,
     "type": "apk",
     "abis": [],
     "minSdk": 28,
     "requiresPark": true,
     "self": true,
-    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/v1.2.0/MyEX2Center-1.2.0.apk",
+    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/v1.2.1/MyEX2Center-1.2.1.apk",
     "browserUrl": "https://github.com/ngocngo1213/MyEX2Center/releases",
     "iconResName": "img_my_ex2",
     "description": "Cập nhật hệ thống điều khiển trung tâm EX2 Center. Ứng dụng sẽ tự khởi động lại sau khi cập nhật.",
-    "sha256": "dee3d6d65e36ebf1c2bba6d6e2be5237f0fbf2d42a4900968fd2722a6d56d40f"
+    "sha256": "abc7dc59d0aaf44e6e4dabab989e2c67d2decbf86ef3e7a20a9949f0832249c6"
   },
   {
     "name": "EX2 Store",
