@@ -88,9 +88,15 @@ class AppRepository(private val context: Context) {
         }
         val targetUrl = getCatalogUrl()
         if (!targetUrl.contains(UNSET_OWNER) && targetUrl.startsWith("https://")) {
-            val body = httpGetBytes(targetUrl, timeoutMs)
+            // raw.githubusercontent.com caches each URL for up to 5 minutes (and per CDN edge), so a
+            // catalog read right after a release could still be the old one. A query that changes
+            // every minute makes the CDN fetch the current file; catalog and signature use the same
+            // value so they always come from the same commit.
+            val fresh = "t=" + System.currentTimeMillis() / 60_000
+            fun withFresh(url: String) = url + (if (url.contains('?')) "&" else "?") + fresh
+            val body = httpGetBytes(withFresh(targetUrl), timeoutMs)
             if (body != null) {
-                val sig = httpGetBytes("$targetUrl.sig", timeoutMs)?.toString(Charsets.UTF_8)
+                val sig = httpGetBytes(withFresh("$targetUrl.sig"), timeoutMs)?.toString(Charsets.UTF_8)
                 if (CatalogVerifier.verify(body, sig)) {
                     val apps = parseCatalog(body.toString(Charsets.UTF_8))
                     if (apps.isNotEmpty()) {
