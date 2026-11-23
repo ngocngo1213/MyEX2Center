@@ -423,6 +423,8 @@ Cài đè **giữ nguyên** cài đặt của bạn: tên xe, ảnh xe, giao di�
    | **PipePipe** (YouTube nhẹ, phát nền, cửa sổ nổi, có SponsorBlock) | **Cài đặt** |
    | **OuterTune** (YouTube Music) | **Cài đặt** |
    | **Kreate** (YouTube Music, kế nhiệm RiMusic) | **Cài đặt** |
+   | **MicroG ReVanced (GmsCore)** (dịch vụ nền tảng đăng nhập Google cho bộ ReVanced) | **Cài đặt** |
+   | **YT Music ReVanced** / **YouTube ReVanced** | **Cài từ USB / Máy** (file `.apk` đã patch từ ReVanced Manager) |
    | **Trình duyệt Web** | **Cài đặt** |
    | **VIETMAP LIVE** | **Cài từ USB / Máy**: chép file `.apks` vào USB, cắm vào xe, bấm nút |
 

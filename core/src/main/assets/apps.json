@@ -2,35 +2,35 @@
   {
     "name": "MyEX2Center",
     "packageName": "com.mipago.ex2center",
-    "versionCode": 3,
-    "versionName": "1.1.0",
-    "sizeMb": 6.6,
+    "versionCode": 6,
+    "versionName": "1.2.2",
+    "sizeMb": 6.7,
     "type": "apk",
     "abis": [],
     "minSdk": 28,
     "requiresPark": true,
     "self": true,
-    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/v1.1.0/MyEX2Center-1.1.0.apk",
+    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/v1.2.2/MyEX2Center-1.2.2.apk",
     "browserUrl": "https://github.com/ngocngo1213/MyEX2Center/releases",
     "iconResName": "img_my_ex2",
     "description": "Cập nhật hệ thống điều khiển trung tâm EX2 Center. Ứng dụng sẽ tự khởi động lại sau khi cập nhật.",
-    "sha256": "e948397c37bf7c7fce1ec120d4a3d456c7b61f7810f4f88757cd5a4d557ca92f"
+    "sha256": "972bce6481d2b39e8cc9b1d4c86045af5b014ae072bde6391b3f5b018160e3bc"
   },
   {
     "name": "EX2 Store",
     "packageName": "com.mipago.ex2store",
-    "versionCode": 4,
-    "versionName": "1.1.1",
+    "versionCode": 6,
+    "versionName": "1.1.3",
     "sizeMb": 3.6,
     "type": "apk",
     "abis": [],
     "minSdk": 28,
     "requiresPark": true,
-    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/store-v1.1.1/EX2Store-1.1.1.apk",
+    "apkUrl": "https://github.com/ngocngo1213/MyEX2Center/releases/download/store-v1.1.3/EX2Store-1.1.3.apk",
     "browserUrl": "https://github.com/ngocngo1213/MyEX2Center/releases",
     "iconResName": "ic_app_ex2store",
     "description": "Kho ứng dụng cho EX2: cài và cập nhật MyEX2Center cùng các ứng dụng khác. Tự báo khi có bản mới (chỉ khi xe ở số P).",
-    "sha256": "111ffbc2c37f879093c41e1eaa061a506fd47c758adc2840b4e2ca07ac7d83f8"
+    "sha256": "3d6aa373ffe2f0ef1a12a123b7784780ad761925a2610c1c36fb8f1cbc1561d3"
   },
   {
     "name": "VIETMAP LIVE",
@@ -126,6 +126,66 @@
     "iconResName": "ic_app_kreate",
     "description": "Ứng dụng nghe nhạc YouTube Music kế nhiệm RiMusic: giao diện tối (Dark Mode) nút bấm lớn hợp màn hình xe, không quảng cáo, không cần MicroG.",
     "sha256": "10a983175b34c25f9c03a04feb2bb43b27e6f79a29ba1f31c7b873ca94ed48f7"
+  },
+  {
+    "name": "YT Music ReVanced",
+    "packageName": "app.revanced.android.apps.youtube.music",
+    "versionCode": 1,
+    "versionName": "ReVanced",
+    "sizeMb": 0.0,
+    "type": "apk",
+    "abis": [
+      "arm64-v8a"
+    ],
+    "minSdk": 26,
+    "requiresPark": true,
+    "apkUrl": "",
+    "browserUrl": "https://revanced.app",
+    "iconResName": "ic_app_revanced_music",
+    "description": "YouTube Music không quảng cáo, phát nhạc nền cùng Vietmap Live và đồng bộ tài khoản Google (cần cài MicroG ReVanced trước). Cài file APK đã patch từ USB / máy.",
+    "sha256": "",
+    "batteryWhitelist": true
+  },
+  {
+    "name": "YouTube ReVanced",
+    "packageName": "app.revanced.android.youtube",
+    "versionCode": 1,
+    "versionName": "ReVanced",
+    "sizeMb": 0.0,
+    "type": "apk",
+    "abis": [
+      "arm64-v8a"
+    ],
+    "minSdk": 26,
+    "requiresPark": true,
+    "apkUrl": "",
+    "browserUrl": "https://revanced.app",
+    "iconResName": "ic_app_revanced",
+    "description": "YouTube giao diện gốc không quảng cáo, hỗ trợ phát tiếng nền và chia đôi cửa sổ cùng Vietmap Live (cần cài MicroG ReVanced trước). Cài file APK đã patch từ USB / máy.",
+    "sha256": "",
+    "batteryWhitelist": true
+  },
+  {
+    "name": "MicroG ReVanced (GmsCore)",
+    "packageName": "app.revanced.android.gms",
+    "versionCode": 250932004,
+    "versionName": "0.3.13.2",
+    "sizeMb": 100.7,
+    "type": "apk",
+    "abis": [
+      "arm64-v8a",
+      "armeabi-v7a",
+      "x86",
+      "x86_64"
+    ],
+    "minSdk": 23,
+    "requiresPark": true,
+    "apkUrl": "https://github.com/ReVanced/GmsCore/releases/download/v0.3.13.2.250932/app.revanced.android.gms-250932004-signed.apk",
+    "browserUrl": "https://github.com/ReVanced/GmsCore/releases",
+    "iconResName": "ic_app_microg",
+    "description": "Dịch vụ Google nền tảng bắt buộc cho YouTube ReVanced và YT Music ReVanced để đăng nhập tài khoản Google trên xe. Tự động cấp quyền chạy nền.",
+    "sha256": "62119f040d629a9cd3225f280649a464936730c6466cafb5b9dd5ded14269a65",
+    "batteryWhitelist": true
   },
   {
     "name": "Trình duyệt Web",

@@ -673,6 +673,9 @@ class StoreActivity : Activity() {
                 "InfinityLoop1309.NewPipeEnhanced" -> R.drawable.ic_app_pipepipe
                 "com.dd3boh.outertune" -> R.drawable.ic_app_outertune
                 "me.knighthat.kreate", "it.fast4x.rimusic" -> R.drawable.ic_app_kreate
+                "app.revanced.android.apps.youtube.music" -> R.drawable.ic_app_revanced_music
+                "app.revanced.android.youtube" -> R.drawable.ic_app_revanced
+                "app.revanced.android.gms" -> R.drawable.ic_app_microg
                 "com.aaex.carbrowser", "com.aaexbrowser", "mark.via.gp" -> R.drawable.ic_app_browser
                 else -> 0
             }

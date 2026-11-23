@@ -21,13 +21,14 @@ object MediaCompanions {
 
     /**
      * Media apps that can run next to the map, most suitable first.
-     * - YouTube ReVanced: picture-in-picture (enters it when the map comes to the front) and
-     *   background playback; installed outside EX2 Store, used when present.
+     * - YouTube ReVanced / YouTube Music ReVanced: background playback; installed with MicroG
+     *   (GmsCore), used when present.
      * - PipePipe: floating popup player.
      * NewPipe 0.29.1 is left out: it crashes at start on IHU629G (no BatteryManager service for apps).
      */
     val all = listOf(
         MediaCompanion("app.revanced.android.youtube", "YouTube ReVanced", isVideo = true, hasPopupPlayer = false, inStore = false),
+        MediaCompanion("app.revanced.android.apps.youtube.music", "YT Music ReVanced", isVideo = false, hasPopupPlayer = false, inStore = false),
         MediaCompanion("org.smarttube.stable", "SmartTube", isVideo = true, hasPopupPlayer = false),
         MediaCompanion("InfinityLoop1309.NewPipeEnhanced", "PipePipe", isVideo = true, hasPopupPlayer = true),
         MediaCompanion("com.dd3boh.outertune", "OuterTune", isVideo = false, hasPopupPlayer = false),
